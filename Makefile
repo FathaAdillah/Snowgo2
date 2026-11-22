@@ -19,7 +19,7 @@ setup: .env ## First-time setup: env, images, dependencies, app key, migrations
 	$(NODE) npm ci
 	$(MAKE) migrate
 
-up: .env ## Start the full stack (http://snowego.localhost, http://admin.snowego.localhost)
+up: .env ## Start the full stack (http://localhost, http://admin.localhost)
 	$(COMPOSE) up -d --wait
 
 down: ## Stop the stack (volumes are kept)

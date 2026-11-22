@@ -7,8 +7,8 @@ Rancangan platform untuk siap kirim, preorder, dan request order Snowe GO. Lihat
 | Path | Isi |
 |---|---|
 | `apps/api` | Laravel 13 modular monolith (PHP 8.4). Modul domain di `app/Modules/<Modul>` memiliki route dan migration sendiri; didaftarkan di `config/modules.php`. |
-| `apps/admin` | Nuxt 4 SPA + Nuxt UI untuk staff (`admin.snowego.localhost`). |
-| `apps/storefront` | Nuxt 4 SSR + Tailwind CSS 4 untuk customer (`snowego.localhost`). |
+| `apps/admin` | Nuxt 4 SPA + Nuxt UI untuk staff (`admin.localhost`). |
+| `apps/storefront` | Nuxt 4 SSR + Tailwind CSS 4 untuk customer (`localhost`). |
 | `packages/api-types` | Tipe TypeScript envelope/kontrak API v1 yang dipakai kedua frontend. |
 | `infrastructure/docker` | Dockerfile API (php-fpm, Horizon, scheduler, migrate) dan kedua Nitro app. |
 | `infrastructure/nginx` | Edge ingress (routing hostname) dan upstream privat Nginx → PHP-FPM. |
@@ -30,9 +30,10 @@ make down    # hentikan stack, volume tetap
 
 | URL | Service |
 |---|---|
-| http://snowego.localhost | Storefront |
-| http://admin.snowego.localhost | Admin |
-| http://snowego.localhost/api/v1/health | API liveness |
+| http://localhost | Storefront |
+| http://admin.localhost | Admin |
+| http://localhost/api/v1/health | API liveness |
+| http://localhost/db | DB tools (OmniDB, login `DBTOOLS_USER`/`DBTOOLS_PASSWORD`, dev only) |
 | http://127.0.0.1:8025 | Mailpit |
 | http://127.0.0.1:9001 | MinIO console |
 
