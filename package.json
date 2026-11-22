@@ -1,0 +1,18 @@
+{
+  "name": "snowego",
+  "private": true,
+  "packageManager": "npm@11",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "workspaces": [
+    "apps/admin",
+    "apps/storefront",
+    "packages/api-types"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  }
+}
