@@ -73,6 +73,10 @@ it('quarantines once, rechecks ownership on replay, and refuses unready or cross
 
 it('requires both staff session and action permission even when a parent is accessible', function () {
     Storage::fake('private');
+    $this->withHeaders(['Accept' => 'application/json', 'X-Request-Id' => 'customer-import-check'])
+        ->post('/api/v1/files', ['owner_type' => 'staging', 'owner_ref' => 'regions', 'collection' => 'region_import',
+            'file' => UploadedFile::fake()->createWithContent('regions.csv', "code,name\n1,Bali\n")])
+        ->assertForbidden()->assertJsonPath('code', 'FORBIDDEN')->assertJsonPath('meta.request_id', 'customer-import-check');
     ($this->upload)($this->pdf, surface: 'admin/')->assertForbidden();
     Gate::define('files.surface.staff', fn (User $user) => true);
     ($this->upload)($this->pdf, surface: 'admin/')->assertForbidden();
