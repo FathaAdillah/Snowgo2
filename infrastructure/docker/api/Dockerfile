@@ -5,6 +5,7 @@ FROM php:8.4-fpm-alpine3.22 AS base
 COPY --from=mlocati/php-extension-installer:2.9 /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions bcmath gd intl opcache pcntl pdo_pgsql redis zip \
     && apk add --no-cache fcgi postgresql16-client
+RUN apk add --no-cache qpdf ffmpeg
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 COPY infrastructure/docker/api/php.ini /usr/local/etc/php/conf.d/zz-snowego.ini
 COPY infrastructure/docker/api/www.conf /usr/local/etc/php-fpm.d/zz-snowego.conf
