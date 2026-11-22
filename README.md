@@ -1,3 +1,3 @@
 # Snowego E-Commerce
 
-Repository untuk platform e-commerce Snowego. Dokumentasi perancangan ada di folder `docs/`.
+Rancangan platform untuk siap kirim, preorder, dan request order Snowe GO. Lihat [indeks dokumentasi](docs/README.md) untuk review blueprint, keputusan arsitektur, dan backlog implementasi.
