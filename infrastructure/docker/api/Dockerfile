@@ -25,5 +25,6 @@ COPY --from=vendor /var/www/api/vendor ./vendor
 COPY apps/api ./
 RUN rm -f .env \
     && composer dump-autoload --no-dev --optimize --classmap-authoritative \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && mkdir -p /srv/public \
+    && chown -R www-data:www-data storage bootstrap/cache /srv/public
 USER www-data
