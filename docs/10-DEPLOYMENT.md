@@ -31,6 +31,10 @@ Runbook initial: filter logs berdasarkan request ID dan job ID. Cek DB/Redis/sto
 
 ## Pipeline dan release
 
+**Operasi TASK-002:** jalankan `docker compose run --rm migrate` sebelum worker/scheduler memakai skema baru, lalu `docker compose restart horizon scheduler`. Cek `docker compose exec api php artisan schedule:list` dan `docker compose exec api php artisan horizon:status`. Relay dan reconciler berjalan tiap menit, hingga 100 klaim per proses. Event yang gagal enqueue dicoba ulang setelah lease satu menit; receipt yang hilang dari Redis dicoba ulang setelah 15 menit. Periksa backlog dengan `SELECT count(*), min(occurred_at) FROM outbox_events WHERE published_at IS NULL`.
+
+Untuk receipt `FAILED`, gunakan `docker compose exec api php artisan queue:failed`. Periksa exception, event dan handler, perbaiki penyebab, lalu `docker compose exec api php artisan queue:retry <uuid>`. Reconciler tidak mengulang `FAILED` tanpa keputusan operator. Receipt `COMPLETED` membuat job duplikat menjadi no-op.
+
 | Tahap | Gate |
 |---|---|
 | Pull request | Pint, Larastan, lint/typecheck kedua frontend, Pest PostgreSQL test, OpenAPI drift, dependency/image scan |

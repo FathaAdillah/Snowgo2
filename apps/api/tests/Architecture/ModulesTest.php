@@ -10,15 +10,11 @@ arch('support code does not depend on modules')
     ->expect('App\Support')
     ->not->toUse('App\Modules');
 
-arch('module providers extend the module base provider')
-    ->expect('App\Modules')
-    ->classes()
-    ->toHaveSuffix('ServiceProvider')
-    ->ignoring(['App\Modules\Foundation\Http', 'App\Modules\Foundation\Health'])
-    ->toExtend(ModuleServiceProvider::class)
-    ->ignoring(['App\Modules\Foundation\Http', 'App\Modules\Foundation\Health']);
-
 $config = require __DIR__.'/../../config/modules.php';
+arch('registered module providers extend the module base provider')
+    ->expect($config['providers'])
+    ->toHaveSuffix('ServiceProvider')
+    ->toExtend(ModuleServiceProvider::class);
 $modules = array_map(fn (string $provider): string => explode('\\', $provider)[2], $config['providers']);
 
 foreach ($modules as $module) {
