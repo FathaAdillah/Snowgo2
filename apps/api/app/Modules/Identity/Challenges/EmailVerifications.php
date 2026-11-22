@@ -45,7 +45,13 @@ final class EmailVerifications
     public function consume(string $token): void
     {
         DB::transaction(function () use ($token) {
-            $row = DB::table('email_verification_tokens')->where('token_hash', hash('sha256', $token))->lockForUpdate()->first();
+            $hash = hash('sha256', $token);
+            // Lock order matches resend(): user row first, then the challenge.
+            $userId = DB::table('email_verification_tokens')->where('token_hash', $hash)->value('user_id');
+            if ($userId !== null) {
+                User::query()->whereKey($userId)->lockForUpdate()->first();
+            }
+            $row = DB::table('email_verification_tokens')->where('token_hash', $hash)->lockForUpdate()->first();
             if ($row === null || now()->greaterThanOrEqualTo($row->expires_at)) {
                 throw self::invalid();
             }
