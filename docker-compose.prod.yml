@@ -111,7 +111,7 @@ services:
   api:
     <<: *api
     # Publishes public/ for api-nginx before starting FPM.
-    command: ["sh", "-c", "cp -a public/. /srv/public/ && exec php-fpm"]
+    command: ["sh", "-c", "cp -R public/. /srv/public/ && exec php-fpm"]
     volumes:
       - api_public:/srv/public
     healthcheck:
