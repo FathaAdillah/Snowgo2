@@ -32,3 +32,39 @@ export interface Health {
   status: 'ok' | 'degraded'
   checks?: HealthCheck[]
 }
+
+// API-AUTH-014 / API-AUTH-015 (docs/API-DATA-TYPES.md)
+export interface MfaChallenge {
+  challenge_required: true
+  expires_at: string
+}
+
+export interface StaffMe {
+  id: number
+  name: string
+  email: string
+  roles?: string[]
+  permissions?: string[]
+}
+
+// API-RPT-001 GET /admin/dashboard
+export type PurchaseMethod = 'ready_stock' | 'preorder' | 'request_order'
+
+export interface DashboardMethodSummary {
+  method: PurchaseMethod
+  orders_count: number
+  paid_amount: number
+}
+
+export interface Dashboard {
+  orders_count: number
+  by_method: DashboardMethodSummary[]
+  paid_amount: number
+  refund_amount: number
+  net_amount: number
+  pending_payments: number
+  shipment_failures: number
+  open_returns: number
+  open_refunds: number
+  low_stock_count: number
+}

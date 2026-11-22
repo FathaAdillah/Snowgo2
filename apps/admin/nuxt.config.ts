@@ -54,5 +54,12 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  // Bundle icons at build time: /api/* is proxied to Laravel, so the runtime icon endpoint is unreachable.
+  icon: {
+    provider: 'none',
+    fallbackToApi: false,
+    clientBundle: { scan: { globInclude: ['app/**/*.{vue,ts}'] } }
   }
 })
