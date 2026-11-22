@@ -47,14 +47,19 @@ final class PasswordResets
     {
         $credentials = ['email' => $email, 'token' => $token, 'password' => $password,
             'account_type' => User::CUSTOMER, 'disabled_at' => null];
-        $status = DB::transaction(fn () => $this->broker()->reset($credentials, function (User $user, string $password) {
-            // Completing the emailed challenge also proves ownership of the address.
-            $user->forceFill(['password_hash' => $password, 'email_verified_at' => $user->email_verified_at ?? now(),
-                'remember_token' => Str::random(60)])->save();
-            $this->sessions->revokeAll($user->id);
-            $this->journal->audit('identity.password_reset', Subject::User, $user->id, $user->id);
-            $this->outbox->record('PasswordReset', 'user', $user->id, []);
-        }));
+        $status = DB::transaction(function () use ($email, $credentials) {
+            // Serialize concurrent completions: a second request waits here and then finds the challenge gone.
+            DB::table('password_reset_tokens')->where('email', $email)->lockForUpdate()->first();
+
+            return $this->broker()->reset($credentials, function (User $user, string $password) {
+                // Completing the emailed challenge also proves ownership of the address.
+                $user->forceFill(['password_hash' => $password, 'email_verified_at' => $user->email_verified_at ?? now(),
+                    'remember_token' => Str::random(60)])->save();
+                $this->sessions->revokeAll($user->id);
+                $this->journal->audit('identity.password_reset', Subject::User, $user->id, $user->id);
+                $this->outbox->record('PasswordReset', 'user', $user->id, []);
+            });
+        });
         if ($status !== PasswordBroker::PASSWORD_RESET) {
             throw EmailVerifications::invalid();
         }
