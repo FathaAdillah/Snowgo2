@@ -235,7 +235,8 @@ it('rejects the inert EICAR antivirus fixture from quarantine and accepts a clea
 it('validates PDF and MP4 structure, and limits return evidence to one active video', function () {
     expect(FileRules::validContainer('application/pdf', "%PDF-1.4\n%%EOF"))->toBeFalse()
         ->and(FileRules::validContainer('video/mp4', "\0\0\0\x18ftypisom"))->toBeFalse();
-    $video = (new Process(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'color=size=32x32', '-frames:v', '1', '-c:v', 'mpeg4',
+    $video = (new Process(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'color=size=7680x4320', '-frames:v', '1',
+        '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '1',
         '-movflags', 'frag_keyframe+empty_moov', '-f', 'mp4', 'pipe:1']))->mustRun()->getOutput();
     expect(FileRules::validContainer('video/mp4', $video))->toBeTrue();
     $metadataOnly = substr($video, 0, strpos($video, 'moof') - 4);

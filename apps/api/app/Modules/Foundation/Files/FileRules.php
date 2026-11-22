@@ -86,8 +86,10 @@ final class FileRules
             $path = stream_get_meta_data($stream)['uri'];
             $process = $mime === 'application/pdf'
                 ? (new Process(['qpdf', '--check', $path]))->disableOutput()
-                : new Process(['ffmpeg', '-v', 'quiet', '-nostdin', '-xerror', '-f', 'mov', '-enable_drefs', '0',
-                    '-protocol_whitelist', 'file', '-max_pixels', '12000000', '-threads', '1', '-i', $path,
+                // Limit decoder address space, not video resolution. Uploads may contain valid 8K frames.
+                : new Process(['sh', '-c', 'ulimit -v 786432 || exit 127; exec "$0" "$@"', 'ffmpeg',
+                    '-v', 'quiet', '-nostdin', '-xerror', '-f', 'mov', '-enable_drefs', '0',
+                    '-protocol_whitelist', 'file', '-threads', '1', '-filter_threads', '1', '-i', $path,
                     '-map', '0:V:0', '-frames:v', '1', '-vf', 'scale=1:1', '-pix_fmt', 'gray', '-f', 'rawvideo', 'pipe:1']);
             $exit = $process->setTimeout(10)->run();
             if ($exit === 127) {
