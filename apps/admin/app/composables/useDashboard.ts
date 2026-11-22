@@ -48,12 +48,16 @@ function sampleDashboard(trend: TrendPoint[]): Dashboard {
   const orders = trend.reduce((sum, point) => sum + point.orders, 0)
   const paid = trend.reduce((sum, point) => sum + point.amount, 0)
   const refund = Math.round(paid * 0.03)
+  const readyOrders = Math.round(orders * 0.62)
+  const preorderOrders = Math.round(orders * 0.28)
+  const readyPaid = Math.round(paid * 0.55)
+  const preorderPaid = Math.round(paid * 0.33)
   return {
     orders_count: orders,
     by_method: [
-      { method: 'ready_stock', orders_count: Math.round(orders * 0.62), paid_amount: Math.round(paid * 0.55) },
-      { method: 'preorder', orders_count: Math.round(orders * 0.28), paid_amount: Math.round(paid * 0.33) },
-      { method: 'request_order', orders_count: Math.round(orders * 0.1), paid_amount: Math.round(paid * 0.12) }
+      { method: 'ready_stock', orders_count: readyOrders, paid_amount: readyPaid },
+      { method: 'preorder', orders_count: preorderOrders, paid_amount: preorderPaid },
+      { method: 'request_order', orders_count: orders - readyOrders - preorderOrders, paid_amount: paid - readyPaid - preorderPaid }
     ],
     paid_amount: paid,
     refund_amount: refund,
