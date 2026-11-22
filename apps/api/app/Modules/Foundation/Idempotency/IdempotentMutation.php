@@ -109,8 +109,8 @@ final class IdempotentMutation
                 return $this->reused();
             }
             if ($existing->status === 'COMPLETED') {
-                $body = json_decode(Crypt::decryptString($existing->response_ciphertext), true, flags: JSON_THROW_ON_ERROR);
-                $body['meta']['request_id'] = RequestId::current();
+                $body = json_decode(Crypt::decryptString($existing->response_ciphertext), flags: JSON_THROW_ON_ERROR);
+                $body->meta->request_id = RequestId::current();
 
                 return new JsonResponse($body, $existing->http_status);
             }

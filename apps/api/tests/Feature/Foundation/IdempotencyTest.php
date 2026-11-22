@@ -32,15 +32,17 @@ beforeEach(function () {
                 return ApiResponse::error('FIXTURE_ERROR', 'No change', $status);
             }
 
-            return ApiResponse::success(['event' => $id, 'number' => $number], status: 201);
+            return ApiResponse::success(['event' => $id, 'number' => $number, 'options' => (object) [0 => (object) []]], status: 201);
         });
     });
 });
 
 it('replays the encrypted result only for the same authorized scope and canonical request', function () {
     $url = '/api/v1/fixture/1?x=1&y=2';
-    $first = $this->postJson($url, ['a' => 1, 'b' => 2])->assertCreated()->json('data');
-    $this->postJson('/api/v1/fixture/1?y=2&x=1', ['b' => 2, 'a' => 1])->assertCreated()->assertJsonPath('data', $first);
+    $first = $this->postJson($url, ['a' => 1, 'b' => 2])->assertCreated();
+    $replay = $this->postJson('/api/v1/fixture/1?y=2&x=1', ['b' => 2, 'a' => 1], ['X-Request-Id' => 'retry-request-01'])
+        ->assertCreated()->assertJsonPath('meta.request_id', 'retry-request-01');
+    expect(json_encode($replay->getData()->data))->toBe(json_encode($first->getData()->data));
     $this->assertDatabaseCount('outbox_events', 1);
     $row = DB::table('idempotency_keys')->first();
     expect($row->response_ciphertext)->not->toContain('"number"')
