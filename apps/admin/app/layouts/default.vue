@@ -28,7 +28,10 @@ const initials = computed(() => displayName.value.split(' ').map(part => part[0]
 
 const userMenu = computed<DropdownMenuItem[][]>(() => [
   [{ type: 'label', label: displayName.value, description: user.value?.email ?? 'Belum masuk' }],
-  [{ label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' }],
+  [
+    { label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' },
+    ...(import.meta.dev ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : [])
+  ],
   [{ label: 'Keluar', icon: 'i-lucide-log-out', color: 'error', to: '/login' }]
 ])
 

@@ -14,6 +14,7 @@ WORKDIR /var/www/api
 
 FROM base AS dev
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
+RUN mkdir -p storage/logs storage/framework/views && chown www-data:www-data storage/logs storage/framework/views && chmod 2775 storage/logs storage/framework/views
 # Source is bind-mounted and vendor lives in the api_vendor volume; dependencies install via `make setup`.
 
 FROM base AS vendor

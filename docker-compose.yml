@@ -8,7 +8,10 @@ x-api-env: &api-env
   APP_KEY: ${APP_KEY:?run make setup}
   APP_URL: ${APP_URL}
   ADMIN_URL: ${ADMIN_URL}
-  LOG_CHANNEL: stderr
+  LOG_CHANNEL: stack
+  LOG_STACK: stderr,daily
+  LOG_VIEWER_USER: ${DBTOOLS_USER}
+  LOG_VIEWER_PASSWORD: ${DBTOOLS_PASSWORD}
   LOG_LEVEL: ${LOG_LEVEL:-debug}
   TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
   DB_CONNECTION: pgsql
@@ -57,19 +60,25 @@ x-api: &api
     - ./apps/api:/var/www/api
     # Named volume: Composer on a Windows/macOS bind mount is slow and can fail unzipping large packages.
     - api_vendor:/var/www/api/vendor
+    - api_logs:/var/www/api/storage/logs
+    - api_views:/var/www/api/storage/framework/views
   networks: [internal]
+
+x-node-volumes: &node-volumes
+  - .:/workspace
+  - node_modules:/workspace/node_modules
+  - admin_node_modules:/workspace/apps/admin/node_modules
+  - storefront_node_modules:/workspace/apps/storefront/node_modules
+  - api_types_node_modules:/workspace/packages/api-types/node_modules
 
 x-nitro: &nitro
   environment:
     NUXT_API_INTERNAL_ORIGIN: http://api-nginx:8000
-  volumes:
-    - .:/workspace
-    - node_modules:/workspace/node_modules
-    - admin_node_modules:/workspace/apps/admin/node_modules
-    - storefront_node_modules:/workspace/apps/storefront/node_modules
-    - api_types_node_modules:/workspace/packages/api-types/node_modules
+  volumes: *node-volumes
   networks: [internal]
   depends_on:
+    web-deps:
+      condition: service_completed_successfully
     api-nginx:
       condition: service_healthy
   healthcheck:
@@ -80,6 +89,13 @@ x-nitro: &nitro
     start_period: 30s
 
 services:
+  web-deps:
+    image: node:24-alpine3.22
+    working_dir: /workspace
+    volumes: *node-volumes
+    command: ["sh", "infrastructure/scripts/web-deps.sh"]
+    networks: [internal]
+
   edge:
     image: nginx:1.28-alpine
     ports:
@@ -93,6 +109,7 @@ services:
       - ./infrastructure/nginx/edge.conf:/etc/nginx/templates/default.conf.template:ro
       - ./infrastructure/nginx/edge-common.conf:/etc/nginx/snippets/edge-common.conf:ro
       - ./infrastructure/nginx/edge-dev-tools.conf:/etc/nginx/snippets/dev/dbtools.conf:ro
+      - ./infrastructure/nginx/admin-log-viewer.conf:/etc/nginx/snippets/admin-dev/log-viewer.conf:ro
     networks: [internal]
     depends_on:
       storefront:
@@ -293,6 +310,8 @@ networks:
 
 volumes:
   clamav_signatures:
+  api_logs:
+  api_views:
   api_vendor:
   postgres:
   omnidb:

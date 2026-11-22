@@ -6,6 +6,7 @@ use App\Support\Http\ApiContract;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,5 +28,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Scramble::configure()->withDocumentTransformers(ApiContract::class);
+        if (config('log-viewer.enabled')) {
+            foreach (['downloadLogFile', 'downloadLogFolder', 'deleteLogFile', 'deleteLogFolder'] as $ability) {
+                Gate::define($ability, static fn (?object $user) => false);
+            }
+        }
     }
 }

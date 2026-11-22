@@ -2,12 +2,22 @@
 
 use App\Modules\Identity\Http\Controllers\AuthController;
 use App\Modules\Identity\Http\Controllers\ChallengesController;
+use App\Modules\Identity\Http\Controllers\GoogleController;
 use App\Modules\Identity\Http\Controllers\SessionsController;
 use App\Modules\Identity\Http\Middleware\EnsureIdentity;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 // Module routes are mounted under /api/v1 by the module service provider.
 Route::prefix('auth')->name('identity.')->group(function () {
+    // Cross-site top-level callback has no first-party Origin; start its cookie session explicitly.
+    Route::prefix('google')->withoutMiddleware(EnsureFrontendRequestsAreStateful::class)
+        ->middleware(['web', 'throttle:10,1'])->group(function () {
+            Route::get('redirect', [GoogleController::class, 'redirect'])->block(30)->name('google.redirect');
+            Route::get('callback', [GoogleController::class, 'callback'])->block(30)->name('google.callback');
+        });
+    Route::post('google/links', [GoogleController::class, 'confirm'])
+        ->middleware(['auth:web', EnsureIdentity::class.':customer-unverified', 'throttle:5,1'])->name('google.confirm');
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::middleware('throttle:identity-challenges')->group(function () {
         Route::post('register', [AuthController::class, 'register'])->name('register');

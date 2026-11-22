@@ -10,6 +10,10 @@ const { data } = await useApiHealth()
     <p class="max-w-2xl text-slate-600">
       Kerangka storefront Snowego. Katalog, keranjang dan checkout dibangun pada E03–E13.
     </p>
+    <NuxtLink
+      to="/auth/google"
+      class="underline"
+    >Masuk dengan Google</NuxtLink>
     <p
       class="text-sm"
       :class="data?.data.status === 'ok' ? 'text-emerald-700' : 'text-red-700'"

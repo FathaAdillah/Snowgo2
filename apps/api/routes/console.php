@@ -33,5 +33,7 @@ Schedule::command('files:prune')->daily()->withoutOverlapping();
 Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=', now())->delete())
     ->name('prune-idempotency-keys')->daily();
 Schedule::command('auth:clear-resets')->hourly();
+Schedule::call(fn () => DB::table('oauth_link_requests')->where('expires_at', '<=', now())->delete())
+    ->name('prune-google-link-requests')->hourly();
 Schedule::call(fn () => DB::table('email_verification_tokens')->where('expires_at', '<=', now())->delete())
     ->name('prune-email-verification-tokens')->hourly();

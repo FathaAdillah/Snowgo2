@@ -90,7 +90,8 @@ Challenge pengaitan . Session re-auth wajib saat konsumsi; jangan simpan access 
 |---|---|---|---|
 | user_id | bigint FK → users.id | Tidak | — |
 | subject | varchar(255) | Tidak | — |
-| token_hash | varchar(128) | Tidak | — |
+| email | varchar(254) | Tidak | Snapshot email saat challenge diterbitkan |
+| token_hash | char(64) | Tidak | SHA-256, PK |
 | expires_at | timestamptz | Tidak | — |
 | used_at | timestamptz | Ya | — |
 
