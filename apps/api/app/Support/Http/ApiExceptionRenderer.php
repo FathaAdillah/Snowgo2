@@ -23,6 +23,7 @@ final class ApiExceptionRenderer
         return match (true) {
             $e instanceof ValidationException => ApiResponse::error('VALIDATION_FAILED', 'Validation failed', 422, $e->errors()),
             $e instanceof AuthenticationException => ApiResponse::error('UNAUTHENTICATED', 'Unauthenticated', 401),
+            ($e instanceof AuthorizationException ? $e : $e->getPrevious())?->getCode() === 'EMAIL_NOT_VERIFIED' => ApiResponse::error('EMAIL_NOT_VERIFIED', 'Email address is not verified', 403),
             $e instanceof AuthorizationException, $e instanceof HttpExceptionInterface && $e->getStatusCode() === 403 => ApiResponse::error('FORBIDDEN', 'Forbidden', 403),
             $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error('NOT_FOUND', 'Not found', 404),
             $e instanceof TokenMismatchException => ApiResponse::error('CSRF_TOKEN_MISMATCH', 'CSRF token mismatch', 419),

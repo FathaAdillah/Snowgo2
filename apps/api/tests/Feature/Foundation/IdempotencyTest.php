@@ -26,7 +26,7 @@ beforeEach(function () {
 
             return 'user:'.$request->user()->id;
         }, function () use ($request, $number) {
-            $request->user()->update(['name' => 'Changed']);
+            $request->user()->forceFill(['remember_token' => 'Changed'])->save();
             $id = app(Outbox::class)->record('NameChanged', 'user', $request->user()->id, []);
             if ($status = config('fixture.error')) {
                 return ApiResponse::error('FIXTURE_ERROR', 'No change', $status);
@@ -65,7 +65,7 @@ it('rolls back partial error effects and retries transient but not terminal outc
     config(['fixture.error' => $status]);
     $this->postJson('/api/v1/fixture/1')->assertStatus($status);
     $this->assertDatabaseEmpty('outbox_events');
-    expect($this->actor->fresh()->name)->not->toBe('Changed');
+    expect($this->actor->fresh()->remember_token)->not->toBe('Changed');
     config(['fixture.error' => false]);
     $this->postJson('/api/v1/fixture/1')->assertStatus($status === 422 ? 422 : 201);
 })->with([422, 503, 429]);
