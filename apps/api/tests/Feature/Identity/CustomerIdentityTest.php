@@ -150,6 +150,9 @@ it('lists and revokes only the account own devices by opaque reference', functio
         ->and(collect($list)->where('current', true)->sole()['device_label'])->toBe('Chrome · Windows')
         ->and(DB::table('sessions')->pluck('id')->intersect(collect($list)->pluck('session_ref')))->toBeEmpty();
     $phoneRef = collect($list)->firstWhere('current', false)['session_ref'];
+    $idle = ($this->login)($user->email);
+    DB::table('sessions')->where('id', $idle)->update(['last_activity' => now()->subMinutes(config('session.lifetime') + 1)->getTimestamp()]);
+    ($this->browser)('GET', 'auth/sessions', session: $laptop)->assertJsonPath('meta.total', 2);
 
     ($this->browser)('DELETE', "auth/sessions/$phoneRef", session: $stranger)->assertNotFound()->assertJsonPath('code', 'NOT_FOUND');
     ($this->browser)('GET', 'auth/me', session: $phone)->assertOk();
@@ -160,7 +163,7 @@ it('lists and revokes only the account own devices by opaque reference', functio
 
     ($this->browser)('POST', 'auth/logout', session: $laptop)->assertOk();
     ($this->browser)('GET', 'auth/me', session: $laptop)->assertUnauthorized();
-    $this->assertDatabaseMissing('sessions', ['user_id' => $user->id]);
+    $this->assertDatabaseMissing('sessions', ['id' => $laptop, 'user_id' => $user->id]);
     ($this->browser)('GET', 'auth/me', session: $stranger)->assertOk();
 });
 
