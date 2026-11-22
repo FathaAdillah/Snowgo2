@@ -22,7 +22,7 @@ class ReadinessProbe
         return [
             $this->check('database', fn () => $this->database()),
             $this->check('redis', fn () => Redis::connection()->ping()),
-            $this->check('storage', fn () => Storage::disk('private')->exists('.readiness')),
+            $this->check('storage', fn () => $this->storage()),
         ];
     }
 
@@ -39,6 +39,13 @@ class ReadinessProbe
         $pending = array_diff(array_keys($files), $repository->getRan());
         if ($pending !== []) {
             throw new RuntimeException(count($pending).' pending migrations.');
+        }
+    }
+
+    private function storage(): void
+    {
+        if (! Storage::disk('private')->exists('.readiness')) {
+            throw new RuntimeException('Private bucket readiness marker missing.');
         }
     }
 
