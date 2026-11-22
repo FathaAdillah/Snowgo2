@@ -627,6 +627,16 @@
                 "tags": [
                     "Challenges"
                 ],
+                "parameters": [
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -775,6 +785,16 @@
                 "tags": [
                     "Challenges"
                 ],
+                "parameters": [
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -887,6 +907,16 @@
                 "summary": "Reset the password with a single-use challenge and revoke every session of the account",
                 "tags": [
                     "Challenges"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
                 ],
                 "requestBody": {
                     "required": true,
@@ -1045,6 +1075,16 @@
                 "summary": "Send a new verification email to the signed-in customer if still unverified",
                 "tags": [
                     "Challenges"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {

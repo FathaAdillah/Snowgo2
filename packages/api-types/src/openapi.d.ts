@@ -633,7 +633,9 @@ export interface operations {
     "identity.email-verification-requests": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -695,7 +697,9 @@ export interface operations {
     "identity.email-verifications": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -955,7 +959,9 @@ export interface operations {
     "identity.password-reset-requests": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1008,7 +1014,9 @@ export interface operations {
     "identity.password-resets": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
             path?: never;
             cookie?: never;
         };

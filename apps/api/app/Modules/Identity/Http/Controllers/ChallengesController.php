@@ -13,12 +13,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 
-#[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
 final class ChallengesController
 {
     /**
      * Consume an email verification challenge once.
      */
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, 'Email verified', type: AuthController::ACK)]
     #[Response(422, 'Invalid or expired challenge', type: AuthController::ERROR)]
     #[Response(429, 'Throttled', type: AuthController::ERROR)]
@@ -33,6 +33,7 @@ final class ChallengesController
     /**
      * Send a new verification email to the signed-in customer if still unverified.
      */
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, 'Queued when still unverified', type: AuthController::ACK)]
     #[Response(401, 'Unauthenticated', type: AuthController::ERROR)]
     #[Response(429, 'Throttled', type: AuthController::ERROR)]
@@ -48,6 +49,7 @@ final class ChallengesController
     /**
      * Request a password reset email; the response does not reveal whether the address exists.
      */
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, 'Uniform acknowledgement', type: AuthController::ACK)]
     #[Response(429, 'Throttled', type: AuthController::ERROR)]
     public function requestReset(Request $request, PasswordResets $resets): JsonResponse
@@ -61,6 +63,7 @@ final class ChallengesController
     /**
      * Reset the password with a single-use challenge and revoke every session of the account.
      */
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, 'Password changed', type: AuthController::ACK)]
     #[Response(422, 'Invalid or expired challenge', type: AuthController::ERROR)]
     #[Response(429, 'Throttled', type: AuthController::ERROR)]
