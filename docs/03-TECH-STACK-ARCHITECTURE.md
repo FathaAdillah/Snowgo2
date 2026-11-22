@@ -84,6 +84,10 @@ Satu service provider per modul mendaftarkan route group dan migration. Struktur
 
 Tuliskan audit/status dan outbox di transaksi yang sama dengan state. Scheduler mengklaim event PostgreSQL dengan SKIP LOCKED dan lease, publish ke Redis setelah claim commit lalu tandai terbit bila enqueue berhasil; lease kedaluwarsa dan republish bisa menghasilkan duplikat. Consumer memakai kunci unik event + handler. Reconciler memeriksa handler penting yang belum selesai dan re-enqueue secara aman. Side effect HTTP/SMTP/PDF di job setelah commit dengan timeout, retry/backoff dan jalur rekonsiliasi. Redis lock hanya optimasi, integritas ada di constraint/lock PostgreSQL.
 
+Pada route bertanda **K**, controller memanggil `IdempotentMutation::run` di luar transaksi. Callback pertama memeriksa policy/ownership dan mengembalikan scope dari identitas server, **bukan** input klien. Callback mutasi mengembalikan envelope JSON (termasuk hasil bisnis 4xx); efek DB, `Journal`, `Outbox::record` dan hasil sukses commit bersama. Error membatalkan efek DB; exception atau 408/425/429/5xx tidak disimpan untuk replay. Jangan gunakan untuk respons streaming, redirect, atau respons yang menetapkan cookie.
+
+Daftarkan `event type => [nama handler stabil => class EventHandler]` di konfigurasi `outbox.handlers`. Saat event ditulis, daftar penerima disalin ke `event_consumptions`; menambah handler tidak mengirim ulang event lama. Event tanpa pelanggan tetap tercatat dan relay menyelesaikan routing tanpa job. Handler menerima event dari PostgreSQL dan hanya menulis efek DB; simpan intent pengiriman untuk SMTP/provider terpisah. Jangan masukkan secret atau body HTTP mentah ke payload, dan jangan hapus registrasi lama sampai backlog selesai.
+
 | Event | Producer | Consumer contoh |
 |---|---|---|
 | StockReserved, StockReleased | Inventory | Audit/operasi |

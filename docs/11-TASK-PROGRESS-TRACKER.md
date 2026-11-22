@@ -1,6 +1,6 @@
 # Task dan progress tracker
 
-Sumber status pengerjaan development. Setiap epic di bawah memiliki feature PRD, task yang dapat diuji dan subtasks praktis di deskripsi. Milestone E00 menutup review dokumentasi dengan product owner sebelum task implementation berjalan. TASK-001 (bootstrap platform) siap verifikasi; task lain belum dimulai.
+Sumber status pengerjaan development. Setiap epic di bawah memiliki feature PRD, task yang dapat diuji dan subtasks praktis di deskripsi. Milestone E00 menutup review dokumentasi dengan product owner. Bootstrap platform sudah digabung dan diverifikasi; fondasi async siap direview.
 
 | Epic | Milestone | Dependensi milestone |
 |---|---|---|
@@ -28,8 +28,8 @@ Dependensi task mengatur jalur kritis. E05–E08 menggunakan kontrak dan test do
 | ID | Epic | Module / feature | Task | Description / subtask | Dependency | Priority | Status | Progress | Owner / Agent | Acceptance criteria | Test requirement | Documentation requirement |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | TASK-000 | E00 | FND / FR-FND-001 | Review baseline | Konfirmasi ADR dan keputusan Q-01–Q-05 yang mempengaruhi build, rekam jawaban bisnis | — | P0 | NOT_STARTED | 0% | PO/Architect | Master prompt dan acceptance direview, scope dan dependency prioritas disetujui | TC-FND-001 | README, BRD, PRD, ADR |
-| TASK-001 | E01 | FND / FR-FND-001 | Bootstrap platform | Siapkan struktur monorepo, Laravel/Nuxt, Compose, Make, env dan health; cek constraint paket | TASK-000 | P0 | READY_FOR_TEST | 75% | Platform | API, DB, Redis, MinIO dan kedua web service sehat dari instruksi setup | TC-FND-001 | Architecture, Deployment |
-| TASK-002 | E01 | FND / FR-FND-001 | Foundation async | Buat audit/history, idempotency, outbox, event consumption, Horizon dan scheduler | TASK-001 | P0 | NOT_STARTED | 0% | Backend | Commit/retry menyimpan 1 hasil domain dan event durable; failed jobs terlihat | TC-FND-001, TC-NTF-001 | Schema, Architecture, API |
+| TASK-001 | E01 | FND / FR-FND-001 | Bootstrap platform | Siapkan struktur monorepo, Laravel/Nuxt, Compose, Make, env dan health; cek constraint paket | TASK-000 | P0 | DONE | 100% | Devin | API, DB, Redis, MinIO dan kedua web service sehat dari instruksi setup | TC-FND-001 | Architecture, Deployment |
+| TASK-002 | E01 | FND / FR-FND-001 | Foundation async | Buat audit/history, idempotency, outbox, event consumption, Horizon dan scheduler | TASK-001 | P0 | READY_FOR_TEST | 75% | Devin | Commit/retry menyimpan 1 hasil domain dan event durable; failed jobs terlihat | TC-FND-001, TC-NTF-001 (queue; SMTP di TASK-035) | Schema, Architecture, API |
 | TASK-003 | E01 | SEC / FR-SEC-001 | Storage dan policy | Provision bucket dan IAM, file policy, quarantine, scan, signed URL | TASK-002 | P0 | NOT_STARTED | 0% | Backend/Security | Anonymous object private ditolak dan proof READY saja dapat dipakai | TC-SEC-001 | Security, Deployment, API |
 | TASK-004 | E01 | FND / FR-FND-001 | Kontrak dan CI | Setup lint/static, PG integration, generate OpenAPI dan TS client, drift gate | TASK-002 | P0 | NOT_STARTED | 0% | Platform | Kedua frontend menerima tipe dari kontrak dan CI gagal pada perubahan drift | TC-FND-001 | Architecture, Testing, API |
 | TASK-005 | E02 | AUTH / FR-AUTH-001 | Customer identity dan session | Daftar, verifikasi, login, reset dan revoke, seed mail fixture | TASK-002, TASK-004 | P0 | NOT_STARTED | 0% | Backend | Auth cookie/CSRF benar, token challenge single-use dan sesi terpisah | TC-AUTH-001 | PRD, API, Security |

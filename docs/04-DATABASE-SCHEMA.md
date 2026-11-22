@@ -1374,7 +1374,7 @@ Audit keamanan/bisnis. Immutable, field redaction di writer
 | after | jsonb | Ya | — |
 | ip | inet | Ya | — |
 | user_agent | varchar(255) | Ya | — |
-| request_id | uuid | Tidak | — |
+| request_id | varchar(128) | Tidak | Pertahankan correlation ID ingress (UUID atau token aman), sama dengan header API |
 | occurred_at | timestamptz | Tidak | now |
 
 **Constraint dan indeks tambahan** · I(subject_type,subject_id,occurred_at); I(actor_id,occurred_at); I(request_id).
@@ -1392,6 +1392,7 @@ Replay mutation. Response ownership tetap dicek saat replay; TTL 48 jam minimum
 | status | CHECK (PROCESSING,COMPLETED) | Tidak | — |
 | http_status | integer | Ya | — |
 | response_ciphertext | text | Ya | — |
+| lease_token | uuid | Ya | Memagari pemilik claim PROCESSING sebelum transaksi mutasi |
 | lease_until | timestamptz | Ya | — |
 | expires_at | timestamptz | Tidak | — |
 
@@ -1427,6 +1428,7 @@ Event durable. Append-only payload; relay dapat publish ulang
 | payload | jsonb | Tidak | — |
 | occurred_at | timestamptz | Tidak | now |
 | published_at | timestamptz | Ya | — |
+| request_id | varchar(128) | Tidak | Correlation ID sumber untuk worker/audit |
 | lease_until | timestamptz | Ya | — |
 | attempts | integer | Tidak | 0 |
 
