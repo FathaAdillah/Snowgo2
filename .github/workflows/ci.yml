@@ -28,7 +28,7 @@ jobs:
         run: |
           docker compose build api storefront
           docker compose run --rm --no-deps api composer install --no-interaction --prefer-dist
-          docker compose run --rm --no-deps storefront npm ci
+          docker compose run --rm web-deps
       - name: Migrate the disposable database and check contract drift
         run: make migrate contracts-check
       - name: Audit locked dependencies
@@ -39,6 +39,21 @@ jobs:
         run: make lint test-web
       - name: PostgreSQL integration and live client contract tests
         run: make test-api test-contract
+      - name: Verify storefront forwards the Google redirect to the browser
+        env:
+          GOOGLE_CLIENT_ID: ci-placeholder
+          GOOGLE_CLIENT_SECRET: ci-placeholder
+        run: |
+          docker compose up -d --wait storefront
+          docker compose exec -T storefront node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const res = await fetch('http://127.0.0.1:3000/api/v1/auth/google/redirect', { redirect: 'manual' });
+          assert.equal(res.status, 302);
+          const location = new URL(res.headers.get('location'));
+          assert.equal(location.origin, 'https://accounts.google.com');
+          assert.equal(location.searchParams.get('code_challenge_method'), 'S256');
+          assert.ok(res.headers.getSetCookie().length);
+          JS
       - name: Remove test services and volumes
         if: always()
         run: docker compose down -v --remove-orphans

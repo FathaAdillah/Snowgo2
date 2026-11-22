@@ -17,6 +17,7 @@ export default defineEventHandler((event) => {
   const { apiInternalOrigin } = useRuntimeConfig(event)
 
   return proxyRequest(event, `${apiInternalOrigin}${pathname}${search}`, {
+    fetchOptions: { redirect: 'manual' },
     headers: {
       'x-forwarded-host': getRequestHost(event),
       'x-forwarded-proto': getRequestProtocol(event)
