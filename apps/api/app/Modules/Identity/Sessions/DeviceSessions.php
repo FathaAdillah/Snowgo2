@@ -7,6 +7,7 @@ use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Identity\Surface;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -43,7 +44,7 @@ final class DeviceSessions
      */
     public function page(User $user, Surface $surface, string $currentId, int $page, int $perPage): array
     {
-        $query = DB::table('sessions')->where('user_id', $user->id)->where('surface', $surface->value);
+        $query = $this->active($user, $surface);
         $rows = (clone $query)->orderByDesc('last_activity')->orderBy('id')->forPage($page, $perPage)
             ->get(['id', 'user_agent', 'last_activity']);
 
@@ -59,7 +60,7 @@ final class DeviceSessions
     public function revoke(User $user, Surface $surface, string $reference): ?string
     {
         return DB::transaction(function () use ($user, $surface, $reference) {
-            $ids = DB::table('sessions')->where('user_id', $user->id)->where('surface', $surface->value)->lockForUpdate()->pluck('id');
+            $ids = $this->active($user, $surface)->lockForUpdate()->pluck('id');
             $id = $ids->first(fn (string $id) => hash_equals($this->reference($id), $reference));
             if (! is_string($id)) {
                 return null;
@@ -75,6 +76,13 @@ final class DeviceSessions
     public function revokeAll(int $userId): void
     {
         DB::table('sessions')->where('user_id', $userId)->delete();
+    }
+
+    /** Rows past the idle lifetime are dead even before session garbage collection deletes them. */
+    private function active(User $user, Surface $surface): Builder
+    {
+        return DB::table('sessions')->where('user_id', $user->id)->where('surface', $surface->value)
+            ->where('last_activity', '>', now()->subMinutes((int) config('session.lifetime'))->getTimestamp());
     }
 
     /** Opaque, stable per session; raw session IDs never leave the server. */
