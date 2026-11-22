@@ -19,7 +19,7 @@ final class AuthController
 
     public const ERROR = 'array{success:false,code:string,message:string,meta:array{request_id:string}}';
 
-    private const ME = 'array{success:bool,message:string,data:array{surface:string,display_name:string,email:string,email_verified:bool},meta:array{request_id:string}}';
+    public const ME = 'array{success:bool,message:string,data:array{surface:string,display_name:string,email:string,email_verified:bool},meta:array{request_id:string}}';
 
     public function __construct(private readonly CustomerDirectory $directory) {}
 

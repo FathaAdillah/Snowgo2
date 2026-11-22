@@ -86,6 +86,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identity.google.callback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identity.google.confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google/redirect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identity.google.redirect"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -760,6 +808,190 @@ export interface operations {
                         /** @constant */
                         success: false;
                     };
+                };
+            };
+        };
+    };
+    "identity.google.callback": {
+        parameters: {
+            query: {
+                code?: string;
+                error?: string;
+                state: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Return to storefront; a collision requires confirmation */
+            302: {
+                headers: {
+                    Location: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Identity conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid or expired challenge */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    "identity.google.confirm": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    password: string;
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Google account linked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            display_name: string;
+                            email: string;
+                            email_verified: boolean;
+                            surface: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Identity conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid or expired challenge */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    "identity.google.redirect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to Google */
+            302: {
+                headers: {
+                    Location: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

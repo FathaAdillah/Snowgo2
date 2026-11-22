@@ -3,8 +3,10 @@
 namespace App\Modules\Identity;
 
 use App\Models\User;
+use App\Modules\Identity\Google\GoogleOidc;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Identity\Sessions\SurfaceSessionHandler;
+use App\Support\Http\ApiProblem;
 use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -16,6 +18,19 @@ use Illuminate\Support\Facades\Session;
 
 final class IdentityServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(GoogleOidc::class, function () {
+            $config = config('services.google');
+            if (empty($config['client_id']) || empty($config['client_secret'])) {
+                throw new ApiProblem(503, 'OAUTH_UNAVAILABLE', 'Google login is not configured');
+            }
+
+            return (new GoogleOidc(request(), $config['client_id'], $config['client_secret'], $config['redirect'],
+                ['timeout' => 6, 'connect_timeout' => 3]))->enablePKCE();
+        });
+    }
+
     public function boot(): void
     {
         parent::boot();

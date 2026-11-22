@@ -2509,6 +2509,381 @@
                 }
             }
         },
+        "/auth/google/redirect": {
+            "get": {
+                "operationId": "identity.google.redirect",
+                "tags": [
+                    "Google"
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Location": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/google/callback": {
+            "get": {
+                "operationId": "identity.google.callback",
+                "tags": [
+                    "Google"
+                ],
+                "parameters": [
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "error",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Return to storefront; a collision requires confirmation",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Location": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid or expired challenge",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Identity conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/google/links": {
+            "post": {
+                "operationId": "identity.google.confirm",
+                "tags": [
+                    "Google"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "minLength": 64,
+                                        "maxLength": 64
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    }
+                                },
+                                "required": [
+                                    "token",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Google account linked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "surface": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "email_verified": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "surface",
+                                                "display_name",
+                                                "email",
+                                                "email_verified"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid or expired challenge",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "409": {
+                        "description": "Identity conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "foundation.health",

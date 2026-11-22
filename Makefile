@@ -17,7 +17,7 @@ setup: .env ## First-time setup: env, images, dependencies, app key, migrations
 	@grep -q '^APP_KEY=base64:' .env || { sed -i.bak "s|^APP_KEY=.*|APP_KEY=base64:$$(openssl rand -base64 32)|" .env && rm -f .env.bak; }
 	$(COMPOSE) build
 	$(API) composer install --no-interaction
-	$(NODE) npm ci
+	$(COMPOSE) run --rm web-deps
 	$(MAKE) migrate
 
 up: .env ## Start the full stack (http://localhost, http://admin.localhost)

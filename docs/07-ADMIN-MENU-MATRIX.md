@@ -142,4 +142,6 @@ Maker-checker untuk refund dan recovery payment membedakan actor meskipun permis
 
 System logs, Horizon dan metrics berada pada permukaan operator privat melalui IAM. Dokumen pembayaran, private attachment, detail alamat customer dan aktivitas sensitif mengikuti policy parent, scope dan masking. Menu Phase 2 disembunyikan sampai flag dan readiness aktif.
 
+Khusus Compose development, menu profil menampilkan **Log Viewer** tepat di bawah **Pengaturan**. Tautan membuka `/log-viewerx` di host admin (termasuk port edge saat ini); autentikasi operator lokal tetap wajib untuk halaman dan API log. Menu, rute dan kredensial ini tidak dipakai di produksi.
+
 [Lihat kontrak dan endpoint](05-API-CONTRACT.md) · [Keamanan](08-SECURITY.md)

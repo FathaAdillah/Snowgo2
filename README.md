@@ -52,7 +52,8 @@ produksi (memblokir CRITICAL) tanpa publish atau deploy.
 | http://localhost | Storefront |
 | http://admin.localhost | Admin |
 | http://localhost/api/v1/health | API liveness |
-| http://localhost/db | DB tools (OmniDB, login `DBTOOLS_USER`/`DBTOOLS_PASSWORD`, dev only) |
+| http://admin.localhost/db (also http://localhost/db) | OmniDB, dev only; sign in with `DBTOOLS_USER` / `DBTOOLS_PASSWORD`. |
+| http://admin.localhost/log-viewerx | Read-only [Log Viewer](https://github.com/opcodesio/log-viewer), dev only. Open **Profil → Log Viewer**, below **Pengaturan**; use the configured DB tools operator credentials. |
 | http://127.0.0.1:8025 | Mailpit |
 | http://127.0.0.1:9001 | MinIO console |
 
