@@ -1,0 +1,17 @@
+{
+  "name": "@snowego/api-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript types for the Snowego REST API v1, shared by admin and storefront.",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/api/api.json -o src/openapi.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
+  }
+}
