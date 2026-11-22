@@ -87,6 +87,7 @@ services:
     volumes:
       - ./infrastructure/nginx/edge.conf:/etc/nginx/templates/default.conf.template:ro
       - ./infrastructure/nginx/edge-common.conf:/etc/nginx/snippets/edge-common.conf:ro
+      - ./infrastructure/nginx/edge-dev-tools.conf:/etc/nginx/snippets/dev/dbtools.conf:ro
     networks: [internal]
     depends_on:
       storefront:
@@ -249,11 +250,36 @@ services:
       timeout: 3s
       retries: 10
 
+  dbtools:
+    # OmniDB (dev only) at http://localhost/db; login with DBTOOLS_USER / DBTOOLS_PASSWORD.
+    image: omnidbteam/omnidb:3.0.3b
+    entrypoint: ["sh", "/usr/local/bin/omnidb-entrypoint"]
+    environment:
+      DBTOOLS_USER: ${DBTOOLS_USER}
+      DBTOOLS_PASSWORD: ${DBTOOLS_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./infrastructure/scripts/omnidb-entrypoint.sh:/usr/local/bin/omnidb-entrypoint:ro
+      - omnidb:/home/omnidb/.omnidb
+    networks: [internal]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/db/', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
 networks:
   internal:
 
 volumes:
   postgres:
+  omnidb:
   redis:
   minio:
   node_modules:

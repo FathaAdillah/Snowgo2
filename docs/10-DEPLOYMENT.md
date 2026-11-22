@@ -4,7 +4,7 @@
 
 | Environment | Ingress dan data | Mail, provider dan credential |
 |---|---|---|
-| Development | Compose di workstation, snowego.localhost dan admin.snowego.localhost. PostgreSQL/Redis internal; MinIO API/console dan Mailpit UI lewat loopback, port berbeda. | Mailpit SMTP 1025, UI 8025, local-only; Google sandbox, fake shipping/payment provider; dummy secrets hanya di env lokal |
+| Development | Compose di workstation, localhost dan admin.localhost (DB tools OmniDB di localhost/db). PostgreSQL/Redis internal; MinIO API/console dan Mailpit UI lewat loopback, port berbeda. | Mailpit SMTP 1025, UI 8025, local-only; Google sandbox, fake shipping/payment provider; dummy secrets hanya di env lokal |
 | Staging | Hostname terpisah, HTTPS, arsitektur setara produksi, DB/bucket/Redis terpisah. Data sintetis. | Mailpit atau SMTP sandbox allowlist; credential sandbox, jobs aktif |
 | Production | snowego.shop dan admin.snowego.shop di edge TLS. DNS/ingress ke Nginx, Nitro → private API upstream. Private network untuk DB, Redis, queue, scheduler, MinIO console dan metrics. | SMTP produksi dengan SPF/DKIM/DMARC; secret references dan IAM terpisah. URL private storage presigned lewat object endpoint HTTPS yang kompatibel dengan Host yang ditandatangani. |
 
