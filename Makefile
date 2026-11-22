@@ -2,9 +2,10 @@
 COMPOSE ?= docker compose
 API     := $(COMPOSE) run --rm --no-deps api
 NODE    := $(COMPOSE) run --rm --no-deps storefront
+EXPORT  := $(COMPOSE) run --rm --no-deps -T api php artisan scramble:export --stdout --fail-on-unknown
 
 .DEFAULT_GOAL := help
-.PHONY: help setup up down ps logs migrate seed test test-api test-web lint lint-api lint-web analyse fresh shell-api build-prod
+.PHONY: help setup up down ps logs migrate seed test test-api test-web lint lint-api lint-web analyse fresh shell-api build-prod contracts contracts-check test-contract
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -51,6 +52,18 @@ test-api: ## Pest on PostgreSQL/Redis/MinIO/ClamAV
 
 test-web: ## Frontend typecheck (unit/E2E suites land with features)
 	$(NODE) npm run typecheck
+
+contracts: ## Regenerate the public OpenAPI snapshot and shared TypeScript client types
+	@set -eu; tmp=$$(mktemp); trap 'rm -f "$$tmp"' EXIT; $(EXPORT) > "$$tmp"; cp "$$tmp" apps/api/api.json
+	$(COMPOSE) run --rm --no-deps --user "$$(id -u):$$(id -g)" storefront npm run generate -w @snowego/api-types
+
+contracts-check: ## Fail on backend/spec or spec/TypeScript drift without rewriting either file
+	@set -eu; tmp=$$(mktemp); trap 'rm -f "$$tmp"' EXIT; $(EXPORT) > "$$tmp"; diff -u apps/api/api.json "$$tmp"
+	$(NODE) npm run generate -w @snowego/api-types -- --check
+
+test-contract: ## Validate live API responses from the typed client against the committed schemas
+	$(COMPOSE) up -d --wait api-nginx
+	$(COMPOSE) run --rm --no-deps -e API_CONTRACT_ORIGIN=http://api-nginx:8000 storefront npm test -w @snowego/api-types
 
 lint: lint-api lint-web analyse ## Pint, Larastan, ESLint
 

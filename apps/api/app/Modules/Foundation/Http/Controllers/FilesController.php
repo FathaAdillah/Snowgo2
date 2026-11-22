@@ -20,17 +20,19 @@ final class FilesController
 {
     private const FILE_RESPONSE = 'array{success:bool,message:string,data:array{id:string,collection:string,status:string,mime:string,size_bytes:int,created_at:string},meta:array{request_id:string}}';
 
-    private const FILE_ERROR = 'array{success:bool,code:string,message:string,meta:array{request_id:string}}';
+    private const FILE_ERROR = 'array{success:false,code:string,message:string,meta:array{request_id:string}}';
 
     public function __construct(private readonly StoredFiles $files) {}
 
     #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[IgnoreResponse(200)]
     #[Response(202, 'Accepted into private quarantine', type: self::FILE_RESPONSE)]
     #[Response(404, 'Parent not found or inaccessible', type: self::FILE_ERROR)]
     #[Response(409, 'Idempotency conflict', type: self::FILE_ERROR)]
     #[Response(413, 'File too large', type: self::FILE_ERROR)]
     #[Response(415, 'Unsupported content', type: self::FILE_ERROR)]
+    #[Response(419, 'CSRF token mismatch', type: self::FILE_ERROR)]
     public function upload(Request $request, IdempotentMutation $guard): JsonResponse
     {
         $data = $request->validate(['owner_type' => 'required|string|max:40', 'owner_ref' => 'required|string|max:120',

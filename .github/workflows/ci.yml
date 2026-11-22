@@ -1,0 +1,64 @@
+name: Foundation CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts-and-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Prepare disposable Compose environment
+        run: |
+          cp .env.example .env
+          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - name: Install locked dependencies
+        run: |
+          docker compose build api storefront
+          docker compose run --rm --no-deps api composer install --no-interaction --prefer-dist
+          docker compose run --rm --no-deps storefront npm ci
+      - name: Migrate the disposable database and check contract drift
+        run: make migrate contracts-check
+      - name: Audit locked dependencies
+        run: |
+          docker compose run --rm --no-deps api composer audit --locked
+          docker compose run --rm --no-deps storefront npm audit --audit-level=high
+      - name: Pint, Larastan, ESLint and Nuxt typechecks
+        run: make lint test-web
+      - name: PostgreSQL integration and live client contract tests
+        run: make test-api test-contract
+      - name: Remove test services and volumes
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+  production-images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [api, admin, storefront]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Build production image
+        run: docker build --target prod -f infrastructure/docker/${{ matrix.app }}/Dockerfile -t snowego/${{ matrix.app }}:ci .
+      - name: Scan image for critical vulnerabilities
+        run: |
+          docker save snowego/${{ matrix.app }}:ci -o "$RUNNER_TEMP/image.tar"
+          docker run --rm -v "$RUNNER_TEMP/image.tar:/image.tar:ro" \
+            aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e \
+            image --input /image.tar --scanners vuln --severity CRITICAL --exit-code 1 --no-progress

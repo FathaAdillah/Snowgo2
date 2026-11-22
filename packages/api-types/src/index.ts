@@ -1,11 +1,26 @@
-// Shared envelope (docs/05-API-CONTRACT.md). Resource types are generated into
-// ./openapi.d.ts from the Scramble export once the contract pipeline (TASK-004) lands.
+import createClient, { type ClientOptions } from 'openapi-fetch'
+import type { components, paths } from './openapi'
 
-export interface ApiMeta {
-  request_id: string
-  [key: string]: unknown
+export type { components, operations, paths } from './openapi'
+
+export const apiBase = '/api/v1'
+export function createApiClient(options: ClientOptions = {}) {
+  return createClient<paths>({ baseUrl: apiBase, credentials: 'same-origin', ...options })
 }
 
+/** Pass as bodySerializer for multipart operations; fetch supplies the boundary. */
+export function multipartBody(body: Record<string, string | Blob>): FormData {
+  const form = new FormData()
+  for (const [name, value] of Object.entries(body)) form.append(name, value)
+  return form
+}
+
+export type HealthResponse = paths['/health']['get']['responses'][200]['content']['application/json']
+export type ApiError = components['schemas']['ApiError']
+export type ApiMeta = components['schemas']['ApiMeta']
+
+// Provisional DTOs for planned staff auth and dashboard routes. Replace with
+// generated operation types when these endpoints are implemented.
 export interface ApiSuccess<T> {
   success: true
   message: string
@@ -13,25 +28,7 @@ export interface ApiSuccess<T> {
   meta: ApiMeta
 }
 
-export interface ApiError {
-  success: false
-  message: string
-  code: string
-  errors?: Record<string, string[]>
-  meta: ApiMeta
-}
-
 export type ApiResponse<T> = ApiSuccess<T> | ApiError
-
-export interface HealthCheck {
-  component: string
-  status: 'ok' | 'fail'
-}
-
-export interface Health {
-  status: 'ok' | 'degraded'
-  checks?: HealthCheck[]
-}
 
 // API-AUTH-014 / API-AUTH-015 (docs/API-DATA-TYPES.md)
 export interface MfaChallenge {

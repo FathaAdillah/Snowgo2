@@ -20,6 +20,8 @@ COPY apps/storefront apps/storefront
 RUN npm run build --workspace @snowego/storefront
 
 FROM node:24-alpine3.22 AS prod
+# Nitro runs directly under Node; do not ship npm and its bundled dependencies.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
 WORKDIR /app
 COPY --from=build --chown=node:node /workspace/apps/storefront/.output ./
