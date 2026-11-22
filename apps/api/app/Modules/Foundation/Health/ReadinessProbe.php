@@ -35,7 +35,7 @@ class ReadinessProbe
             throw new RuntimeException('Migration repository missing.');
         }
 
-        $files = $this->migrator->getMigrationFiles($this->migrator->paths());
+        $files = $this->migrator->getMigrationFiles([database_path('migrations'), ...$this->migrator->paths()]);
         $pending = array_diff(array_keys($files), $repository->getRan());
         if ($pending !== []) {
             throw new RuntimeException(count($pending).' pending migrations.');
