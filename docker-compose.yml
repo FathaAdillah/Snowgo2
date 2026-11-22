@@ -53,6 +53,8 @@ x-api: &api
   environment: *api-env
   volumes:
     - ./apps/api:/var/www/api
+    # Named volume: Composer on a Windows/macOS bind mount is slow and can fail unzipping large packages.
+    - api_vendor:/var/www/api/vendor
   networks: [internal]
 
 x-nitro: &nitro
@@ -279,6 +281,7 @@ networks:
   internal:
 
 volumes:
+  api_vendor:
   postgres:
   omnidb:
   redis:
