@@ -28,6 +28,25 @@ make lint    # Pint, Larastan, ESLint
 make down    # hentikan stack, volume tetap
 ```
 
+### Kontrak API dan CI
+
+Setelah mengubah route, validasi, atau respons API v1, jalankan `make migrate` lalu `make contracts`.
+Scramble membaca skema PostgreSQL development saat mengekspor tipe model.
+Review dan commit `apps/api/api.json` (hasil Scramble) dan `packages/api-types/src/openapi.d.ts`
+(hasil openapi-typescript) bersama kode API. Jangan edit hasil generasi secara manual.
+`make contracts-check` memeriksa kedua arah drift tanpa menulis file; `make test-contract`
+menguji respons Laravel lewat HTTP terhadap skema yang di-commit.
+
+Admin dan storefront mengimpor `paths`, `components`, dan tipe respons dari `@snowego/api-types`.
+Untuk browser gunakan `createApiClient().GET('/health')`; saat SSR gunakan `useFetch` same-origin
+dengan tipe respons hasil generasi agar request tetap lewat Nitro. Untuk upload kirim `File`
+dengan `bodySerializer: multipartBody`, `Idempotency-Key`, dan `X-XSRF-TOKEN`. Endpoint internal
+dan rencana fitur yang belum diimplementasikan tidak masuk kontrak publik.
+
+GitHub Actions memeriksa drift, lint, typecheck, Pest pada PostgreSQL 16, dan kontrak HTTP.
+CI juga menjalankan Composer audit, npm audit (HIGH ke atas), serta build dan scan tiga image
+produksi (memblokir CRITICAL) tanpa publish atau deploy.
+
 | URL | Service |
 |---|---|
 | http://localhost | Storefront |
