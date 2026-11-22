@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CalendarDate } from '@internationalized/date'
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
-import type { DateRange } from '~/composables/useDashboard'
+import { MAX_RANGE_DAYS, type DateRange } from '~/composables/useDashboard'
 
 const model = defineModel<DateRange>({ required: true })
 
@@ -28,8 +28,11 @@ function applyPreset(days: number) {
   apply()
 }
 
+const tooLong = computed(() => !!pending.value?.start && !!pending.value.end
+  && pending.value.end.compare(pending.value.start) >= MAX_RANGE_DAYS)
+
 function apply() {
-  if (!pending.value?.start || !pending.value.end) {
+  if (!pending.value?.start || !pending.value.end || tooLong.value) {
     return
   }
   model.value = { from: pending.value.start.toString(), to: pending.value.end.toString() }
@@ -80,7 +83,11 @@ function onCalendarUpdate(value: any) {
             :max-value="today(getLocalTimeZone())"
             @update:model-value="onCalendarUpdate"
           />
-          <div class="mt-2 flex justify-end gap-2">
+          <div class="mt-2 flex items-center justify-end gap-2">
+            <span
+              v-if="tooLong"
+              class="me-auto text-xs text-error"
+            >Maksimal {{ MAX_RANGE_DAYS }} hari</span>
             <UButton
               label="Batal"
               color="neutral"
@@ -91,7 +98,7 @@ function onCalendarUpdate(value: any) {
             <UButton
               label="Terapkan"
               size="xs"
-              :disabled="!pending?.start || !pending?.end"
+              :disabled="!pending?.start || !pending?.end || tooLong"
               @click="apply"
             />
           </div>

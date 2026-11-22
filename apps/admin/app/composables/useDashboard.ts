@@ -5,6 +5,9 @@ export interface DateRange {
   to: string
 }
 
+/** API-RPT-001 accepts at most 92 days per request. */
+export const MAX_RANGE_DAYS = 92
+
 export interface TrendPoint {
   date: string
   amount: number
@@ -32,7 +35,7 @@ function sampleTrend(range: DateRange): TrendPoint[] {
   const points: TrendPoint[] = []
   const cursor = new Date(`${range.from}T00:00:00`)
   const end = new Date(`${range.to}T00:00:00`)
-  while (cursor <= end && points.length < 92) {
+  while (cursor <= end) {
     const seed = cursor.getTime() / 86_400_000
     const orders = Math.round(4 + seeded(seed) * 14)
     points.push({ date: isoDate(cursor), orders, amount: orders * Math.round(180_000 + seeded(seed + 1) * 240_000) })
