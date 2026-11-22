@@ -1339,6 +1339,8 @@ Metadata objek. Owner polymorphic allowlist divalidasi policy; dokumen private i
 | size_bytes | bigint | Tidak | — |
 | sha256 | varchar(64) | Tidak | — |
 | original_name | varchar(255) | Ya | — |
+| scan_token | uuid | Ya | Hanya terisi saat SCANNING; worker lama tidak boleh memfinalisasi lease baru |
+| scan_due_at | timestamptz(6) | Ya | Jadwal pengiriman pertama atau akhir lease; NULL saat terminal |
 
 **Constraint dan indeks tambahan** · U(disk,object_key); I(owner_type,owner_id,collection,status); C(size_bytes>0).
 

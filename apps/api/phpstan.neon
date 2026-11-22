@@ -3,6 +3,9 @@ includes:
 
 parameters:
     level: 6
+    databaseMigrationsPath:
+        - database/migrations
+        - app/Modules/*/Database/Migrations
     paths:
         - app
         - config

@@ -38,7 +38,7 @@ x-api-env: &api-env
   S3_PUBLIC_BUCKET: ${S3_PUBLIC_BUCKET:?}
   S3_PUBLIC_URL: ${S3_PUBLIC_URL:?}
   S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:?}
-  S3_TEMPORARY_URL: ${S3_TEMPORARY_URL:-}
+  S3_DOWNLOAD_ENDPOINT: ${S3_DOWNLOAD_ENDPOINT:-${S3_ENDPOINT}}
   MAIL_MAILER: smtp
   MAIL_HOST: ${MAIL_HOST:?}
   MAIL_PORT: ${MAIL_PORT:-587}
@@ -136,6 +136,16 @@ services:
     restart: "no"
     profiles: [release]
 
+  clamav:
+    image: clamav/clamav:1.4.7
+    environment:
+      CLAMD_CONF_AlertExceedsMax: "yes"
+      CLAMD_CONF_AlertEncrypted: "yes"
+    volumes:
+      - clamav_signatures:/var/lib/clamav
+    networks: [internal]
+    restart: unless-stopped
+
   postgres:
     image: postgres:16.10-alpine
     environment:
@@ -171,6 +181,7 @@ networks:
   internal:
 
 volumes:
+  clamav_signatures:
   postgres:
   redis:
   api_public:

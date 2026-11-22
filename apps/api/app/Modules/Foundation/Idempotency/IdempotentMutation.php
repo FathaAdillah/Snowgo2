@@ -25,6 +25,15 @@ final class IdempotentMutation
      */
     public function run(Request $request, Closure $authorize, Closure $mutate): JsonResponse
     {
+        return $this->runPrepared($request, $authorize, fn () => $mutate);
+    }
+
+    /**
+     * @param  Closure():string  $authorize
+     * @param  Closure():(Closure():JsonResponse)  $prepare  Stage external input only after a new claim, then return the DB mutation.
+     */
+    public function runPrepared(Request $request, Closure $authorize, Closure $prepare): JsonResponse
+    {
         $actor = $authorize();
         if ($actor === '' || ! $request->route() || DB::transactionLevel() !== 0) {
             throw new LogicException('An authorized route outside a transaction is required.');
@@ -55,6 +64,8 @@ final class IdempotentMutation
 
         $owned = (clone $row)->where('lease_token', $token);
         try {
+            $mutate = $prepare();
+
             return DB::transaction(function () use ($owned, $mutate) {
                 if (! (clone $owned)->lockForUpdate()->first()) {
                     return $this->busy();
