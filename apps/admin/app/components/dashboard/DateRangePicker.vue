@@ -8,9 +8,16 @@ const model = defineModel<DateRange>({ required: true })
 const open = ref(false)
 const pending = shallowRef<{ start: CalendarDate, end: CalendarDate } | null>(null)
 
-watch(model, (value) => {
-  pending.value = { start: parseDate(value.from), end: parseDate(value.to) }
-}, { immediate: true })
+function resetPending() {
+  pending.value = { start: parseDate(model.value.from), end: parseDate(model.value.to) }
+}
+
+watch(model, resetPending, { immediate: true })
+watch(open, (isOpen) => {
+  if (isOpen) {
+    resetPending()
+  }
+})
 
 const formatter = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 const label = (date: CalendarDate) => formatter.format(date.toDate(getLocalTimeZone()))
