@@ -5,10 +5,6 @@
   --font-sans: 'Public Sans', sans-serif;
 }
 
-:root {
-  --ui-bg: #ffffff;
-}
-
 @layer base {
   button:not(:disabled),
   [role="button"]:not(:disabled) {
