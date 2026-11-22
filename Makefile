@@ -45,7 +45,7 @@ test: test-api test-web ## All tests
 
 test-api: ## Pest on PostgreSQL/Redis/MinIO/ClamAV
 	$(COMPOSE) up -d --wait clamav
-	$(COMPOSE) run --rm -e APP_ENV=testing -e DB_DATABASE=snowego_test api sh -c '\
+	$(COMPOSE) run --rm -e APP_ENV=testing -e DB_DATABASE=snowego_test -e CACHE_STORE=array api sh -c '\
 	  PGPASSWORD=$$DB_PASSWORD psql -h postgres -U $$DB_USERNAME -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '\''snowego_test'\''" | grep -q 1 \
 	  || PGPASSWORD=$$DB_PASSWORD createdb -h postgres -U $$DB_USERNAME snowego_test; \
 	  php artisan test'
