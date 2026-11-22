@@ -234,6 +234,8 @@ it('validates PDF and MP4 structure, and limits return evidence to one active vi
     $video = (new Process(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'color=size=32x32', '-frames:v', '1', '-c:v', 'mpeg4',
         '-movflags', 'frag_keyframe+empty_moov', '-f', 'mp4', 'pipe:1']))->mustRun()->getOutput();
     expect(FileRules::validContainer('video/mp4', $video))->toBeTrue();
+    $metadataOnly = substr($video, 0, strpos($video, 'moof') - 4);
+    expect(FileRules::validContainer('video/mp4', $metadataOnly))->toBeFalse();
     Storage::fake('private');
     $files = app(StoredFiles::class);
     $file = $files->stage(UploadedFile::fake()->createWithContent('return.mp4', $video), 'return_evidence');

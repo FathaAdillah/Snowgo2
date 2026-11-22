@@ -86,14 +86,15 @@ final class FileRules
             $path = stream_get_meta_data($stream)['uri'];
             $process = $mime === 'application/pdf'
                 ? (new Process(['qpdf', '--check', $path]))->disableOutput()
-                : new Process(['ffprobe', '-v', 'quiet', '-f', 'mov', '-enable_drefs', '0', '-protocol_whitelist', 'file',
-                    '-select_streams', 'V:0', '-show_entries', 'stream=codec_name', '-of', 'csv=p=0', $path]);
+                : new Process(['ffmpeg', '-v', 'quiet', '-nostdin', '-xerror', '-f', 'mov', '-enable_drefs', '0',
+                    '-protocol_whitelist', 'file', '-max_pixels', '12000000', '-threads', '1', '-i', $path,
+                    '-map', '0:V:0', '-frames:v', '1', '-vf', 'scale=1:1', '-pix_fmt', 'gray', '-f', 'rawvideo', 'pipe:1']);
             $exit = $process->setTimeout(10)->run();
             if ($exit === 127) {
                 throw new RuntimeException('File decoder unavailable');
             }
 
-            return $exit === 0 && ($mime === 'application/pdf' || ! in_array(trim($process->getOutput()), ['', 'unknown'], true));
+            return $exit === 0 && ($mime === 'application/pdf' || strlen($process->getOutput()) === 1);
         } catch (ProcessTimedOutException) {
             return false;
         } finally {
