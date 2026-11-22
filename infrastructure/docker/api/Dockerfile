@@ -13,7 +13,7 @@ WORKDIR /var/www/api
 
 FROM base AS dev
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
-# Source and vendor are bind-mounted; dependencies install via `make setup`.
+# Source is bind-mounted and vendor lives in the api_vendor volume; dependencies install via `make setup`.
 
 FROM base AS vendor
 COPY apps/api/composer.json apps/api/composer.lock ./
