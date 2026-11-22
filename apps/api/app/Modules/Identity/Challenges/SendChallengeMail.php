@@ -22,15 +22,19 @@ final class SendChallengeMail implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 60, 300, 900];
 
+    /** Challenges issued after this instant belong to a newer delivery job. */
+    public readonly string $issuedBy;
+
     public function __construct(public readonly string $event, public readonly int $userId)
     {
+        $this->issuedBy = now()->format('Y-m-d H:i:s.uP');
         $this->onQueue('notifications');
     }
 
     public function handle(): void
     {
         $user = User::query()->whereKey($this->userId)->whereNull('disabled_at')->first();
-        $challenge = $user ? $this->challenge($user)->whereNotNull('delivery_ciphertext')->first() : null;
+        $challenge = $user ? $this->active($this->challenge($user))->whereNotNull('delivery_ciphertext')->first() : null;
         if ($user === null || $challenge === null) {
             $this->failed(null);
 
@@ -44,12 +48,12 @@ final class SendChallengeMail implements ShouldQueue
         $this->challenge($user)->where('delivery_ciphertext', $challenge->delivery_ciphertext)->update(['delivery_ciphertext' => null]);
     }
 
-    /** Remove the challenge material once delivery is final, successful or not. */
+    /** Remove this job's challenge material once delivery is final, successful, failed or expired. */
     public function failed(?Throwable $exception): void
     {
         $user = User::query()->find($this->userId);
         if ($user !== null) {
-            $this->challenge($user)->update(['delivery_ciphertext' => null]);
+            $this->challenge($user)->where('created_at', '<=', $this->issuedBy)->update(['delivery_ciphertext' => null]);
         }
     }
 
@@ -62,7 +66,13 @@ final class SendChallengeMail implements ShouldQueue
     {
         return $this->isReset()
             ? DB::table('password_reset_tokens')->where('email', $user->email)
-                ->where('created_at', '>', now()->subMinutes((int) config('auth.passwords.users.expire')))
-            : DB::table('email_verification_tokens')->where('user_id', $user->id)->where('expires_at', '>', now());
+            : DB::table('email_verification_tokens')->where('user_id', $user->id);
+    }
+
+    private function active(Builder $challenge): Builder
+    {
+        return $this->isReset()
+            ? $challenge->where('created_at', '>', now()->subMinutes((int) config('auth.passwords.users.expire')))
+            : $challenge->where('expires_at', '>', now());
     }
 }
