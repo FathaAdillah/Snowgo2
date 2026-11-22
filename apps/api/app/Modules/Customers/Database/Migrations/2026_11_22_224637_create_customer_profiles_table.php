@@ -17,6 +17,9 @@ return new class extends Migration
                 marketing_opt_in boolean NOT NULL DEFAULT false,
                 created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
             );
+            -- Carry existing names over before Identity drops users.name.
+            INSERT INTO customer_profiles (user_id, display_name)
+                SELECT id, left(COALESCE(NULLIF(btrim(name), ''), email), 120) FROM users;
             SQL);
     }
 

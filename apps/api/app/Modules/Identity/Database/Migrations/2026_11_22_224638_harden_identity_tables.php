@@ -80,6 +80,7 @@ return new class extends Migration
             ALTER TABLE users ALTER COLUMN password_hash TYPE varchar(255), ALTER COLUMN password_hash SET NOT NULL;
             ALTER TABLE users RENAME COLUMN password_hash TO password;
             ALTER TABLE users ADD COLUMN name varchar(255) NOT NULL DEFAULT '';
+            UPDATE users SET name = COALESCE((SELECT display_name FROM customer_profiles WHERE user_id = users.id), email);
             ALTER TABLE users ALTER COLUMN name DROP DEFAULT;
             SQL);
     }
