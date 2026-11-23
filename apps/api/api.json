@@ -4070,6 +4070,18 @@
                             ],
                             "maxLength": 100
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "invited",
+                                "disabled"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -4142,12 +4154,20 @@
                                                 },
                                                 "last_page": {
                                                     "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
                                                 "request_id",
                                                 "page",
-                                                "last_page"
+                                                "last_page",
+                                                "per_page",
+                                                "total"
                                             ]
                                         }
                                     },

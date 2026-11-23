@@ -224,13 +224,31 @@ it('finds and paginates staff by display name and persists a delegated role chan
     $first = $accounts->first();
     ($this->login)($root);
     $staff = '/api/v1/admin/staff';
-    ($this->send)('GET', "$staff?search=packing&page=2")->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('meta.last_page', 2);
+    ($this->send)('GET', "$staff?search=packing&status=invited&page=2")->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('meta.last_page', 2)->assertJsonPath('meta.page', 2)->assertJsonPath('meta.per_page', 25)->assertJsonPath('meta.total', 26);
     ($this->send)('GET', "$staff?search=".urlencode($root->email))->assertOk()->assertJsonPath('data.0.manageable', false);
     $this->travel(31)->seconds();
     ($this->auth)('step-up', ['password' => UserFactory::PASSWORD, 'code' => ($this->otp)($root->two_factor_secret)])->assertOk();
     ($this->send)('PATCH', "$staff/$first->id", ['display_name' => 'Team Lead', 'roles' => ['warehouse']])->assertOk();
     ($this->send)('GET', "$staff?search=team%20lead")->assertOk()->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.display_name', 'Team Lead')->assertJsonPath('data.0.roles.0', 'warehouse');
+});
+
+it('combines staff status and search without widening delegation or including customers', function () {
+    $viewer = ($this->staff)('inventory_staff')->givePermissionTo('admin.staff.view');
+    $root = ($this->staff)(StaffAccess::SUPER);
+    $root->forceFill(['staff_display_name' => 'Crew lead'])->save();
+    $invited = User::factory()->staff()->create(['staff_display_name' => 'Crew member']);
+    $disabled = User::factory()->staff()->disabled()->create(['staff_display_name' => 'Crew manager', 'two_factor_confirmed_at' => now()]);
+    $disabled->givePermissionTo('admin.staff.update');
+    User::factory()->create(['staff_display_name' => 'Crew outsider']);
+    ($this->login)($viewer);
+    $url = '/api/v1/admin/staff?search=crew&status=';
+    foreach (['active' => [$root, false], 'invited' => [$invited, true], 'disabled' => [$disabled, false]] as $status => [$account, $manageable]) {
+        ($this->send)('GET', $url.$status)->assertOk()->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.id', $account->id)->assertJsonPath('data.0.manageable', $manageable);
+    }
+    ($this->send)('GET', $url.'unknown')->assertUnprocessable();
 });
 
 it('advertises operator actions only to a local MFA-authenticated superadmin', function (string $env, string $role) {

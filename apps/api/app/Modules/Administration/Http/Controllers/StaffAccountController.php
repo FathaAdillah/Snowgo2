@@ -22,26 +22,33 @@ use Spatie\Permission\Models\Role;
 
 final class StaffAccountController
 {
-    #[Response(200, 'Staff accounts', type: 'array{success:bool,message:string,data:list<array{id:int,email:string,display_name:string|null,active:bool,mfa_confirmed:bool,manageable:bool,roles:list<string>}>,meta:array{request_id:string,page:int,last_page:int}}')]
+    #[Response(200, 'Staff accounts', type: 'array{success:bool,message:string,data:list<array{id:int,email:string,display_name:string|null,active:bool,mfa_confirmed:bool,manageable:bool,roles:list<string>}>,meta:array{request_id:string,page:int,last_page:int,per_page:int,total:int}}')]
     public function index(Request $request): JsonResponse
     {
-        $data = $request->validate(['page' => 'sometimes|integer|min:1', 'search' => 'nullable|string|max:100']);
-        $query = User::query()->where('account_type', User::STAFF)->with(['permissions', 'roles.permissions']);
-        if (! empty($data['search'])) {
-            $term = '%'.addcslashes($data['search'], '\\%_').'%';
-            $query->where(fn ($q) => $q->whereLike('email', $term)->orWhereLike('staff_display_name', $term));
-        }
-        $page = $query->orderBy('id')->paginate(25);
+        $data = $request->validate(['page' => 'sometimes|integer|min:1', 'search' => 'nullable|string|max:100', 'status' => 'sometimes|string|in:active,invited,disabled']);
         $actor = $request->user();
         assert($actor instanceof User);
         $super = StaffAccess::super($actor);
+        $query = User::query()->where('account_type', User::STAFF)
+            ->with($super ? ['roles:id,name'] : ['roles.permissions', 'permissions']);
+        if (isset($data['search'])) {
+            $term = '%'.addcslashes($data['search'], '\\%_').'%';
+            $query->where(fn ($q) => $q->whereLike('email', $term)->orWhereLike('staff_display_name', $term));
+        }
+        match ($data['status'] ?? null) {
+            'active' => $query->whereNull('disabled_at')->whereNotNull('two_factor_confirmed_at'),
+            'invited' => $query->whereNull('disabled_at')->whereNull('two_factor_confirmed_at'),
+            'disabled' => $query->whereNotNull('disabled_at'),
+            default => null,
+        };
+        $page = $query->orderBy('id')->paginate(25, ['id', 'email', 'staff_display_name', 'account_type', 'disabled_at', 'two_factor_confirmed_at']);
         $available = $super ? [] : StaffAccess::permissions($actor);
 
         return ApiResponse::success($page->getCollection()->map(fn (User $user) => [
             'id' => $user->id, 'email' => $user->email, 'display_name' => $user->getAttribute('staff_display_name'),
             'mfa_confirmed' => $user->two_factor_confirmed_at !== null, 'active' => $user->disabled_at === null, 'roles' => $user->getRoleNames(),
             'manageable' => $actor->id !== $user->id && ($super || (! StaffAccess::super($user) && ! array_diff(StaffAccess::permissions($user), $available))),
-        ]), meta: ['page' => $page->currentPage(), 'last_page' => $page->lastPage()]);
+        ]), meta: ['page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total()]);
     }
 
     #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]

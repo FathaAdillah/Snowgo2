@@ -59,6 +59,14 @@
   }
 }
 
+@utility staff-directory {
+  --ui-success: var(--ui-color-success-700);
+
+  &:where(.dark, .dark *) {
+    --ui-success: var(--ui-color-success-400);
+  }
+}
+
 @utility nav-link-disabled {
   opacity: 0.45;
   cursor: not-allowed;

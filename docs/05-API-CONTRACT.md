@@ -267,7 +267,7 @@ Lihat [kamus tipe dan validasi](API-DATA-TYPES.md). Setiap response bertipe reso
 | API-RTN-006 | `GET /admin/returns/{number}` | Detail returns | returns.return.view | – | – | ReturnCase | NOT_FOUND | – | – | – |
 | API-CUS-010 | `GET /admin/customers` | Daftar customers | customers.customer.view | – | Page,q? | Page<CustomerAdmin> | VALIDATION_FAILED | – | – | – |
 | API-CUS-011 | `GET /admin/customers/{id}` | Detail customers | customers.customer.view | – | – | CustomerAdmin | NOT_FOUND | – | – | – |
-| API-ADM-001 | `GET /admin/staff` | Cari nama/email staf internal | admin.staff.view | – | page?,search? | Page<Staff> | VALIDATION_FAILED | – | – | – |
+| API-ADM-001 | `GET /admin/staff` | Cari nama/email dan filter status staf internal | admin.staff.view | – | page?, search?, status?:active/invited/disabled | Staff[]; meta: page,last_page,per_page,total | VALIDATION_FAILED | – | – | – |
 | API-ADM-002 | `GET /admin/staff/{id}` | Detail staff | admin.staff.view | – | – | Staff | NOT_FOUND | – | – | – |
 | API-ADM-003 | `GET /admin/roles` | Kartu role & jumlah anggota | admin.roles.view | – | – | Role[] | FORBIDDEN | – | – | – |
 | API-ADM-004 | `GET /admin/roles/{id}` | Detail role dan grant | admin.roles.view | – | – | Role | FORBIDDEN,NOT_FOUND | – | – | – |
