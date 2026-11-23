@@ -157,6 +157,19 @@ it('keeps stocked SKU units and options attached to the physical goods', functio
     $api('PATCH', "variants/$variant", ['unit_id' => $box, 'attribute_value_ids' => [$option]])->assertOk();
 });
 
+it('requires clearing every warehouse before retiring a variant', function () {
+    $this->actor->assignRole('inventory_staff')->givePermissionTo('catalog.variant.update', 'catalog.variant.archive');
+    $api = $this->api;
+    ($this->open)();
+    $other = $api('POST', 'warehouses', ['code' => 'SECONDARY'] + $this->warehouse)->assertCreated()->json('data.id');
+    $level = $api('POST', 'stock-receipts', ['warehouse_id' => $other] + $this->receipt)->assertOk()->json('data.id');
+    $path = 'variants/'.DB::table('product_variants')->where('sku', 'ALB-2')->value('id');
+    $api('PATCH', $path, ['active' => false])->assertConflict()->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
+    $api('POST', 'stock-adjustments', ['level_id' => $level, 'delta' => -10, 'reason_code' => 'COUNT'])->assertCreated();
+    $api('PATCH', $path, ['active' => false])->assertOk();
+    $api('POST', 'stock-receipts', ['warehouse_id' => $other] + $this->receipt)->assertNotFound();
+});
+
 function inventoryWriter(array $input, int $actor): Closure
 {
     return static function () use ($input, $actor) {

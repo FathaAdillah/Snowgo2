@@ -49,9 +49,9 @@ final class CatalogEditor
                     }
                     $columns['option_key'] = $values->isEmpty() ? 'default' : hash('sha256', $values->pluck('id')->implode(','));
                 }
-                if ($before && ((int) $fields['unit_id'] !== (int) $before->unit_id || $fields['sku'] !== $before->sku
+                if ($before && (! $fields['active'] || (int) $fields['unit_id'] !== (int) $before->unit_id || $fields['sku'] !== $before->sku
                     || ($columns['option_key'] ?? $before->option_key) !== $before->option_key) && StockAvailability::hasPhysicalStock($id)) {
-                    throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Clear stock in all warehouses before changing the SKU, unit or options.');
+                    throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Clear stock in all warehouses before archiving or changing the SKU, unit or options.');
                 }
                 break;
             case Resource::Category:
