@@ -73,11 +73,11 @@ final class StaffProfileController
             $this->mfa->verifyCredentials($user, $data['current_password'], $data['code']);
             $this->ensureAvailable($data['email']);
             $token = Str::random(24);
-            DB::table('staff_email_changes')->updateOrInsert(['user_id' => $user->id], [
-                'email' => $data['email'], 'session_version' => $user->staff_session_version,
+            DB::table('staff_email_changes')->upsert([
+                'user_id' => $user->id, 'email' => $data['email'], 'session_version' => $user->staff_session_version,
                 'token_hash' => hash('sha256', $token), 'delivery_ciphertext' => Crypt::encryptString($token),
                 'created_at' => now()->format('Y-m-d H:i:s.uP'), 'expires_at' => now()->addMinutes(15),
-            ]);
+            ], ['user_id'], ['email', 'session_version', 'token_hash', 'delivery_ciphertext', 'created_at', 'expires_at']);
         });
     }
 

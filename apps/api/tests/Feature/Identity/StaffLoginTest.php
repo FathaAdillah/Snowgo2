@@ -421,3 +421,16 @@ it('binds a login email change to its owner, expiry and security version', funct
     ($this->auth)('profile/email/confirm', $proof)->assertUnprocessable();
     expect($owner->fresh()->email)->toBe($owner->email);
 })->with(['different account', 'expired', 'revoked sessions']);
+
+it('delivers a replacement for an expired login email request', function () {
+    $this->freezeTime();
+    $owner = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($owner);
+    foreach (['old@example.test', 'replacement@example.test'] as $email) {
+        $this->travel(16)->minutes();
+        ($this->auth)('profile/email', ['email' => $email, 'current_password' => UserFactory::PASSWORD,
+            'code' => ($this->otp)($owner->two_factor_secret)])->assertOk();
+    }
+    app(Relay::class)->publish();
+    expect(Mail::sent(StaffEmailChange::class)->sole()->hasTo('replacement@example.test'))->toBeTrue();
+});
