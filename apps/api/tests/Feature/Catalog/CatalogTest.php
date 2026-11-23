@@ -132,6 +132,10 @@ it('enforces global SKUs, canonical unordered options, one option per attribute 
     $api('PATCH', "variants/$id", ['product_id' => $other])->assertUnprocessable();
     $api('PATCH', "variants/$id", ['weight_g' => 0])->assertUnprocessable();
     $api('PATCH', "variants/$id", ['rts_price_amount' => null])->assertUnprocessable();
+    $api('PATCH', "variants/$id", ['rts_price_amount' => 27000])->assertOk();
+    $audit = DB::table('audit_logs')->where(['subject_type' => 'variant', 'subject_id' => $id])->latest('id')->first();
+    expect(json_decode($audit->before)->rts_price_amount)->toBe(25000)
+        ->and(json_decode($audit->after)->rts_price_amount)->toBe(27000);
     $api('PATCH', "attribute-values/$red", ['active' => false])->assertConflict();
     $api('PATCH', "variants/$id", ['active' => false])->assertOk();
     $api('PATCH', "attribute-values/$red", ['active' => false])->assertOk();

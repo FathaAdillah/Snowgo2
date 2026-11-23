@@ -142,7 +142,10 @@ final class CatalogAdmin
                     Resource::ProductMedia => 'product_media',
                     default => strtolower($kind->name),
                 });
-                app(Journal::class)->audit($event, $subject, $key, $actor->id, $before ? (array) $before : null, $data);
+                $after = $kind === Resource::Variant
+                    ? (array) DB::table('product_variants')->where('id', $key)->firstOrFail(['active', 'rts_enabled', 'rts_price_amount'])
+                    : $data;
+                app(Journal::class)->audit($event, $subject, $key, $actor->id, $before ? (array) $before : null, $after);
                 app(Outbox::class)->record($event, $subject->value, $key, ['product_id' => $kind === Resource::Product ? $key : $product]);
 
                 return $this->show($kind, $key, $id === null ? 201 : 200);

@@ -41,12 +41,15 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::Variant) {
+            $fields = [...$fields, 'rts_enabled', 'rts_price_amount'];
+        }
         if (in_array($subject, [Subject::Region, Subject::Reason, Subject::Unit, Subject::TaxClass], true)) {
             $fields = [...$fields, 'code', 'name', 'domain', 'label', 'rate_bps', 'parent_id', 'kind'];
         }
         $safe = array_intersect_key($data, array_flip($fields));
 
-        return json_encode((object) array_filter($safe, is_scalar(...)), JSON_THROW_ON_ERROR);
+        return json_encode((object) array_filter($safe, fn ($v, $k) => is_scalar($v) || ($k === 'rts_price_amount' && $v === null), ARRAY_FILTER_USE_BOTH), JSON_THROW_ON_ERROR);
     }
 
     private function requireTransaction(): void
