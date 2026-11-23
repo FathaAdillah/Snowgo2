@@ -181,6 +181,10 @@ it('keeps staged images private, binds READY media to its actual owner, and reco
     $api('POST', 'product-media', ['product_id' => $other] + $media)->assertUnprocessable();
     $id = $create('product-media', $media);
     $productMedia = $create('product-media', ['file_id' => $productRef, 'variant_id' => null, 'position' => 2] + $media);
+    $api('PATCH', "product-media/$id", ['variant_id' => (string) $variant, 'position' => 1])->assertOk();
+    $api('PATCH', "product-media/$productMedia", ['variant_id' => null, 'position' => 2])->assertOk();
+    $api('PATCH', "product-media/$id", ['variant_id' => null])->assertUnprocessable();
+    $api('PATCH', "product-media/$productMedia", ['variant_id' => $variant])->assertUnprocessable();
     $runConsumers = function () {
         foreach (DB::table('event_consumptions')->where('status', 'PROCESSING')->orderByDesc('id')->pluck('id') as $receipt) {
             (new ConsumeEvent($receipt))->handle();

@@ -73,7 +73,7 @@ final class CatalogEditor
                 break;
             case Resource::ProductMedia:
                 self::immutableParent($before, $data, 'product_id');
-                if ($before !== null && array_key_exists('variant_id', $data) && ! isset($data['file_id'])) {
+                if ($before !== null && (string) $before->variant_id !== (string) $fields['variant_id'] && ! isset($data['file_id'])) {
                     self::invalid('file_id', 'Supply the file reference when changing the media owner.');
                 }
                 if (isset($fields['variant_id']) && ! DB::table('product_variants')->where(['id' => $fields['variant_id'], 'product_id' => $fields['product_id']])->exists()) {
