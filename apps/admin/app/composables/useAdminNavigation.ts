@@ -1,10 +1,12 @@
 export interface NavChild {
+  permission?: string
   label: string
   icon: string
   to?: string
 }
 
 export interface NavLink {
+  permission: string
   type: 'link'
   label: string
   icon: string
@@ -22,7 +24,7 @@ export type NavEntry = NavLink | NavGroup
 
 // Menu groups follow docs/07-ADMIN-MENU-MATRIX.md; entries without `to` are not built yet.
 export const adminNavigation: NavEntry[] = [
-  { type: 'link', label: 'Dashboard', icon: 'i-lucide-layout-grid', to: '/' },
+  { type: 'link', label: 'Dashboard', icon: 'i-lucide-layout-grid', to: '/', permission: 'reporting.dashboard.view' },
   {
     type: 'group',
     label: 'Commerce',
@@ -113,10 +115,10 @@ export const adminNavigation: NavEntry[] = [
     label: 'Administrasi',
     icon: 'i-lucide-shield-check',
     children: [
-      { label: 'Staff & Sesi', icon: 'i-lucide-user-cog' },
+      { label: 'Staff & Sesi', icon: 'i-lucide-user-cog', to: '/staff', permission: 'admin.staff.view' },
       { label: 'Role & Izin', icon: 'i-lucide-key-round' },
       { label: 'Audit Log', icon: 'i-lucide-scroll-text' },
-      { label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' },
+      { label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings', permission: 'admin.profile.view' },
       { label: 'Integrasi', icon: 'i-lucide-plug' }
     ]
   }

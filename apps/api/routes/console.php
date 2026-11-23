@@ -2,15 +2,28 @@
 
 use App\Modules\Foundation\Files\ScanQueue;
 use App\Modules\Foundation\Outbox\Relay;
+use App\Modules\Identity\Staff\StaffInvitations;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('staff:invite {email} {--role=admin}', function (StaffInvitations $invitations) {
+    $this->callSilent('db:seed', ['--class' => PermissionSeeder::class, '--force' => true]);
+    $data = Validator::make(['email' => $this->argument('email'), 'role' => $this->option('role')], [
+        'email' => 'required|email|max:254', 'role' => ['required', Rule::exists('roles', 'name')->where('guard_name', 'web')],
+    ])->validate();
+    $invitations->invite($data['email'], $data['role']);
+    $this->info('Activation email queued. Open the inbox to set a password and enroll MFA.');
+})->purpose('Invite a new staff member or reissue a pending invitation without changing its role');
 
 Artisan::command('outbox:relay', function (Relay $relay) {
     $this->info('Events routed: '.$relay->publish());
@@ -33,6 +46,8 @@ Schedule::command('files:prune')->daily()->withoutOverlapping();
 Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=', now())->delete())
     ->name('prune-idempotency-keys')->daily();
 Schedule::command('auth:clear-resets')->hourly();
+Schedule::call(fn () => DB::table('staff_invitations')->where('expires_at', '<=', now())->delete())
+    ->name('prune-staff-invitations')->hourly();
 Schedule::call(fn () => DB::table('oauth_link_requests')->where('expires_at', '<=', now())->delete())
     ->name('prune-google-link-requests')->hourly();
 Schedule::call(fn () => DB::table('email_verification_tokens')->where('expires_at', '<=', now())->delete())

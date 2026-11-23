@@ -4,6 +4,7 @@ namespace App\Modules\Identity\Challenges;
 
 use App\Models\User;
 use App\Modules\Identity\Mail\ResetPassword;
+use App\Modules\Identity\Mail\StaffInvitation;
 use App\Modules\Identity\Mail\VerifyEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Query\Builder;
@@ -41,9 +42,11 @@ final class SendChallengeMail implements ShouldQueue
             return;
         }
         $token = Crypt::decryptString($challenge->delivery_ciphertext);
-        Mail::to($user->email)->send($this->isReset()
-            ? new ResetPassword($user->email, $token)
-            : new VerifyEmail($token));
+        Mail::to($user->email)->send(match ($this->event) {
+            'PasswordResetRequested' => new ResetPassword($user->email, $token),
+            'StaffInvited' => new StaffInvitation($token),
+            default => new VerifyEmail($token),
+        });
         // A newer challenge keeps its own ciphertext for its own delivery.
         $this->challenge($user)->where('delivery_ciphertext', $challenge->delivery_ciphertext)->update(['delivery_ciphertext' => null]);
     }
@@ -64,9 +67,11 @@ final class SendChallengeMail implements ShouldQueue
 
     private function challenge(User $user): Builder
     {
-        return $this->isReset()
-            ? DB::table('password_reset_tokens')->where('email', $user->email)
-            : DB::table('email_verification_tokens')->where('user_id', $user->id);
+        return match ($this->event) {
+            'PasswordResetRequested' => DB::table('password_reset_tokens')->where('email', $user->email),
+            'StaffInvited' => DB::table('staff_invitations')->where('user_id', $user->id),
+            default => DB::table('email_verification_tokens')->where('user_id', $user->id),
+        };
     }
 
     private function active(Builder $challenge): Builder

@@ -82,7 +82,7 @@ final class DeviceSessions
     private function active(User $user, Surface $surface): Builder
     {
         return DB::table('sessions')->where('user_id', $user->id)->where('surface', $surface->value)
-            ->where('last_activity', '>', now()->subMinutes((int) config('session.lifetime'))->getTimestamp());
+            ->where('last_activity', '>', now()->subMinutes($surface === Surface::Staff ? 30 : (int) config('session.lifetime'))->getTimestamp());
     }
 
     /** Opaque, stable per session; raw session IDs never leave the server. */

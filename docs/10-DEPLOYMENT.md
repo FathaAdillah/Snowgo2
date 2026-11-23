@@ -4,7 +4,7 @@
 
 | Environment | Ingress dan data | Mail, provider dan credential |
 |---|---|---|
-| Development | Compose di workstation, localhost dan admin.localhost. OmniDB di `/db` pada kedua host; Log Viewer hanya pada host admin. PostgreSQL/Redis internal; MinIO API/console dan Mailpit UI lewat loopback. | Mailpit SMTP 1025, UI 8025, local-only; Google sandbox, fake shipping/payment provider; dummy secrets hanya di env lokal |
+| Development | Compose di workstation, localhost dan admin.localhost. OmniDB dan Log Viewer hanya pada host admin dengan sesi MFA superadmin. PostgreSQL/Redis internal; MinIO API/console dan Mailpit UI lewat loopback. | Mailpit SMTP 1025, UI 8025, local-only; Google sandbox, fake shipping/payment provider; dummy secrets hanya di env lokal |
 | Staging | Hostname terpisah, HTTPS, arsitektur setara produksi, DB/bucket/Redis terpisah. Data sintetis. | Mailpit atau SMTP sandbox allowlist; credential sandbox, jobs aktif |
 | Production | snowego.shop dan admin.snowego.shop di edge TLS. DNS/ingress ke Nginx, Nitro → private API upstream. Private network untuk DB, Redis, queue, scheduler, MinIO console dan metrics. | SMTP produksi dengan SPF/DKIM/DMARC; secret references dan IAM terpisah. URL private storage presigned lewat object endpoint HTTPS yang kompatibel dengan Host yang ditandatangani. |
 
@@ -55,7 +55,24 @@ Untuk receipt `FAILED`, gunakan `docker compose exec api php artisan queue:faile
 
 - Setelah pull, jalankan `docker compose build`, `docker compose run --rm --no-deps api composer install --no-interaction`, `docker compose run --rm migrate`, lalu `docker compose up -d`. Jangan hapus volume. `web-deps` menjalankan `npm ci` saat lockfile/manifest atau versi Node berubah, sebelum admin dan storefront mulai.
 - Untuk login Google, buat OAuth client **Web application**. Isi `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` hanya pada environment runtime. Authorized redirect URI harus **persis** `APP_URL` ditambah `/api/v1/auth/google/callback`; contoh port 8080: `http://localhost:8080/api/v1/auth/google/callback`. Gunakan HTTPS di produksi. Email yang sama tidak cukup untuk menautkan akun: pemilik harus masuk dan membuktikan password; jika tidak punya password, reset lalu mulai ulang.
-- OmniDB: `http://admin.localhost:8080/db` (alias lama `http://localhost:8080/db` tetap ada). **Profil → Log Viewer** membuka `http://admin.localhost:8080/log-viewerx`; autentikasi HTTP Basic menggunakan `DBTOOLS_USER` dan `DBTOOLS_PASSWORD` lokal, bukan akun pelanggan. Ganti nilai contoh dan pertahankan binding edge ke loopback. Viewer hanya membaca log aplikasi `laravel*.log`; stderr Docker tetap aktif, unduh dan hapus ditolak. Produksi tidak membuka kedua konsol.
+- OmniDB (`/db`) dan Log Viewer (`/log-viewerx`) hanya tersedia di host admin development melalui **Profil** setelah login superadmin + MFA. Alias storefront dihapus. Kredensial OmniDB hanya untuk login kedua di dalam OmniDB, bukan akses edge. Viewer hanya membaca log aplikasi; unduh dan hapus ditolak. Pertahankan binding loopback.
+
+## Login staf dan superadmin pertama
+
+Tidak ada akun atau password superadmin bawaan. Setelah pull, jalankan ini di direktori proyek (ganti email contoh):
+
+```sh
+docker compose run --rm migrate
+docker compose up -d
+docker compose restart horizon scheduler
+docker compose exec api php artisan staff:invite nama@example.test --role=super_admin
+```
+
+Buka [Mailpit](http://localhost:8025), ikuti **Aktifkan akun staf**, buat password, masukkan kunci ke authenticator berbasis waktu dan verifikasi kode. Simpan kode pemulihan yang hanya ditampilkan sekali. Buka [login admin](http://admin.localhost:8080/login) dan masuk dengan password serta **kode berikutnya**. Pastikan `ADMIN_URL` dan `SANCTUM_STATEFUL_DOMAINS` di environment sesuai host dan port. Undangan kedaluwarsa setelah satu jam; ulangi perintah dengan role yang sama untuk mengirim pengganti.
+
+Untuk staf biasa gunakan `--role=admin`, atau undang melalui **Administrasi → Staff & Sesi**. Mutasi keamanan meminta password dan TOTP baru; kode pemulihan tidak berlaku untuk konfirmasi ini. SMTP selain Mailpit harus dikonfigurasi di produksi.
+
+Saat deploy fitur baru, jalankan migrasi lalu `php artisan db:seed --class=PermissionSeeder --force` sebelum membuka traffic. Seeder permission ini tidak membuat user atau data demo. Bila nama `super_admin` sudah dipakai role non-sistem, seeder berhenti tanpa mempromosikan anggotanya: periksa anggota dan ubah nama role lama sebelum melanjutkan.
 
 ## Backup, restore dan disaster recovery
 

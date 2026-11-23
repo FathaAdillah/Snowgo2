@@ -80,7 +80,7 @@ it('requires both staff session and action permission even when a parent is acce
     ($this->upload)($this->pdf, surface: 'admin/')->assertForbidden();
     Gate::define('files.surface.staff', fn (User $user) => true);
     ($this->upload)($this->pdf, surface: 'admin/')->assertForbidden();
-    Gate::define('foundation.file.manage', fn (User $user) => true);
+    Gate::define('foundation.file.create', fn (User $user) => true);
     $id = ($this->upload)($this->pdf, surface: 'admin/')->assertAccepted()->json('data.id');
     $this->getJson("/api/v1/admin/files/$id")->assertForbidden();
     Gate::define('foundation.file.view', fn (User $user) => true);
@@ -219,7 +219,7 @@ it('rejects the inert EICAR antivirus fixture from quarantine and accepts a clea
     Bus::fake();
     config(['stored_files.owners.staging' => FixtureFileParent::class]);
     Gate::define('files.surface.staff', fn (User $user) => true);
-    Gate::define('foundation.file.manage', fn (User $user) => true);
+    Gate::define('foundation.file.create', fn (User $user) => true);
     Gate::define('foundation.file.view', fn (User $user) => true);
     foreach (['REJECTED' => $fixture, 'READY' => "code,name\n1,Bali\n"] as $status => $bytes) {
         $result = $this->withHeaders(['Accept' => 'application/json', 'Idempotency-Key' => "import-$status"])

@@ -50,8 +50,9 @@ test-api: ## Pest on PostgreSQL/Redis/MinIO/ClamAV
 	  || PGPASSWORD=$$DB_PASSWORD createdb -h postgres -U $$DB_USERNAME snowego_test; \
 	  php artisan test'
 
-test-web: ## Frontend typecheck (unit/E2E suites land with features)
+test-web: ## Frontend typecheck and permission-aware admin component tests
 	$(NODE) npm run typecheck
+	$(NODE) npm run test -w @snowego/admin
 
 contracts: ## Regenerate the public OpenAPI snapshot and shared TypeScript client types
 	@set -eu; tmp=$$(mktemp); trap 'rm -f "$$tmp"' EXIT; $(EXPORT) > "$$tmp"; cp "$$tmp" apps/api/api.json

@@ -39,6 +39,8 @@ Akun pembeli dan staff. TOTP secret dan recovery codes encrypted; staf diprovisi
 | two_factor_secret | text | Ya | — |
 | two_factor_recovery_codes | text | Ya | — |
 | two_factor_confirmed_at | timestamptz | Ya | — |
+| two_factor_last_step | bigint | Tidak | 0; cegah replay TOTP |
+| staff_session_version | bigint | Tidak | 0; dinaikkan saat perubahan keamanan/revoke |
 
 **Constraint dan indeks tambahan** · U(email); I(account_type,disabled_at).
 
@@ -103,12 +105,13 @@ Enrollment satu kali. Simpan token hash, konsumsi setelah password dan TOTP vali
 
 | Kolom | Tipe | Nullable | Default atau atribut |
 |---|---|---|---|
-| user_id | bigint FK → users.id | Tidak | — |
-| token_hash | varchar(128) | Tidak | Unique |
+| user_id | bigint FK → users.id | Tidak | PK |
+| token_hash | char(64) | Tidak | Unique |
 | expires_at | timestamptz | Tidak | — |
-| consumed_at | timestamptz | Ya | — |
+| delivery_ciphertext | text | Ya | Dihapus setelah pengiriman |
+| created_at | timestamptz | Tidak | now() |
 
-**Constraint dan indeks tambahan** · I(user_id,expires_at).
+**Constraint dan indeks tambahan** · I(expires_at). Konsumsi menghapus baris dalam transaksi enrollment.
 
 ### DB-CUS-001 — customer_profiles
 
@@ -1246,6 +1249,7 @@ Role dinamis Spatie. Guard web; role staff saja
 |---|---|---|---|
 | name | varchar(100) | Tidak | — |
 | guard_name | varchar(60) | Tidak | — |
+| bypasses_permissions | boolean | Tidak | false; CHECK hanya `web:super_admin` boleh true |
 
 **Constraint dan indeks tambahan** · U(name,guard_name).
 

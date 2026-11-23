@@ -1,6 +1,8 @@
 # Admin menu dan RBAC matrix
 
-Sidebar muncul saat staff memiliki permission baca untuk submenu. Button, route guard, dan API memeriksa permission aksi. Policy resource, state transition dan scope file berlaku setelah pemeriksaan permission. Kolom role memuat gabungan seluruh role yang memiliki setidaknya satu permission menu. Katalog grant di bawah menentukan aksi awal. Seluruh permission diberikan secara eksplisit kepada Super Admin, dan dapat ditugaskan ke role melalui role editor.
+Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route guard, dan API memeriksa permission aksi. Policy resource, state transition dan scope file tetap berlaku. Matriks di bawah merencanakan menu; fitur yang belum tersedia tidak memberi akses ke data. Role sistem `super_admin` mendapat semua permission terdaftar secara efektif setelah login + MFA, bukan via flag pada user atau wildcard yang melewati policy.
+
+**Setiap fitur baru:** buat `<Fitur>PermissionsSeeder` (`php artisan make:seeder`), turunkan dari `FeaturePermissions`, isi `ACTIONS` dengan satu kode per aksi yang diimplementasikan (`.view`, `.create`, `.update`, `.delete`, dst.) dan daftarkan di `PermissionSeeder`. Role biasa tidak mendapat grant baru otomatis. Gunakan `can:<kode>` di route, permission dari `/admin/auth/me` untuk menu/tombol, dan uji penolakan langsung di API. CI menolak endpoint bisnis admin tanpa permission terdaftar. `StaffRoleSeeder` hanya mengisi grant awal role baru; reseed tidak mengembalikan izin yang dicabut.
 
 | Module | Menu | Submenu | Purpose | Role | Permission | Related API | Related tables | Priority | Phase |
 |---|---|---|---|---|---|---|---|---|---|
@@ -38,12 +40,12 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Button, route 
 | Promotions | Marketing | Promo, coupon dan voucher | Eligibility, diskon dan kuota | Super Admin, Admin, Content Manager, Product Manager | promotions.promotion.view, promotions.promotion.manage, promotions.coupon.view, promotions.coupon.manage | API-PRM-001, API-PRM-002, API-PRM-003, API-PRM-004, API-PRM-005, API-PRM-006, API-PRM-007, API-PRM-008 | promotions, coupons, coupon_usages | P2 | Phase 2 |
 | Geography | Master Data | Countries, provinces, cities, districts | Hierarki wilayah dan import | Super Admin, Admin, Product Manager, Order Staff | geography.region.view, geography.region.manage | API-GEO-002, API-GEO-003, API-GEO-004, API-GEO-005, API-GEO-018 | regions, stored_files | P1 | MVP |
 | Geography | Master Data | Units, tax class dan reason codes | Data referensi lintas transaksi | Super Admin, Admin, Product Manager, Order Staff, Finance | geography.reason.view, geography.reason.manage, geography.unit.view, geography.unit.manage, geography.tax.view, geography.tax.manage | API-GEO-006, API-GEO-007, API-GEO-008, API-GEO-009, API-GEO-010, API-GEO-011, API-GEO-012, API-GEO-013, API-GEO-014, API-GEO-015, API-GEO-016, API-GEO-017 | reason_codes, units, tax_classes | P1 | MVP |
-| Administration | Administration | Staff dan sessions | Undangan, assign role dan revoke device | Super Admin | admin.staff.view, admin.staff.manage | API-ADM-001, API-ADM-002, API-ADM-011, API-ADM-012, API-ADM-013, API-AUTH-018 | users, model_has_roles, sessions, staff_invitations | P0 | MVP |
+| Administration | Administration | Staff dan sessions | Undangan, assign role dan revoke device | Super Admin | admin.staff.view, admin.staff.create, admin.staff.update, admin.staff.assign_roles, admin.staff.change_status, admin.staff.sessions.delete | API-ADM-001, API-ADM-002, API-ADM-011, API-ADM-012, API-ADM-013, API-AUTH-018 | users, model_has_roles, sessions, staff_invitations | P0 | MVP |
 | Administration | Administration | Roles dan permissions | Bundle permission dan katalog | Super Admin | admin.role.view, admin.role.manage | API-ADM-003, API-ADM-004, API-ADM-005, API-ADM-014, API-ADM-015 | roles, role_has_permissions, permissions | P0 | MVP |
 | Administration | Administration | Audit logs | Filter actor, entity dan action | Super Admin, Admin, Finance | admin.audit.view | API-ADM-006 | audit_logs | P0 | MVP |
 | Administration | Administration | Settings dan feature flags | Typed settings dengan audit | Super Admin, Admin | admin.setting.view, admin.setting.manage | API-ADM-007, API-ADM-008, API-ADM-016 | settings | P0 | MVP |
 | Administration | Administration | Integrations dan credential references | Konfigurasi provider dan secret reference | Super Admin, Admin | admin.integration.view, admin.integration.manage | API-ADM-009, API-ADM-010, API-ADM-017 | integration_configs | P0 | MVP |
-| Foundation | Administration | Bukti dan file | Scan dan signed URL berdasar parent resource | Super Admin, Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager | foundation.file.manage, foundation.file.view | API-FND-007, API-FND-008, API-FND-009 | stored_files | P0 | MVP |
+| Foundation | Administration | Bukti dan file | Scan dan signed URL berdasar parent resource | Super Admin, Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager | foundation.file.create, foundation.file.view, foundation.file.download | API-FND-007, API-FND-008, API-FND-009 | stored_files | P0 | MVP |
 
 ## Grant awal
 
@@ -56,7 +58,9 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Button, route 
 | admin.role.view | — |
 | admin.setting.manage | Admin |
 | admin.setting.view | Admin |
-| admin.staff.manage | — |
+| admin.staff.create / admin.staff.assign_roles | — |
+| admin.staff.update / admin.staff.change_status | — |
+| admin.staff.sessions.delete | — |
 | admin.staff.view | — |
 | catalog.attribute.manage | Admin, Product Manager |
 | catalog.attribute.view | Admin, Product Manager, Content Manager |
@@ -77,7 +81,7 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Button, route 
 | content.entry.manage | Admin, Content Manager |
 | content.entry.view | Admin, Content Manager |
 | customers.customer.view | Admin, Order Staff, Customer Service |
-| foundation.file.manage | Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager |
+| foundation.file.create / foundation.file.download | Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager |
 | foundation.file.view | Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager |
 | geography.reason.manage | Admin |
 | geography.reason.view | Admin, Product Manager, Order Staff, Finance |
@@ -142,6 +146,6 @@ Maker-checker untuk refund dan recovery payment membedakan actor meskipun permis
 
 System logs, Horizon dan metrics berada pada permukaan operator privat melalui IAM. Dokumen pembayaran, private attachment, detail alamat customer dan aktivitas sensitif mengikuti policy parent, scope dan masking. Menu Phase 2 disembunyikan sampai flag dan readiness aktif.
 
-Khusus Compose development, menu profil menampilkan **Log Viewer** tepat di bawah **Pengaturan**. Tautan membuka `/log-viewerx` di host admin (termasuk port edge saat ini); autentikasi operator lokal tetap wajib untuk halaman dan API log. Menu, rute dan kredensial ini tidak dipakai di produksi.
+Di Compose development, hanya superadmin aktif yang melihat **Profil → Log Viewer** di bawah **Pengaturan**, lalu **OmniDB**. URL langsung dan API Log Viewer memakai gate yang sama. Grant operator yang sengaja diberikan ke role biasa tetap tidak membuka konsol.
 
 [Lihat kontrak dan endpoint](05-API-CONTRACT.md) · [Keamanan](08-SECURITY.md)

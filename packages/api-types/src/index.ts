@@ -19,8 +19,6 @@ export type HealthResponse = paths['/health']['get']['responses'][200]['content'
 export type ApiError = components['schemas']['ApiError']
 export type ApiMeta = components['schemas']['ApiMeta']
 
-// Provisional DTOs for planned staff auth and dashboard routes. Replace with
-// generated operation types when these endpoints are implemented.
 export interface ApiSuccess<T> {
   success: true
   message: string
@@ -31,18 +29,11 @@ export interface ApiSuccess<T> {
 export type ApiResponse<T> = ApiSuccess<T> | ApiError
 
 // API-AUTH-014 / API-AUTH-015 (docs/API-DATA-TYPES.md)
-export interface MfaChallenge {
-  challenge_required: true
-  expires_at: string
-}
-
-export interface StaffMe {
-  id: number
-  name: string
-  email: string
-  roles?: string[]
-  permissions?: string[]
-}
+export type MfaChallenge = paths['/admin/auth/login']['post']['responses'][200]['content']['application/json']['data']
+export type StaffMe = paths['/admin/auth/me']['get']['responses'][200]['content']['application/json']['data']
+export type StaffList = paths['/admin/staff']['get']['responses'][200]['content']['application/json']
+export type Enrollment = paths['/admin/auth/mfa-enrollments']['post']['responses'][200]['content']['application/json']['data']
+export type RecoveryCodes = paths['/admin/auth/mfa-enrollment-verifications']['post']['responses'][200]['content']['application/json']['data']
 
 // API-RPT-001 GET /admin/dashboard
 export type PurchaseMethod = 'ready_stock' | 'preorder' | 'request_order'

@@ -18,9 +18,9 @@ foreach (['customer' => 'files', 'staff' => 'admin/files'] as $surface => $prefi
             $status = Route::get('{id}', [FilesController::class, 'show'])->whereUlid('id')->name('show');
             $download = Route::get('{id}/download', [FilesController::class, 'download'])->whereUlid('id')->name('download');
             if ($surface === 'staff') {
-                $upload->middleware('can:foundation.file.manage');
+                $upload->middleware('can:foundation.file.create');
                 $status->middleware('can:foundation.file.view');
-                $download->middleware('can:foundation.file.view');
+                $download->middleware('can:foundation.file.download');
             }
         });
 }

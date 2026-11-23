@@ -4,6 +4,7 @@ namespace App\Modules\Identity\Http\Middleware;
 
 use App\Models\User;
 use App\Modules\Identity\Sessions\DeviceSessions;
+use App\Modules\Identity\Staff\StaffAccess;
 use App\Modules\Identity\Surface;
 use App\Support\Http\ApiProblem;
 use Closure;
@@ -26,17 +27,22 @@ final class EnsureIdentity
         $user = $request->user();
         $surface = DeviceSessions::surface($request);
         if (! $user instanceof User || $surface === null || $user->disabled_at !== null
-            || ($surface === Surface::Customer) !== ($user->account_type === User::CUSTOMER)) {
+            || ($surface === Surface::Customer) !== ($user->account_type === User::CUSTOMER)
+            || ($surface === Surface::Staff && ! StaffAccess::active($user, $request))) {
             if ($user !== null) {
                 $this->sessions->end($request);
             }
             throw new AuthenticationException;
         }
-        if ($mode !== 'session' && $surface !== Surface::Customer) {
+        if (($mode === 'staff' && $surface !== Surface::Staff)
+            || (str_starts_with($mode, 'customer') && $surface !== Surface::Customer)) {
             throw new ApiProblem(403, 'FORBIDDEN', 'Forbidden');
         }
         if ($mode === 'customer' && $user->email_verified_at === null) {
             throw new ApiProblem(403, 'EMAIL_NOT_VERIFIED', 'Email address is not verified');
+        }
+        if ($surface === Surface::Staff) {
+            $request->session()->put('staff.seen', now()->timestamp);
         }
 
         return $next($request);

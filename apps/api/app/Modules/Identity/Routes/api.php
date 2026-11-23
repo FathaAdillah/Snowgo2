@@ -4,9 +4,25 @@ use App\Modules\Identity\Http\Controllers\AuthController;
 use App\Modules\Identity\Http\Controllers\ChallengesController;
 use App\Modules\Identity\Http\Controllers\GoogleController;
 use App\Modules\Identity\Http\Controllers\SessionsController;
+use App\Modules\Identity\Http\Controllers\StaffAuthController;
 use App\Modules\Identity\Http\Middleware\EnsureIdentity;
+use App\Modules\Identity\Http\Middleware\StaffOrigin;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+
+Route::prefix('admin/auth')->name('staff.auth.')->middleware(StaffOrigin::class)->group(function () {
+    Route::post('login', [StaffAuthController::class, 'login'])->middleware('throttle:identity-challenges')->block()->name('login');
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('mfa-enrollments', [StaffAuthController::class, 'enroll'])->block()->name('enroll');
+        Route::post('mfa-enrollment-verifications', [StaffAuthController::class, 'confirm'])->block()->name('confirm');
+    });
+    Route::post('mfa-challenges', [StaffAuthController::class, 'verify'])->middleware('throttle:staff-mfa')->block()->name('verify');
+    Route::middleware(['auth:web', EnsureIdentity::class.':staff'])->group(function () {
+        Route::get('me', [StaffAuthController::class, 'me'])->name('me');
+        Route::post('logout', [AuthController::class, 'logout'])->block()->name('logout');
+        Route::post('step-up', [StaffAuthController::class, 'stepUp'])->middleware('throttle:5,1')->block()->name('step-up');
+    });
+});
 
 // Module routes are mounted under /api/v1 by the module service provider.
 Route::prefix('auth')->name('identity.')->group(function () {

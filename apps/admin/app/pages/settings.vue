@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { FormError } from '@nuxt/ui'
 
+definePageMeta({ permission: 'admin.profile.view' })
+
 useHead({ title: 'Pengaturan · Snowego Admin' })
 
-const { user } = useAdminAuth()
+const { user, can } = useAdminAuth()
 const toast = useToast()
 
-const account = reactive({ name: user.value?.name ?? '', email: user.value?.email ?? '' })
+const account = reactive({ name: user.value?.display_name ?? '', email: user.value?.email ?? '' })
 const password = reactive({ current: '', next: '', confirm: '' })
 
 function validateAccount(state: typeof account): FormError[] {
@@ -60,6 +62,7 @@ function notAvailable() {
         </p>
       </template>
       <UForm
+        v-if="can('admin.profile.update')"
         :state="account"
         :validate="validateAccount"
         class="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -95,9 +98,12 @@ function notAvailable() {
           />
         </div>
       </UForm>
+      <p v-else>
+        {{ account.email }}
+      </p>
     </UCard>
 
-    <UCard>
+    <UCard v-if="can('admin.profile.change_password')">
       <template #header>
         <h2 class="font-semibold text-highlighted">
           Ganti Password

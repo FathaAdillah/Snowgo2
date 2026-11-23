@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             throw new RuntimeException('Demo data must not be seeded in production.');
         }
 
+        $this->call(PermissionSeeder::class);
         DB::transaction(function () use ($directory) {
             $customer = User::query()->firstOrNew(['email' => 'customer@snowego.test']);
             if (! $customer->exists) {
