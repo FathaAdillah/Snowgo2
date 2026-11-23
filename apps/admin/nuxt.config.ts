@@ -5,6 +5,19 @@ export default defineNuxtConfig({
     '@nuxt/ui'
   ],
 
+  $development: {
+    vite: { optimizeDeps: { include: ['reka-ui', 'reka-ui/date', '@vue/devtools-core', 'openapi-fetch'] } },
+    hooks: {
+      'vite:extendConfig'(config, { isClient }) {
+        if (!isClient) return
+        // Nuxt UI transpiles Reka; Nuxt consequently excludes it from Vite's prebundle.
+        // Use the compiled ESM locally instead of serving hundreds of primitive modules.
+        const deps = config.environments?.client?.optimizeDeps ?? config.optimizeDeps
+        if (deps?.exclude) deps.exclude = deps.exclude.filter(id => id !== 'reka-ui')
+      }
+    }
+  },
+
   // Staff panel: client-rendered SPA; Nitro only serves assets and the API proxy.
   ssr: false,
 
