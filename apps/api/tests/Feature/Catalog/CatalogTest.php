@@ -155,22 +155,29 @@ it('keeps staged images private, binds READY media to its actual owner, and reco
     $product = $create('products', ['category_ids' => [$category]] + $this->item);
     $other = $create('products', ['slug' => 'other'] + $this->item);
     $variant = $create('variants', ['product_id' => $product] + $this->variant);
-    $ref = $this->post('/api/v1/admin/files', ['owner_type' => 'variant', 'owner_ref' => (string) $variant, 'collection' => 'catalog_media',
-        'file' => UploadedFile::fake()->image('pin.png')], ['Accept' => 'application/json', 'Idempotency-Key' => 'image'])->assertAccepted()->json('data.id');
+    $upload = fn ($type, $owner) => $this->post('/api/v1/admin/files', ['owner_type' => $type, 'owner_ref' => (string) $owner, 'collection' => 'catalog_media',
+        'file' => UploadedFile::fake()->image('pin.png')], ['Accept' => 'application/json', 'Idempotency-Key' => $type.'image'])->assertAccepted()->json('data.id');
+    $ref = $upload('variant', $variant);
+    $productRef = $upload('product', $product);
     $media = ['product_id' => $product, 'variant_id' => $variant, 'file_id' => $ref, 'alt' => 'Pin merah', 'position' => 1];
     $api('POST', 'product-media', $media)->assertConflict()->assertJsonPath('code', 'FILE_NOT_READY');
-    $token = (string) Str::uuid();
-    DB::table('stored_files')->where('public_id', $ref)->update(['status' => 'SCANNING', 'scan_token' => $token]);
-    (new ScanStoredFile(DB::table('stored_files')->where('public_id', $ref)->value('id'), $token))->handle(new class implements MalwareScanner
+    $scanner = new class implements MalwareScanner
     {
         public function clean(string $bytes): bool
         {
             return true;
         }
-    });
+    };
+    foreach ([$ref, $productRef] as $file) {
+        $token = (string) Str::uuid();
+        $target = DB::table('stored_files')->where('public_id', $file);
+        $target->update(['status' => 'SCANNING', 'scan_token' => $token]);
+        (new ScanStoredFile($target->value('id'), $token))->handle($scanner);
+    }
     $api('POST', 'product-media', ['variant_id' => null] + $media)->assertNotFound();
     $api('POST', 'product-media', ['product_id' => $other] + $media)->assertUnprocessable();
     $id = $create('product-media', $media);
+    $productMedia = $create('product-media', ['file_id' => $productRef, 'variant_id' => null, 'position' => 2] + $media);
     $runConsumers = function () {
         foreach (DB::table('event_consumptions')->where('status', 'PROCESSING')->orderByDesc('id')->pluck('id') as $receipt) {
             (new ConsumeEvent($receipt))->handle();
@@ -183,6 +190,9 @@ it('keeps staged images private, binds READY media to its actual owner, and reco
     $runConsumers();
     $key = "published/catalog/$product/$id";
     $public->assertExists($key);
+    $api('PATCH', "variants/$variant", ['product_id' => (string) $product, 'weight_g' => 45])->assertOk();
+    $runConsumers();
+    $public->assertExists("published/catalog/$product/$productMedia");
     $this->getJson('/api/v1/products/kopi-pin')->assertOk()->assertJsonPath('data.cover_url', $public->url($key))
         ->assertJsonPath('data.media.0.sku', 'PIN-1')->assertJsonPath('data.media.0.alt', 'Pin merah')->assertJsonMissingPath('data.media.0.file_id');
     $api('PATCH', "products/$product", ['status' => 'ARCHIVED'])->assertOk();

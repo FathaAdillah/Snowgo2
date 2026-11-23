@@ -13,11 +13,11 @@ final class PublishMedia implements EventHandler
     public function handle(RecordedEvent $event): void
     {
         // The outbox runs handlers transactionally. Always reconcile current state, not the historical event.
-        $id = $event->payload['product_id'];
-        $product = DB::table('products')->where('id', $id)->lockForUpdate()->first();
+        $product = DB::table('products')->where('id', $event->payload['product_id'])->lockForUpdate()->first();
         if (! $product) {
             return;
         }
+        $id = $product->id;
         $rows = DB::table('product_media as m')->where('m.product_id', $id)->join('stored_files as f', 'f.id', '=', 'm.file_id')
             ->leftJoin('product_variants as v', 'v.id', '=', 'm.variant_id')->orderBy('m.id')
             ->get(['m.*', 'v.active as variant_active', 'v.deleted_at as variant_deleted', 'f.collection', 'f.object_key', 'f.mime', 'f.status', 'f.owner_id', 'f.owner_type']);
