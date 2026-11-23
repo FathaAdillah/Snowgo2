@@ -40,8 +40,8 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
   [{ type: 'label', label: displayName.value, description: user.value?.email ?? 'Belum masuk' }],
   [
     ...(can('admin.profile.view') ? [{ label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' }] : []),
-    ...(import.meta.dev && can('operator.logs.view') ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : []),
-    ...(import.meta.dev && can('operator.database.open') ? [{ label: 'OmniDB', icon: 'i-lucide-database', to: '/db/', external: true }] : [])
+    ...(can('operator.logs.view') ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : []),
+    ...(can('operator.database.open') ? [{ label: 'OmniDB', icon: 'i-lucide-database', to: '/db/', external: true }] : [])
   ],
   [{ label: 'Keluar', icon: 'i-lucide-log-out', color: 'error', onSelect: async () => {
     try {
