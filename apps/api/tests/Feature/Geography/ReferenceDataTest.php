@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Geography\RegionBatch;
 use App\Modules\Geography\WilayahSource;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use Database\Seeders\PermissionSeeder;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 uses(DatabaseTruncation::class);
 
@@ -146,4 +148,15 @@ it('validates the full snapshot before changing the database', function () {
     $this->assertDatabaseEmpty('regions');
     $write($path, 3, $rows);
     expect($load())->toBe(4)->and($load())->toBe(0);
+});
+
+it('rejects broken CSV quoting without merging rows and preserves quoted names', function () {
+    $disk = Storage::fake('csv');
+    $header = "kind,code,name,parent_code,active\r\n";
+    $disk->put('bad.csv', $header."COUNTRY,ID,\"Indonesia,,1\r\nCOUNTRY,OTHER,other\",,1\r\n");
+    expect(fn () => RegionBatch::csv($disk->readStream('bad.csv'))->import(null))->toThrow(ValidationException::class);
+    $this->assertDatabaseEmpty('regions');
+    $disk->put('good.csv', $header."COUNTRY,ID,\"Indonesia, \"\"ID\"\"\",,1\r\n");
+    expect(RegionBatch::csv($disk->readStream('good.csv'))->import(null))->toBe(1);
+    $this->assertDatabaseHas('regions', ['name' => 'Indonesia, "ID"']);
 });

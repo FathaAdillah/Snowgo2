@@ -20,11 +20,11 @@ final class RegionBatch
     public static function csv($stream): self
     {
         $batch = new self;
-        if (fgetcsv($stream, escape: '') !== ['kind', 'code', 'name', 'parent_code', 'active']) {
+        if (self::record($stream) !== ['kind', 'code', 'name', 'parent_code', 'active']) {
             throw ValidationException::withMessages(['file_id' => 'Expected header: kind,code,name,parent_code,active']);
         }
-        while (($row = fgetcsv($stream, escape: '')) !== false) {
-            if (count($row) !== 5 || ! in_array($row[4], ['0', '1'], true)) {
+        while (($row = self::record($stream)) !== null) {
+            if (! in_array($row[4], ['0', '1'], true)) {
                 throw ValidationException::withMessages(['file_id' => 'Invalid CSV row; active must be 0 or 1.']);
             }
             [$kind, $code, $name, $parent] = $row;
@@ -32,6 +32,26 @@ final class RegionBatch
         }
 
         return $batch;
+    }
+
+    /**
+     * Region fields are single-line. Never let an unmatched quote consume the next record.
+     *
+     * @param  resource  $stream
+     * @return array<int,string|null>|null
+     */
+    private static function record($stream): ?array
+    {
+        $line = fgets($stream, 2049);
+        if ($line === false && feof($stream)) {
+            return null;
+        }
+        $field = '(?:[^",\r\n]*+|"(?:[^"\r\n]++|"")*+")';
+        if ($line === false || strlen($line) >= 2048 || ! preg_match('/\A'.$field.'(?:,'.$field.'){4}(?:\r?\n)?\z/', $line)) {
+            throw ValidationException::withMessages(['file_id' => 'Expected five CSV fields with balanced quotes on one line.']);
+        }
+
+        return str_getcsv(rtrim($line, "\r\n"), escape: '');
     }
 
     public function add(string $kind, string $code, string $name, ?string $parent, ?bool $active): void
