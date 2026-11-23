@@ -55,6 +55,17 @@ it('denies all nine resources without grants and separates create, edit, publish
     $this->assertDatabaseCount('outbox_events', 1);
 });
 
+it('grants content managers read-only catalog access on a fresh install', function () {
+    $this->actor->assignRole('content_manager');
+    foreach (Resource::cases() as $kind) {
+        ($this->api)('GET', $kind->path())->assertOk();
+        ($this->api)('POST', $kind->path())->assertForbidden();
+        ($this->api)('PATCH', $kind->path().'/1')->assertForbidden();
+        expect($this->actor->can($kind->permission('archive')))->toBeFalse();
+    }
+    expect($this->actor->can('catalog.product.publish'))->toBeFalse();
+});
+
 it('rejects cycles and duplicates and applies active filters before pagination', function () {
     $this->actor->assignRole('product_manager');
     $create = $this->create;

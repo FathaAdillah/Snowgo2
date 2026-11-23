@@ -31,6 +31,10 @@ class CatalogPermissionsSeeder extends Seeder
     /** @return list<string> */
     public static function initialGrants(string $role): array
     {
-        return in_array($role, ['admin', 'product_manager', 'content_manager'], true) ? self::actions() : [];
+        return match ($role) {
+            'admin', 'product_manager' => self::actions(),
+            'content_manager' => array_map(fn (Resource $resource) => $resource->permission('view'), Resource::cases()),
+            default => [],
+        };
     }
 }

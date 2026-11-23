@@ -62,8 +62,8 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | admin.staff.update / admin.staff.change_status | — |
 | admin.staff.sessions.delete | — |
 | admin.staff.view | — |
-| catalog.attribute.create, catalog.attribute.update, catalog.attribute.archive, catalog.attribute_value.view, catalog.attribute_value.create, catalog.attribute_value.update, catalog.attribute_value.archive | Admin, Product Manager |
-| catalog.attribute.view | Admin, Product Manager, Content Manager |
+| catalog.attribute.create, catalog.attribute.update, catalog.attribute.archive, catalog.attribute_value.create, catalog.attribute_value.update, catalog.attribute_value.archive | Admin, Product Manager |
+| catalog.attribute.view, catalog.attribute_value.view | Admin, Product Manager, Content Manager |
 | catalog.brand.create, catalog.brand.update, catalog.brand.archive | Admin, Product Manager |
 | catalog.brand.view | Admin, Product Manager, Content Manager |
 | catalog.category.create, catalog.category.update, catalog.category.archive | Admin, Product Manager |
