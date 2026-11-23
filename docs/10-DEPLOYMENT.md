@@ -102,6 +102,12 @@ Setelah memperbarui kode, jalankan `docker compose run --rm migrate` lalu `docke
 
 Saat deploy fitur baru, jalankan migrasi lalu `php artisan db:seed --class=PermissionSeeder --force` sebelum membuka traffic. Seeder permission ini tidak membuat user atau data demo. Bila nama `super_admin` sudah dipakai role non-sistem, seeder berhenti tanpa mempromosikan anggotanya: periksa anggota dan ubah nama role lama sebelum melanjutkan.
 
+### Mengaktifkan Setting akun staf
+
+Setelah memperbarui kode, jalankan `docker compose run --rm migrate` lalu `docker compose exec api php artisan db:seed --class=PermissionSeeder`. Muat ulang worker (`docker compose restart horizon scheduler`) dan build ulang admin sesuai mode lokal. Ini tidak mengubah kredensial atau mematikan MFA pada akun lama.
+
+Buka **Profil → Setting**. Jika staf biasa perlu mengubah akunnya, berikan `admin.profile.view` dan hanya [izin aksi yang diperlukan](07-ADMIN-MENU-MATRIX.md) lewat **Administrasi → Role & Izin**. Untuk ganti email, salin kode yang dikirim ke alamat baru (di development: Mailpit). Jangan hapus entri authenticator setelah mematikan MFA **saat login**; kode tetap diperlukan saat mengubah kredensial.
+
 ## Backup, restore dan disaster recovery
 
 Baseline usulan RPO 24 jam dan RTO 4 jam. Snapshot/pg_dump konsisten harian dan backup sebelum migrasi risiko tinggi, repositori off-host terenkripsi, retention 14 harian dan 3 bulanan (ASSUMPTION). Simpan object versioning/replica dan manifest file keys, serta versi env/secret refs secara terpisah. Redis disposable untuk cache; outbox PostgreSQL dan idempotency ledger memungkinkan rekonstruksi queue kritis. Gunakan PITR jika target RPO lebih ketat. Private bucket backup tunduk pada kebijakan retensi dan akses yang sama.

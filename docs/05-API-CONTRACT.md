@@ -32,7 +32,7 @@ CrowdFunding memakai campuran data/message, respons JSON inline, serta error Lar
 | Session | Sanctum sesuai surface dan owner; daftar/revoke hanya perangkat sendiri |
 | Customer | Sanctum COOKIE + CUSTOMER + verified email dan ownership. Pengecualian verifikasi ulang email dan pengaitan Google menerima akun belum verified. |
 | Admin auth | Anonim saat login; MFA memerlukan pre-auth challenge; enrollment memerlukan undangan yang valid; step-up memerlukan sesi STAFF aktif dan MFA |
-| Admin | Sanctum COOKIE + STAFF aktif + TOTP verified + permission yang tercantum; policy bisnis dan scope file parent tetap dicek |
+| Admin | Sanctum COOKIE + STAFF aktif + MFA login sesuai kebijakan akun (selalu untuk superadmin) + permission yang tercantum; step-up, policy bisnis dan scope file parent tetap dicek |
 | Webhook | Signature/replay policy provider dan validasi raw event, tanpa sesi browser |
 | Internal | Jaringan privat dan allowlist/identitas service, tanpa paparan ingress publik |
 
@@ -149,10 +149,15 @@ Lihat [kamus tipe dan validasi](API-DATA-TYPES.md). Setiap response bertipe reso
 
 | ID | Method dan path | Tujuan | Auth / permission | Body | Query | Respons | Error khusus | Efek | Event | Idempotensi |
 |---|---|---|---|---|---|---|---|---|---|---|
-| API-AUTH-014 | `POST /admin/auth/login` | Mulai sign-in staff | admin-auth | email:email,password:password | – | MfaChallenge | BAD_CREDENTIALS,THROTTLED | Buat sesi pre-auth dan challenge | – | – |
+| API-AUTH-014 | `POST /admin/auth/login` | Mulai sign-in staff | admin-auth | email:email,password:password | – | MfaChallenge | BAD_CREDENTIALS,THROTTLED | Buat challenge, atau sesi STAFF langsung jika staf biasa menonaktifkan MFA login | StaffSignedIn jika tidak perlu challenge | – |
 | API-AUTH-015 | `POST /admin/auth/mfa-challenges` | Selesaikan staff MFA | admin-auth | code:TOTP atau recovery code | – | StaffMe dengan roles dan permission efektif | INVALID_CHALLENGE,THROTTLED | Promote sesi setelah MFA dan rotate ID | StaffSignedIn | – |
 | API-AUTH-016 | `POST /admin/auth/mfa-enrollments` | Mulai enrollment dari undangan | admin-auth | token:token,password:password | – | Enrollment | INVALID_CHALLENGE | Buat encrypted seed pending, tampilkan sekali | – | – |
 | API-AUTH-017 | `POST /admin/auth/mfa-enrollment-verifications` | Konfirmasi enrollment | admin-auth | token:token,code:otp | – | recovery_codes:string[] (sekali tampil) | INVALID_CHALLENGE | Tandai confirmed dan konsumsi token | StaffMfaEnrolled | – |
+| API-AUTH-019 | `POST /admin/auth/profile/name` | Nama tampilan sendiri | admin.profile.view + admin.profile.update | display_name:text100 | – | AuthAck | VALIDATION_FAILED,FORBIDDEN | Tidak mengubah email login | StaffDisplayNameChanged | – |
+| API-AUTH-020 | `POST /admin/auth/profile/password` | Ganti password sendiri | admin.profile.view + admin.profile.change_password | current_password,password,password_confirmation,code:otp | – | AuthAck | VALIDATION_FAILED,INVALID_CHALLENGE,FORBIDDEN | Cabut semua sesi | StaffPasswordChanged | – |
+| API-AUTH-021 | `POST /admin/auth/profile/email` | Minta perubahan email | admin.profile.view + admin.profile.change_email | email,current_password,code:otp | – | AuthAck | INVALID_CHALLENGE,IDENTITY_CONFLICT,FORBIDDEN | Kirim kode ke alamat baru | StaffEmailChangeRequested | – |
+| API-AUTH-022 | `POST /admin/auth/profile/email/confirm` | Verifikasi alamat baru | admin.profile.view + admin.profile.change_email | token:string24 | – | AuthAck | INVALID_CHALLENGE,IDENTITY_CONFLICT,FORBIDDEN | Konsumsi kode, ganti email dan cabut semua sesi | StaffEmailChanged | – |
+| API-AUTH-023 | `POST /admin/auth/profile/mfa` | Atur MFA login sendiri | admin.profile.view + admin.profile.manage_mfa; bukan superadmin | enabled:bool,current_password,code:otp | – | AuthAck | INVALID_CHALLENGE,FORBIDDEN | Cabut semua sesi; step-up tetap membutuhkan TOTP | StaffLoginMfaEnabled/Disabled | – |
 | API-CAT-004 | `GET /admin/products` | Daftar products | catalog.product.view | – | Page,q?,active? | Page<ProductDetail> | VALIDATION_FAILED | – | – | – |
 | API-CAT-005 | `GET /admin/products/{id}` | Detail products | catalog.product.view | – | – | ProductDetail | NOT_FOUND | – | – | – |
 | API-CAT-006 | `POST /admin/products` | Buat products | catalog.product.manage | ProductInput | – | ProductDetail | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | ProductChanged | K |

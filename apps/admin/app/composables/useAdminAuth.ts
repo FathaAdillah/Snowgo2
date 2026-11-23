@@ -10,7 +10,7 @@ export function useAdminAuth() {
     return decodeURIComponent(value ?? '')
   }
 
-  async function post<T>(path: string, body: Record<string, string>) {
+  async function post<T>(path: string, body: Record<string, string | boolean>) {
     const token = await csrf()
     return $fetch<ApiSuccess<T>>(path, {
       method: 'POST',
@@ -55,7 +55,7 @@ export function useAdminAuth() {
   const enroll = (token: string, password: string) => post<Enrollment>('/api/v1/admin/auth/mfa-enrollments', { token, password })
   const confirm = (token: string, code: string) => post<RecoveryCodes>('/api/v1/admin/auth/mfa-enrollment-verifications', { token, code })
   const stepUp = (password: string, code: string) => post('/api/v1/admin/auth/step-up', { password, code })
-  return { user, login, verifyMfa, refresh, can, logout, enroll, confirm, csrf, stepUp }
+  return { user, login, verifyMfa, refresh, can, logout, enroll, confirm, csrf, stepUp, post }
 }
 
 export function authErrorMessage(error: unknown): string {

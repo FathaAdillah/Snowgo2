@@ -4,6 +4,7 @@ namespace App\Modules\Identity\Challenges;
 
 use App\Models\User;
 use App\Modules\Identity\Mail\ResetPassword;
+use App\Modules\Identity\Mail\StaffEmailChange;
 use App\Modules\Identity\Mail\StaffInvitation;
 use App\Modules\Identity\Mail\VerifyEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -42,7 +43,8 @@ final class SendChallengeMail implements ShouldQueue
             return;
         }
         $token = Crypt::decryptString($challenge->delivery_ciphertext);
-        Mail::to($user->email)->send(match ($this->event) {
+        Mail::to($this->event === 'StaffEmailChangeRequested' ? $challenge->email : $user->email)->send(match ($this->event) {
+            'StaffEmailChangeRequested' => new StaffEmailChange($token),
             'PasswordResetRequested' => new ResetPassword($user->email, $token),
             'StaffInvited' => new StaffInvitation($token),
             default => new VerifyEmail($token),
@@ -70,6 +72,7 @@ final class SendChallengeMail implements ShouldQueue
         return match ($this->event) {
             'PasswordResetRequested' => DB::table('password_reset_tokens')->where('email', $user->email),
             'StaffInvited' => DB::table('staff_invitations')->where('user_id', $user->id),
+            'StaffEmailChangeRequested' => DB::table('staff_email_changes')->where('user_id', $user->id)->where('session_version', $user->staff_session_version),
             default => DB::table('email_verification_tokens')->where('user_id', $user->id),
         };
     }

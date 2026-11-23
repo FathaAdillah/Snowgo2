@@ -29,9 +29,15 @@ final class StaffAccess
     {
         return $user->account_type === User::STAFF && $user->disabled_at === null && $user->two_factor_confirmed_at !== null
             && DeviceSessions::surface($request) === Surface::Staff
+            && (! $request->session()->get('staff.password_only') || self::passwordOnly($user))
             && $request->session()->get('staff.version') === $user->staff_session_version
             && $request->session()->get('staff.started', 0) > now()->subHours(12)->timestamp
             && $request->session()->get('staff.seen', 0) > now()->subMinutes(30)->timestamp;
+    }
+
+    public static function passwordOnly(User $user): bool
+    {
+        return $user->staff_password_only && ! self::super($user);
     }
 
     /** @return list<string> */

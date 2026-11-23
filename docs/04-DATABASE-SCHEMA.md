@@ -41,6 +41,7 @@ Akun pembeli dan staff. TOTP secret dan recovery codes encrypted; staf diprovisi
 | two_factor_confirmed_at | timestamptz | Ya | — |
 | two_factor_last_step | bigint | Tidak | 0; cegah replay TOTP |
 | staff_session_version | bigint | Tidak | 0; dinaikkan saat perubahan keamanan/revoke |
+| staff_password_only | boolean | Tidak | false; pilihan login staf biasa, tidak berlaku untuk superadmin atau untuk step-up |
 
 **Constraint dan indeks tambahan** · U(email); I(account_type,disabled_at).
 
@@ -112,6 +113,10 @@ Enrollment satu kali. Simpan token hash, konsumsi setelah password dan TOTP vali
 | created_at | timestamptz | Tidak | now() |
 
 **Constraint dan indeks tambahan** · I(expires_at). Konsumsi menghapus baris dalam transaksi enrollment.
+
+### DB-AUTH-007 — staff_email_changes
+
+Satu permintaan perubahan alamat login per `user_id` (PK/FK ke `users.id`, cascade delete). Menyimpan `email` tujuan, `session_version`, `token_hash`, `delivery_ciphertext` sementara, `created_at` dan `expires_at` terindeks. Permintaan baru menggantikan permintaan lama. Konfirmasi dari akun yang sama mengubah email unik dan mencabut sesi dalam satu transaksi.
 
 ### DB-CUS-001 — customer_profiles
 

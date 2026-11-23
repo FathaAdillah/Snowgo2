@@ -23,6 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property int $two_factor_last_step
  * @property int $staff_session_version
+ * @property bool $staff_password_only
  */
 #[Fillable(['email', 'password_hash', 'account_type'])]
 #[Hidden(['password_hash', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_last_step'])]
@@ -43,6 +44,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'staff_password_only' => 'boolean',
             'email_verified_at' => 'datetime',
             'disabled_at' => 'datetime',
             'password_hash' => 'hashed',

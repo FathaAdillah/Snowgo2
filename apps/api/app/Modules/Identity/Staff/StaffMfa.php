@@ -77,7 +77,7 @@ final class StaffMfa
         return DB::table('staff_invitations')->where('token_hash', $hash)->where('expires_at', '>', now());
     }
 
-    public function begin(Request $request, string $email, string $password): string
+    public function begin(Request $request, string $email, string $password): ?string
     {
         $request->session()->forget('staff.challenge');
         $guard = Auth::guard('web');
@@ -88,6 +88,12 @@ final class StaffMfa
         $user = $guard->getLastAttempted();
         assert($user instanceof User);
         $this->sessions->end($request);
+        if (StaffAccess::passwordOnly($user)) {
+            DB::transaction(fn () => $this->record($user, 'StaffSignedIn'));
+            $this->startSession($user, $request, true);
+
+            return null;
+        }
         $expires = now()->addMinutes(5);
         $request->session()->put('staff.challenge', ['user' => $user->id, 'expires' => $expires->timestamp,
             'version' => $user->staff_session_version, 'credential' => hash('sha256', (string) $user->password_hash)]);
@@ -124,25 +130,37 @@ final class StaffMfa
             return $user;
         });
         $request->session()->forget('staff.challenge');
+        $this->startSession($user, $request, false);
+
+        return $user;
+    }
+
+    private function startSession(User $user, Request $request, bool $passwordOnly): void
+    {
         Auth::guard('web')->login($user);
         $this->sessions->start($request, Surface::Staff);
         $request->session()->put(['staff.version' => $user->staff_session_version, 'staff.started' => now()->timestamp, 'staff.seen' => now()->timestamp]);
 
-        return $user;
+        $request->session()->put('staff.password_only', $passwordOnly);
     }
 
     public function stepUp(Request $request, string $password, string $code): void
     {
         DB::transaction(function () use ($request, $password, $code) {
             $user = User::query()->whereNull('disabled_at')->lockForUpdate()->findOrFail($request->user()?->getAuthIdentifier());
-            if (! Hash::check($password, $user->password_hash)) {
-                throw EmailVerifications::invalid();
-            }
-            $this->consumeTotp($user, $code);
-            $user->save();
+            $this->verifyCredentials($user, $password, $code);
             $this->record($user, 'StaffReauthenticated');
         });
         $request->session()->put('staff.step_up', now()->timestamp);
+    }
+
+    public function verifyCredentials(User $user, string $password, string $code): void
+    {
+        if (! Hash::check($password, $user->password_hash)) {
+            throw EmailVerifications::invalid();
+        }
+        $this->consumeTotp($user, $code);
+        $user->save();
     }
 
     private function consumeTotp(User $user, string $code): void
