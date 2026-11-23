@@ -173,7 +173,7 @@ Hierarki negara hingga kecamatan. Validasi parent type dan negara ID; kode posta
 | name | varchar(120) | Tidak | — |
 | active | boolean | Tidak | true |
 
-**Constraint dan indeks tambahan** · U(code); I(parent_id,kind).
+**Constraint dan indeks tambahan** · U(code); I(parent_id,kind). Negara akar tunggal berkode `ID`. FK komposit ke `(id,kind)` dan `(id,active)` dengan kolom turunan mencegah salah tingkat, siklus, dan anak aktif dari induk nonaktif. Kode bertitik dari API Wilayah Indonesia disimpan sebagai teks; ID internal tidak berubah saat nama diperbarui.
 
 ### DB-GEO-002 — reason_codes
 

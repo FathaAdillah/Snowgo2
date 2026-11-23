@@ -202,20 +202,20 @@ Semua perubahan di `/admin/auth/profile/*` berbagi batas 5 permintaan per menit 
 | API-INV-004 | `PATCH /admin/warehouses/{id}` | Edit atau arsip warehouses | inventory.warehouse.manage | Partial<WarehouseInput> | – | Warehouse | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | WarehouseChanged | K |
 | API-GEO-002 | `GET /admin/regions` | Daftar regions | geography.region.view | – | Page,q?,active? | Page<Region> | VALIDATION_FAILED | – | – | – |
 | API-GEO-003 | `GET /admin/regions/{id}` | Detail regions | geography.region.view | – | – | Region | NOT_FOUND | – | – | – |
-| API-GEO-004 | `POST /admin/regions` | Buat regions | geography.region.manage | RegionInput | – | Region | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | RegionChanged | K |
-| API-GEO-005 | `PATCH /admin/regions/{id}` | Edit atau arsip regions | geography.region.manage | Partial<RegionInput> | – | Region | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | RegionChanged | K |
+| API-GEO-004 | `POST /admin/regions` | Buat regions | geography.region.create | RegionInput | – | Region | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | RegionChanged | K |
+| API-GEO-005 | `PATCH /admin/regions/{id}` | Edit atau arsip regions | geography.region.update | Partial<RegionInput> | – | Region | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | RegionChanged | K |
 | API-GEO-006 | `GET /admin/reason-codes` | Daftar reason-codes | geography.reason.view | – | Page,q?,active? | Page<Reason> | VALIDATION_FAILED | – | – | – |
 | API-GEO-007 | `GET /admin/reason-codes/{id}` | Detail reason-codes | geography.reason.view | – | – | Reason | NOT_FOUND | – | – | – |
-| API-GEO-008 | `POST /admin/reason-codes` | Buat reason-codes | geography.reason.manage | ReasonInput | – | Reason | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | ReasonChanged | K |
-| API-GEO-009 | `PATCH /admin/reason-codes/{id}` | Edit atau arsip reason-codes | geography.reason.manage | Partial<ReasonInput> | – | Reason | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | ReasonChanged | K |
+| API-GEO-008 | `POST /admin/reason-codes` | Buat reason-codes | geography.reason.create | ReasonInput | – | Reason | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | ReasonChanged | K |
+| API-GEO-009 | `PATCH /admin/reason-codes/{id}` | Edit atau arsip reason-codes | geography.reason.update | Partial<ReasonInput> | – | Reason | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE | Ubah field allowlisted + audit | ReasonChanged | K |
 | API-GEO-010 | `GET /admin/units` | Daftar units | geography.unit.view | – | Page,q?,active? | Page<Dictionary> | VALIDATION_FAILED | – | – | – |
 | API-GEO-011 | `GET /admin/units/{id}` | Detail units | geography.unit.view | – | – | Dictionary | NOT_FOUND | – | – | – |
-| API-GEO-012 | `POST /admin/units` | Buat units | geography.unit.manage | MasterInput | – | Dictionary | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | UnitChanged | K |
-| API-GEO-013 | `PATCH /admin/units/{id}` | Edit atau arsip units | geography.unit.manage | Partial<MasterInput> | – | Dictionary | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | UnitChanged | K |
+| API-GEO-012 | `POST /admin/units` | Buat units | geography.unit.create | MasterInput | – | Dictionary | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | UnitChanged | K |
+| API-GEO-013 | `PATCH /admin/units/{id}` | Edit atau arsip units | geography.unit.update | Partial<MasterInput> | – | Dictionary | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE | Ubah field allowlisted + audit | UnitChanged | K |
 | API-GEO-014 | `GET /admin/tax-classes` | Daftar tax-classes | geography.tax.view | – | Page,q?,active? | Page<TaxClass> | VALIDATION_FAILED | – | – | – |
 | API-GEO-015 | `GET /admin/tax-classes/{id}` | Detail tax-classes | geography.tax.view | – | – | TaxClass | NOT_FOUND | – | – | – |
-| API-GEO-016 | `POST /admin/tax-classes` | Buat tax-classes | geography.tax.manage | TaxInput | – | TaxClass | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | TaxClassChanged | K |
-| API-GEO-017 | `PATCH /admin/tax-classes/{id}` | Edit atau arsip tax-classes | geography.tax.manage | Partial<TaxInput> | – | TaxClass | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | TaxClassChanged | K |
+| API-GEO-016 | `POST /admin/tax-classes` | Buat tax-classes | geography.tax.create | TaxInput | – | TaxClass | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | TaxClassChanged | K |
+| API-GEO-017 | `PATCH /admin/tax-classes/{id}` | Edit atau arsip tax-classes | geography.tax.update | Partial<TaxInput> | – | TaxClass | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE | Ubah field allowlisted + audit | TaxClassChanged | K |
 | API-SHP-003 | `GET /admin/couriers` | Daftar couriers | shipping.courier.view | – | Page,q?,active? | Page<Dictionary> | VALIDATION_FAILED | – | – | – |
 | API-SHP-004 | `GET /admin/couriers/{id}` | Detail couriers | shipping.courier.view | – | – | Dictionary | NOT_FOUND | – | – | – |
 | API-SHP-005 | `POST /admin/couriers` | Buat couriers | shipping.courier.manage | MasterInput | – | Dictionary | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | CourierChanged | K |
@@ -287,7 +287,7 @@ Semua perubahan di `/admin/auth/profile/*` berbagi batas 5 permintaan per menit 
 | API-ADM-010 | `GET /admin/integrations/{key}` | Detail integrations | admin.integration.view | – | – | Integration | NOT_FOUND | – | – | – |
 | API-RPT-001 | `GET /admin/dashboard` | Ringkasan metrik dan antrean | reporting.dashboard.view | – | from?,to?,method? | Dashboard | VALIDATION_FAILED,NOT_FOUND | – | – | – |
 | API-RPT-002 | `GET /admin/transaction-reports` | Rekonsiliasi transaksi | reporting.transaction.view | – | Page,from,to,method? | Page<TransactionSummary> | VALIDATION_FAILED,NOT_FOUND | – | – | – |
-| API-GEO-018 | `POST /admin/region-imports` | Impor wilayah tervalidasi | geography.region.manage | file_id:ulid | – | Ack | VALIDATION_FAILED,NOT_FOUND | Upsert per code dan rekam audit | RegionImported | K |
+| API-GEO-018 | `POST /admin/region-imports` | Impor wilayah tervalidasi | geography.region.import | file_id:ulid | – | Ack | VALIDATION_FAILED,NOT_FOUND,FILE_NOT_READY | Upsert per code dan rekam audit | RegionImported | K |
 | API-INV-013 | `POST /admin/stock-receipts` | Penerimaan stok fisik | inventory.adjustment.create | StockReceiptInput | – | StockLevel | VALIDATION_FAILED,NOT_FOUND,QUANTITY_CONFLICT | Catat movement INITIAL/PURCHASE | StockReceived | K |
 | API-INV-014 | `POST /admin/stock-adjustments` | Adjustment non-zero dan beralasan | inventory.adjustment.create | AdjustmentInput | – | Adjustment | VALIDATION_FAILED,NOT_FOUND,QUANTITY_CONFLICT | Lock level, catat saldo dan audit | StockAdjusted | K |
 | API-INV-015 | `POST /admin/stock-transfers` | Transfer stok Phase 2 | inventory.transfer.manage | source_level_id:int,target_level_id:int,qty:qty,reason_code:code | – | Ack | VALIDATION_FAILED,NOT_FOUND,QUANTITY_CONFLICT | Lock kedua level lalu mutasi dua movement | StockTransferred | K |
@@ -359,3 +359,7 @@ Semua perubahan di `/admin/auth/profile/*` berbagi batas 5 permintaan per menit 
 |---|---|---|---|---|---|---|---|---|---|---|
 | API-FND-005 | `GET /internal/readiness` | Probe jaringan internal | internal | – | – | Health | DEPENDENCY_UNAVAILABLE | – | – | – |
 | API-FND-006 | `GET /internal/metrics` | Scrape monitoring | internal | – | – | Metrics | – | – | – | – |
+
+### Wilayah Indonesia (TASK-008)
+
+`GET /regions?parent=11.01&kind=DISTRICT` membaca anak langsung yang aktif dari PostgreSQL. `parent` adalah kode v2 bertitik, bukan ID tabel. Tanpa filter, semua level aktif dipaginasi (20 per halaman, maksimum 100). Mutasi admin memerlukan sesi staf, izin per aksi, CSRF, dan `Idempotency-Key`. Tidak ada hard delete. [Sumber, format CSV, dan cara mengisi data](10-DEPLOYMENT.md#sinkronisasi-wilayah-indonesia).

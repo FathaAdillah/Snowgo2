@@ -30,6 +30,10 @@ final class ScanQueue
 
     public function prune(): int
     {
+        // Import staging is temporary; release the uploader's five slots even for unusable CSVs.
+        DB::table('stored_files')->where(['owner_type' => 'staging', 'collection' => 'region_import'])
+            ->where('created_at', '<', now()->subDay())->whereNotIn('status', ['SCANNING', 'DELETED'])
+            ->update(['status' => 'DELETED', 'scan_due_at' => null, 'updated_at' => now()]);
         $disk = Storage::disk('private');
         $removed = 0;
         foreach (['quarantine', 'ready'] as $prefix) {

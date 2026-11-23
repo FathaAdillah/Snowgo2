@@ -30,6 +30,16 @@ test('public health and private file errors match their published response schem
   assert.ok(!Object.keys(spec.paths).some(path => path.startsWith('/internal/')))
 })
 
+test('public delivery regions match the paginated contract without exposing internal IDs', async () => {
+  const result = await client.GET('/regions', { params: { query: { parent: 'ID', kind: 'PROVINCE', per_page: 1 } } })
+  assert.equal(result.response.status, 200)
+  validateResponse('/regions', 200, result.data)
+  for (const region of result.data.data) {
+    assert.equal(region.parent_code, 'ID')
+    assert.deepEqual(Object.keys(region).sort(), ['code', 'kind', 'name', 'parent_code'])
+  }
+})
+
 test('the file client sends a multipart File and the required headers', async () => {
   const upload = createApiClient({
     baseUrl: 'http://example.test/api/v1',

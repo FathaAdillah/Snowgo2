@@ -9,6 +9,10 @@ use Illuminate\Http\JsonResponse;
  */
 final class ApiResponse
 {
+    public const ACK_SCHEMA = 'array{success:bool,message:string,data:null,meta:array{request_id:string}}';
+
+    public const ERROR_SCHEMA = 'array{success:false,code:string,message:string,meta:array{request_id:string}}';
+
     /**
      * @param  array<string, mixed>  $meta
      */
