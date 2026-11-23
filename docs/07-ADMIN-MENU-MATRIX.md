@@ -28,11 +28,11 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | Catalog | Catalog | Koleksi dan tags | Kurasi dan filter | Super Admin, Admin, Product Manager, Content Manager | catalog.collection.view, catalog.collection.create, catalog.collection.update, catalog.collection.archive, catalog.tag.view, catalog.tag.create, catalog.tag.update, catalog.tag.archive | API-CAT-020, API-CAT-021, API-CAT-022, API-CAT-023, API-CAT-024, API-CAT-025, API-CAT-026, API-CAT-027 | collections, tags | P1 | MVP |
 | Catalog | Catalog | Atribut dan nilai | Opsi varian | Super Admin, Admin, Product Manager, Content Manager | catalog.attribute.view, catalog.attribute.create, catalog.attribute.update, catalog.attribute.archive, catalog.attribute_value.view, catalog.attribute_value.create, catalog.attribute_value.update, catalog.attribute_value.archive | API-CAT-028, API-CAT-029, API-CAT-030, API-CAT-031, API-CAT-032, API-CAT-033, API-CAT-034, API-CAT-035 | attributes, attribute_values | P1 | MVP |
 | Catalog | Catalog | Media | Gambar produk/varian, alt dan urutan | Super Admin, Admin, Product Manager, Content Manager | catalog.media.view, catalog.media.create, catalog.media.update, catalog.media.archive | API-CAT-036, API-CAT-037, API-CAT-038, API-CAT-039 | product_media, stored_files | P1 | MVP |
-| Inventory | Inventory | Warehouses | Gudang, alamat dan default | Super Admin, Admin, Inventory Staff, Warehouse | inventory.warehouse.view, inventory.warehouse.manage | API-INV-001, API-INV-002, API-INV-003, API-INV-004 | warehouses | P0 | MVP |
+| Inventory | Inventory | Warehouses | Gudang, alamat dan default | Super Admin, Admin, Inventory Staff, Warehouse | inventory.warehouse.view, inventory.warehouse.create, inventory.warehouse.update, inventory.warehouse.archive | API-INV-001, API-INV-002, API-INV-003, API-INV-004 | warehouses | P0 | MVP |
 | Inventory | Inventory | Stocks dan low stock | Saldo per gudang dan filter low_stock | Super Admin, Admin, Product Manager, Inventory Staff, Warehouse | inventory.stock.view | API-INV-005, API-INV-006 | inventory_levels | P0 | MVP |
 | Inventory | Inventory | Movements | Ledger dan sumber transaksi | Super Admin, Admin, Inventory Staff, Warehouse | inventory.movement.view | API-INV-007, API-INV-008 | inventory_movements | P0 | MVP |
 | Inventory | Inventory | Reservations | Hold aktif, committed, expired | Super Admin, Admin, Inventory Staff, Order Staff, Warehouse | inventory.reservation.view | API-INV-009, API-INV-010 | stock_reservations | P0 | MVP |
-| Inventory | Inventory | Receipts dan adjustments | Terima barang, koreksi saldo dan alasan | Super Admin, Admin, Inventory Staff, Warehouse | inventory.adjustment.view, inventory.adjustment.create | API-INV-011, API-INV-012, API-INV-013, API-INV-014 | stock_adjustments, inventory_levels, inventory_movements | P0 | MVP |
+| Inventory | Inventory | Receipts dan adjustments | Terima barang, koreksi saldo dan alasan | Super Admin, Admin, Inventory Staff, Warehouse | inventory.receipt.create, inventory.adjustment.view, inventory.adjustment.create | API-INV-011, API-INV-012, API-INV-013, API-INV-014 | stock_adjustments, inventory_levels, inventory_movements | P0 | MVP |
 | Inventory | Inventory | Transfers | Transfer antar gudang | Super Admin, Admin, Inventory Staff | inventory.transfer.manage | API-INV-015 | inventory_levels, inventory_movements, stock_transfers | P2 | Phase 2 |
 | Customers | Customers | Customers dan profil | Akun, alamat, aktivitas dan ringkasan order | Super Admin, Admin, Order Staff, Customer Service | customers.customer.view, customers.customer.pii_view | API-CUS-010, API-CUS-011, API-CUS-012, API-CUS-013 | users, customer_profiles, addresses, audit_logs, orders, status_histories | P1 | MVP |
 | Content | Content | Homepage, banner dan featured | Kurasi konten storefront | Super Admin, Admin, Content Manager | content.entry.view, content.entry.manage | API-CNT-002, API-CNT-003, API-CNT-004, API-CNT-005 | content_entries | P1 | MVP |
@@ -91,13 +91,13 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | geography.tax.view | Admin, Product Manager, Order Staff, Finance |
 | geography.unit.create, geography.unit.update | Admin |
 | geography.unit.view | Admin, Product Manager, Order Staff |
-| inventory.adjustment.create | Admin, Inventory Staff, Warehouse |
+| inventory.receipt.create, inventory.adjustment.create | Admin, Inventory Staff, Warehouse |
 | inventory.adjustment.view | Admin, Inventory Staff, Warehouse |
 | inventory.movement.view | Admin, Inventory Staff, Warehouse |
 | inventory.reservation.view | Admin, Inventory Staff, Order Staff, Warehouse |
 | inventory.stock.view | Admin, Product Manager, Inventory Staff, Warehouse |
 | inventory.transfer.manage | Admin, Inventory Staff |
-| inventory.warehouse.manage | Admin, Inventory Staff |
+| inventory.warehouse.create, inventory.warehouse.update, inventory.warehouse.archive | Admin, Inventory Staff |
 | inventory.warehouse.view | Admin, Inventory Staff, Warehouse |
 | invoicing.invoice.manage | Admin, Finance |
 | invoicing.invoice.view | Admin, Order Staff, Finance, Customer Service |

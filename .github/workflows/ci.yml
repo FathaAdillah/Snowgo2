@@ -50,6 +50,13 @@ jobs:
             INSERT INTO product_categories SELECT p.id,c.id FROM products p,categories c WHERE p.slug='ci-fixture' AND c.slug='ci-category';
             INSERT INTO product_variants(product_id,unit_id,sku,option_key,name,weight_g,rts_enabled,rts_price_amount)
               SELECT p.id,u.id,'CI-SKU','default','Fixture',100,true,25000 FROM products p,units u WHERE p.slug='ci-fixture' AND u.code='ci-unit';
+            INSERT INTO regions(code,kind,name,parent_id) SELECT '11.01','CITY','City',id FROM regions WHERE code='11';
+            INSERT INTO regions(code,kind,name,parent_id) SELECT '11.01.01','DISTRICT','District',id FROM regions WHERE code='11.01';
+            INSERT INTO warehouses(code,name,address,district_id,is_default) SELECT 'ci-wh','Fixture','Fixture',id,true FROM regions WHERE code='11.01.01';
+            INSERT INTO inventory_levels(warehouse_id,variant_id) SELECT w.id,v.id FROM warehouses w,product_variants v WHERE w.code='ci-wh' AND v.sku='CI-SKU';
+            INSERT INTO reason_codes(domain,code,label) VALUES ('inventory','opening','Opening');
+            INSERT INTO inventory_movements(level_id,type,source_key,on_hand_delta,reason_id)
+              SELECT l.id,'INITIAL','ci-opening',1,r.id FROM inventory_levels l,reason_codes r WHERE r.domain='inventory' AND r.code='opening';
           SQL
           CONTRACT_REGION_CODE=11 CONTRACT_PRODUCT_SLUG=ci-fixture make test-contract
       - name: Verify storefront forwards the Google redirect to the browser

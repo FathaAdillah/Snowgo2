@@ -20,6 +20,7 @@ class StaffRoleSeeder extends Seeder
                 $role->givePermissionTo(GeographyPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(CustomerPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(CatalogPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(InventoryPermissionsSeeder::initialGrants($name));
                 if ($name !== 'inventory_staff') {
                     $role->givePermissionTo('foundation.file.view', 'foundation.file.create', 'foundation.file.download');
                 }

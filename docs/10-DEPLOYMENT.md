@@ -171,3 +171,11 @@ Pada role baru, `admin` dan `customer_service` memperoleh izin ringkasan dan ala
 Sesudah deploy API, jalankan migrasi dan `PermissionSeeder` seperti di atas. Identitas produk TASK-009 tetap memakai ID yang sama; produk lama berstatus PUBLISHED kembali menjadi DRAFT sampai memiliki kategori dan varian aktif. Wishlist tidak dihapus. Tidak ada perubahan storefront.
 
 Untuk role yang sudah ada, berikan izin Catalog yang diperlukan di **Role & Izin**. Seeder tidak mengembalikan izin yang pernah dicabut. Jalankan ulang worker Horizon dengan kode baru dan pastikan scheduler/relay berjalan untuk publikasi serta pencabutan media. `S3_PUBLIC_URL` harus menunjuk bucket katalog yang dapat dibaca browser, bukan bucket privat.
+
+## Mengaktifkan inventori (TASK-011)
+
+Jalankan `docker compose exec api php artisan migrate --force` dan `docker compose exec api php artisan db:seed --class=PermissionSeeder --force`. Untuk role yang sudah ada, pilih izin inventori yang diperlukan di **Role & Izin**. Seeder tidak mengubah grant lama.
+
+Lewat API admin, buat alasan aktif di domain `inventory`, siapkan satu kecamatan aktif dan SKU aktif, lalu buat gudang. Gudang aktif pertama otomatis menjadi default. Untuk mengganti default, buat gudang lain dengan `is_default:false` lalu PATCH gudang itu dengan `is_default:true`. Gudang yang masih memiliki stok tidak dapat diarsipkan.
+
+Kirim `POST /api/v1/admin/stock-receipts` (`INITIAL` untuk saldo pembuka, `PURCHASE` untuk penerimaan berikutnya), dengan `Idempotency-Key` baru per transaksi fisik, bukan per retry. Saldo berubah lewat ledger; jangan isi `on_hand` langsung. `GET /api/v1/admin/stock-levels?low_stock=true` memilih level dengan `available <= reorder_point` (default 0); filter `warehouse` memakai kode gudang. Adjustment langsung `APPLIED` tanpa draft. Reservasi/dispatch, transfer dan layar admin tidak diaktifkan oleh migrasi ini.

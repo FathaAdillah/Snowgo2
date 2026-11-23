@@ -2,6 +2,7 @@
 
 namespace App\Modules\Catalog;
 
+use App\Modules\Inventory\StockAvailability;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -50,14 +51,16 @@ final class ProductDirectory
         $covers = self::media()->whereIntegerInRaw('m.product_id', $ids)->selectRaw('DISTINCT ON (m.product_id) m.product_id,m.published_key')
             ->get()->keyBy('product_id');
         $prices = self::variants()->whereIntegerInRaw('product_id', $ids)->where('rts_enabled', true)
-            ->selectRaw('product_id, min(rts_price_amount) AS price')->groupBy('product_id')->get()->keyBy('product_id');
+            ->leftJoinSub(StockAvailability::readyToShip(), 'stock', 'stock.variant_id', '=', 'product_variants.id')
+            ->selectRaw('product_id, COALESCE(min(rts_price_amount) FILTER (WHERE stock.variant_id IS NOT NULL),min(rts_price_amount)) AS price,
+                bool_or(stock.variant_id IS NOT NULL) AS available')->groupBy('product_id')->get()->keyBy('product_id');
 
         $cards = [];
         foreach ($products as $p) {
             $cards[] = ['slug' => $p->slug, 'name' => $p->name, 'brand_slug' => $brands[$p->brand_id] ?? null,
                 'category_slugs' => isset($categories[$p->id]) ? $categories[$p->id]->pluck('slug')->all() : [],
                 'cover_url' => isset($covers[$p->id]) ? Storage::disk('catalog')->url($covers[$p->id]->published_key) : null,
-                'offers' => isset($prices[$p->id]) ? [['method' => 'RTS', 'from_amount' => $prices[$p->id]->price, 'available' => false]] : [],
+                'offers' => isset($prices[$p->id]) ? [['method' => 'RTS', 'from_amount' => $prices[$p->id]->price, 'available' => $prices[$p->id]->available]] : [],
             ];
         }
 
@@ -68,7 +71,9 @@ final class ProductDirectory
     public static function detail(string $slug): array
     {
         $p = self::published()->where('slug', $slug)->first(['id', 'name', 'slug', 'brand_id', 'description', 'seo_title', 'seo_description']) ?? abort(404);
-        $variants = self::variants()->where('product_id', $p->id)->orderBy('id')->get();
+        $variants = self::variants()->where('product_id', $p->id)->orderBy('id')
+            ->leftJoinSub(StockAvailability::readyToShip(), 'stock', 'stock.variant_id', '=', 'product_variants.id')
+            ->select('product_variants.*')->selectRaw('stock.variant_id IS NOT NULL AS available')->get();
         $options = DB::table('variant_attribute_values as o')->join('attribute_values as av', 'av.id', '=', 'o.value_id')
             ->whereIntegerInRaw('o.variant_id', $variants->pluck('id')->all())->orderBy('o.attribute_id')->get(['o.variant_id', 'av.code', 'av.label'])->groupBy('variant_id');
         $media = self::media()->where('m.product_id', $p->id)->get(['m.published_key', 'm.alt', 'm.position', 'v.sku']);
@@ -77,7 +82,7 @@ final class ProductDirectory
             'media' => $media->map(fn ($m) => ['url' => Storage::disk('catalog')->url($m->published_key), 'alt' => $m->alt, 'position' => $m->position, 'sku' => $m->sku])->all(),
             'variants' => $variants->map(fn ($v) => ['sku' => $v->sku, 'name' => $v->name, 'weight_g' => $v->weight_g,
                 'options' => ($options[$v->id] ?? collect())->map(fn ($o) => ['code' => $o->code, 'label' => $o->label])->all(),
-                'offers' => $v->rts_enabled ? [['method' => 'RTS', 'unit_amount' => $v->rts_price_amount, 'available' => false]] : [],
+                'offers' => $v->rts_enabled ? [['method' => 'RTS', 'unit_amount' => $v->rts_price_amount, 'available' => $v->available]] : [],
             ])->all()];
     }
 }
