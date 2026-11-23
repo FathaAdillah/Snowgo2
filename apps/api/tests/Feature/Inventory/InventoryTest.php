@@ -141,6 +141,22 @@ it('projects only available default-warehouse units into public RTS prices and k
     $this->getJson('/api/v1/products/album')->assertOk()->assertJsonPath('data.offers.0.available', false);
 });
 
+it('keeps stocked SKU units and options attached to the physical goods', function () {
+    $this->actor->assignRole('inventory_staff')->givePermissionTo('catalog.variant.update');
+    $api = $this->api;
+    $variant = DB::table('product_variants')->where('sku', 'ALB-2')->value('id');
+    $attribute = DB::table('attributes')->insertGetId(['name' => 'Size', 'code' => 'size']);
+    $option = DB::table('attribute_values')->insertGetId(['attribute_id' => $attribute, 'label' => 'Medium', 'code' => 'M']);
+    $box = DB::table('units')->insertGetId(['code' => 'box', 'name' => 'Box']);
+    $level = $api('POST', 'stock-receipts', ['warehouse_id' => ($this->open)()] + $this->receipt)->assertOk()->json('data.id');
+    foreach ([['unit_id' => $box], ['attribute_value_ids' => [$option]], ['sku' => 'BOX-2']] as $edit) {
+        $api('PATCH', "variants/$variant", $edit)->assertConflict()->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
+    }
+    $api('PATCH', "variants/$variant", ['name' => 'New label'])->assertOk();
+    $api('POST', 'stock-adjustments', ['level_id' => $level, 'delta' => -10, 'reason_code' => 'COUNT'])->assertCreated();
+    $api('PATCH', "variants/$variant", ['unit_id' => $box, 'attribute_value_ids' => [$option]])->assertOk();
+});
+
 function inventoryWriter(array $input, int $actor): Closure
 {
     return static function () use ($input, $actor) {

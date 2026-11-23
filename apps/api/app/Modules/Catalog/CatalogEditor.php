@@ -3,6 +3,7 @@
 namespace App\Modules\Catalog;
 
 use App\Modules\Foundation\Files\StoredFiles;
+use App\Modules\Inventory\StockAvailability;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +48,10 @@ final class CatalogEditor
                         self::invalid('attribute_value_ids', 'Choose at most one active value per active attribute.');
                     }
                     $columns['option_key'] = $values->isEmpty() ? 'default' : hash('sha256', $values->pluck('id')->implode(','));
+                }
+                if ($before && ((int) $fields['unit_id'] !== (int) $before->unit_id || $fields['sku'] !== $before->sku
+                    || ($columns['option_key'] ?? $before->option_key) !== $before->option_key) && StockAvailability::hasPhysicalStock($id)) {
+                    throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Clear stock in all warehouses before changing the SKU, unit or options.');
                 }
                 break;
             case Resource::Category:
