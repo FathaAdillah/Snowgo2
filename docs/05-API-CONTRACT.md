@@ -203,7 +203,7 @@ Semua perubahan di `/admin/auth/profile/*` berbagi batas 5 permintaan per menit 
 | API-GEO-002 | `GET /admin/regions` | Daftar regions | geography.region.view | – | Page,q?,active? | Page<Region> | VALIDATION_FAILED | – | – | – |
 | API-GEO-003 | `GET /admin/regions/{id}` | Detail regions | geography.region.view | – | – | Region | NOT_FOUND | – | – | – |
 | API-GEO-004 | `POST /admin/regions` | Buat regions | geography.region.create | RegionInput | – | Region | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | RegionChanged | K |
-| API-GEO-005 | `PATCH /admin/regions/{id}` | Edit atau arsip regions | geography.region.update | Partial<RegionInput> | – | Region | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | RegionChanged | K |
+| API-GEO-005 | `PATCH /admin/regions/{id}` | Edit atau arsip regions | geography.region.update | name?:text120,active?:bool (minimal satu); identitas wilayah tetap | – | Region | NOT_FOUND,VALIDATION_FAILED,DUPLICATE_RESOURCE,INVALID_STATE_TRANSITION | Ubah field allowlisted + audit | RegionChanged | K |
 | API-GEO-006 | `GET /admin/reason-codes` | Daftar reason-codes | geography.reason.view | – | Page,q?,active? | Page<Reason> | VALIDATION_FAILED | – | – | – |
 | API-GEO-007 | `GET /admin/reason-codes/{id}` | Detail reason-codes | geography.reason.view | – | – | Reason | NOT_FOUND | – | – | – |
 | API-GEO-008 | `POST /admin/reason-codes` | Buat reason-codes | geography.reason.create | ReasonInput | – | Reason | VALIDATION_FAILED,DUPLICATE_RESOURCE | Simpan resource + audit | ReasonChanged | K |

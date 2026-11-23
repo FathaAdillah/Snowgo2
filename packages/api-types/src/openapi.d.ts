@@ -2388,11 +2388,7 @@ export interface operations {
             content: {
                 "application/json": {
                     active?: boolean;
-                    code?: string;
-                    /** @enum {string} */
-                    kind?: "COUNTRY" | "PROVINCE" | "CITY" | "DISTRICT";
                     name?: string;
-                    parent_id?: number | null;
                 };
             };
         };

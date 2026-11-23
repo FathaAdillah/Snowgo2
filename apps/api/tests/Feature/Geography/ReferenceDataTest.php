@@ -67,7 +67,7 @@ it('enforces hierarchy on edits and only exposes active public fields', function
     $aceh = $request('POST', 'regions', $province)->assertCreated()->json('data.id');
     $request('PATCH', "regions/$id", ['active' => false])->assertConflict();
     $request('PATCH', "regions/$aceh", ['parent_id' => $aceh])->assertUnprocessable();
-    $request('PATCH', "regions/$aceh", ['code' => 'ID'])->assertConflict();
+    $request('PATCH', "regions/$aceh", ['code' => '12'])->assertUnprocessable();
     $query = '/api/v1/regions?parent=ID&kind=PROVINCE';
     $this->getJson($query)->assertOk()->assertJsonPath('data.0.code', '11')->assertJsonPath('data.0.parent_code', 'ID')
         ->assertJsonMissingPath('data.0.id')->assertJsonMissingPath('data.0.parent_id')->assertJsonMissingPath('data.0.active');
@@ -122,9 +122,12 @@ it('reads the selected Pages v2 endpoints with dotted IDs, without reactivating 
         Http::fake([$source.$path.'.json' => Http::response(['meta' => ['level' => $level], 'data' => [compact('id', 'name')]])]);
         $this->artisan('geography:sync-wilayah', ['--parent' => $parent])->assertSuccessful();
     }
-    DB::table('regions')->where('code', '11.01.01')->update(['active' => false]);
+    $this->staff->givePermissionTo('geography.region.update');
+    $district = DB::table('regions')->where('code', '11.01.01')->value('id');
+    ($this->api)('PATCH', "regions/$district", ['code' => 'renamed'])->assertUnprocessable();
+    ($this->api)('PATCH', "regions/$district", ['active' => false])->assertOk();
     $this->artisan('geography:sync-wilayah', ['--parent' => '11.01'])->expectsOutput('Changed regions: 0')->assertSuccessful();
-    $this->assertDatabaseHas('regions', ['code' => '11.01.01', 'active' => false]);
+    $this->assertDatabaseHas('regions', ['id' => $district, 'code' => '11.01.01', 'active' => false]);
     expect(fn () => app(WilayahSource::class)->page('http://invalid.test'))->toThrow(UnexpectedValueException::class);
     $this->assertDatabaseCount('regions', 4);
 });

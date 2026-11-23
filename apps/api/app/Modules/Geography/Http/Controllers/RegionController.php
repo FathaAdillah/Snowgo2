@@ -56,9 +56,6 @@ final class RegionController
     public function update(Request $request, References $refs, int $id): JsonResponse
     {
         return $refs->save($request, Master::Region, $request->validate([
-            'parent_id' => 'sometimes|nullable|integer|min:1',
-            'code' => 'sometimes|required|string|max:48|'.References::CODE,
-            'kind' => 'sometimes|required|string|'.References::REGION_KINDS,
             'name' => 'sometimes|required|string|max:120',
             'active' => 'sometimes|required|boolean',
         ]), $id);

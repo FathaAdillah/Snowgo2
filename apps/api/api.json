@@ -4718,27 +4718,6 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "parent_id": {
-                                        "type": [
-                                            "integer",
-                                            "null"
-                                        ],
-                                        "minimum": 1
-                                    },
-                                    "code": {
-                                        "type": "string",
-                                        "pattern": "^[A-Za-z0-9_.-]+$",
-                                        "maxLength": 48
-                                    },
-                                    "kind": {
-                                        "type": "string",
-                                        "enum": [
-                                            "COUNTRY",
-                                            "PROVINCE",
-                                            "CITY",
-                                            "DISTRICT"
-                                        ]
-                                    },
                                     "name": {
                                         "type": "string",
                                         "maxLength": 120
