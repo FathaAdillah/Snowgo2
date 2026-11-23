@@ -52,7 +52,8 @@ it('does not claim existing customer or staff addresses or change their grants',
     }
 });
 
-it('refuses to seed staff outside local and testing even with force', function (string $env) {
+it('requires both the runtime and deployment environments to allow demo data', function (string $env, string $deployment) {
+    config(['app.env' => $deployment]);
     app()->detectEnvironment(fn () => $env);
     try {
         expect(fn () => $this->artisan('db:seed', ['--class' => StaffDemoUsersSeeder::class, '--force' => true])->run())
@@ -62,4 +63,9 @@ it('refuses to seed staff outside local and testing even with force', function (
     }
     $this->assertDatabaseEmpty('users');
     $this->assertDatabaseEmpty('staff_invitations');
-})->with(['production', 'staging']);
+})->with([
+    ['production', 'production'],
+    ['staging', 'local'],
+    ['local', 'production'],
+    ['testing', 'staging'],
+]);

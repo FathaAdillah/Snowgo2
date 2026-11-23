@@ -13,7 +13,8 @@ final class StaffDemoUsersSeeder extends Seeder
 {
     public function run(StaffInvitations $invitations): void
     {
-        if (! app()->environment(['local', 'testing'])) {
+        $allowed = ['local', 'testing'];
+        if (! app()->environment($allowed) || ! in_array(config('app.env'), $allowed, true)) {
             throw new RuntimeException('Staff demo accounts are restricted to local and testing environments.');
         }
 
