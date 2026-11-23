@@ -132,6 +132,31 @@ it('expires an idle or absolutely expired staff session', function (bool $keepAc
     ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
 })->with([false, true]);
 
+it('limits settings and step-up independently to five requests per minute per staff account', function () {
+    $this->freezeTime();
+    $staff = ($this->staff)('admin')->givePermissionTo('admin.profile.update');
+    ($this->login)($staff);
+    $this->travel(31)->seconds();
+    $name = ['display_name' => 'Name'];
+    foreach (range(1, 5) as $_) {
+        ($this->auth)('profile/name', $name)->assertOk();
+    }
+    ($this->auth)('profile/name', $name)->assertTooManyRequests();
+    ($this->auth)('step-up', ['password' => UserFactory::PASSWORD, 'code' => ($this->otp)($staff->two_factor_secret)])->assertOk();
+    foreach (range(1, 4) as $_) {
+        ($this->auth)('step-up')->assertUnprocessable();
+    }
+    ($this->auth)('step-up')->assertTooManyRequests();
+
+    ($this->login)(($this->staff)('admin')->givePermissionTo('admin.profile.update'));
+    ($this->auth)('profile/name', $name)->assertOk();
+    ($this->auth)('step-up')->assertUnprocessable();
+    $this->travel(1)->minute();
+    ($this->login)($staff);
+    ($this->auth)('profile/name', $name)->assertOk();
+    ($this->auth)('step-up')->assertUnprocessable();
+});
+
 it('keeps each action default-deny and never delegates operator consoles to staff', function () {
     $staff = ($this->staff)('admin');
     $staff->givePermissionTo('admin.staff.view', StaffAccess::LOGS, StaffAccess::DB);
@@ -385,7 +410,7 @@ it('changes the login email only after mailbox proof and consumes the request on
     $this->travel(31)->seconds();
     $email = 'updated-login@example.test';
     $proof = ['current_password' => UserFactory::PASSWORD, 'code' => ($this->otp)($staff->two_factor_secret)];
-    ($this->auth)('profile/email', [...$proof, 'email' => strtoupper($staff->email)])->assertConflict();
+    ($this->auth)('profile/email', [...$proof, 'email' => strtoupper($staff->email)])->assertConflict()->assertJsonPath('code', 'IDENTITY_CONFLICT');
     ($this->auth)('profile/email', [...$proof, 'email' => $email])->assertOk();
     expect($staff->fresh()->email)->toBe($staff->email);
     app(Relay::class)->publish();
@@ -421,6 +446,21 @@ it('binds a login email change to its owner, expiry and security version', funct
     ($this->auth)('profile/email/confirm', $proof)->assertUnprocessable();
     expect($owner->fresh()->email)->toBe($owner->email);
 })->with(['different account', 'expired', 'revoked sessions']);
+
+it('returns an identity conflict if another account claims the email before confirmation', function () {
+    $this->freezeTime();
+    $owner = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($owner);
+    $this->travel(31)->seconds();
+    $email = 'claimed@example.test';
+    ($this->auth)('profile/email', ['email' => $email, 'current_password' => UserFactory::PASSWORD,
+        'code' => ($this->otp)($owner->two_factor_secret)])->assertOk();
+    app(Relay::class)->publish();
+    User::factory()->create(['email' => $email]);
+    ($this->auth)('profile/email/confirm', ['token' => Mail::sent(StaffEmailChange::class)->sole()->token])
+        ->assertConflict()->assertJsonPath('code', 'IDENTITY_CONFLICT');
+    expect($owner->fresh()->email)->toBe($owner->email);
+});
 
 it('delivers a replacement for an expired login email request', function () {
     $this->freezeTime();

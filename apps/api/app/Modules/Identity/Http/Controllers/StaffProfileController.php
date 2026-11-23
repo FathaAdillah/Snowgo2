@@ -27,6 +27,8 @@ final class StaffProfileController
 {
     public const PROOF = ['current_password' => 'required|string|max:128', 'code' => 'required|string|digits:6'];
 
+    private const EMAIL_CONFLICT = "array{success:false,code:'IDENTITY_CONFLICT',message:string,meta:array{request_id:string}}";
+
     public function __construct(private StaffMfa $mfa, private DeviceSessions $sessions) {}
 
     #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
@@ -65,6 +67,7 @@ final class StaffProfileController
 
     #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, 'Verification code queued for the new address', type: AuthController::ACK)]
+    #[Response(409, 'Login email is unavailable', type: self::EMAIL_CONFLICT)]
     public function email(Request $request): JsonResponse
     {
         $data = $request->validate([...self::PROOF, 'email' => 'required|string|email|max:254']);
@@ -83,6 +86,7 @@ final class StaffProfileController
 
     #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, 'New login email confirmed; sign in again', type: AuthController::ACK)]
+    #[Response(409, 'Login email is unavailable', type: self::EMAIL_CONFLICT)]
     public function confirmEmail(Request $request): JsonResponse
     {
         $data = $request->validate(['token' => 'required|string|size:24']);
