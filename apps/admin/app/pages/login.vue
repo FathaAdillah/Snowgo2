@@ -10,7 +10,7 @@ const step = ref<'credentials' | 'mfa'>('credentials')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const state = reactive({ email: '', password: '' })
-const otp = ref<number[]>([])
+const otp = ref('')
 
 function validate(value: typeof state): FormError[] {
   const errors: FormError[] = []
@@ -28,6 +28,7 @@ async function submitCredentials(event: FormSubmitEvent<typeof state>) {
   error.value = null
   try {
     await login(event.data.email, event.data.password)
+    state.password = ''
     step.value = 'mfa'
   } catch (err) {
     error.value = authErrorMessage(err)
@@ -40,11 +41,11 @@ async function submitMfa() {
   loading.value = true
   error.value = null
   try {
-    await verifyMfa(otp.value.join(''))
+    await verifyMfa(otp.value.trim())
     await navigateTo('/')
   } catch (err) {
     error.value = authErrorMessage(err)
-    otp.value = []
+    otp.value = ''
   } finally {
     loading.value = false
   }
@@ -105,7 +106,7 @@ const points = [
             Verifikasi 2 Langkah
           </h2>
           <p class="mt-1 mb-7 text-sm text-muted">
-            Masukkan 6 digit kode dari aplikasi authenticator Anda.
+            Masukkan kode 6 digit dari authenticator atau satu kode pemulihan.
           </p>
         </template>
 
@@ -170,16 +171,16 @@ const points = [
           class="flex flex-col gap-4"
           @submit.prevent="submitMfa"
         >
-          <UPinInput
+          <UInput
             v-model="otp"
-            :length="6"
-            otp
-            type="number"
+            type="text"
+            autocomplete="one-time-code"
+            placeholder="Kode verifikasi atau pemulihan"
             size="lg"
             autofocus
             aria-label="Kode verifikasi"
             :disabled="loading"
-            class="justify-between"
+            class="w-full"
           />
           <UButton
             type="submit"

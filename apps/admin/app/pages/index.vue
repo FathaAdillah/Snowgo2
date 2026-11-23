@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { PurchaseMethod } from '@snowego/api-types'
 
+definePageMeta({ permission: 'reporting.dashboard.view' })
+
 useHead({ title: 'Dashboard · Snowego Admin' })
 
 const { range, data, status, refresh } = useDashboard()
@@ -48,7 +50,7 @@ const methods = computed(() => {
           Dashboard
         </h1>
         <p class="mt-1 text-sm text-muted">
-          Selamat datang kembali, {{ user?.name ?? 'Admin' }}! Berikut ringkasan toko hari ini.
+          Selamat datang kembali, {{ user?.display_name ?? 'Admin' }}! Berikut ringkasan toko hari ini.
         </p>
       </div>
       <div class="flex items-center gap-2 rounded-lg border border-default bg-default px-3 py-2 text-xs text-muted">

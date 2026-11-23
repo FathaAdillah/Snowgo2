@@ -10,8 +10,6 @@ x-api-env: &api-env
   ADMIN_URL: ${ADMIN_URL}
   LOG_CHANNEL: stack
   LOG_STACK: stderr,daily
-  LOG_VIEWER_USER: ${DBTOOLS_USER}
-  LOG_VIEWER_PASSWORD: ${DBTOOLS_PASSWORD}
   LOG_LEVEL: ${LOG_LEVEL:-debug}
   TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
   DB_CONNECTION: pgsql
@@ -108,7 +106,7 @@ services:
     volumes:
       - ./infrastructure/nginx/edge.conf:/etc/nginx/templates/default.conf.template:ro
       - ./infrastructure/nginx/edge-common.conf:/etc/nginx/snippets/edge-common.conf:ro
-      - ./infrastructure/nginx/edge-dev-tools.conf:/etc/nginx/snippets/dev/dbtools.conf:ro
+      - ./infrastructure/nginx/edge-dev-tools.conf:/etc/nginx/snippets/admin-dev/dbtools.conf:ro
       - ./infrastructure/nginx/admin-log-viewer.conf:/etc/nginx/snippets/admin-dev/log-viewer.conf:ro
     networks: [internal]
     depends_on:
@@ -282,7 +280,7 @@ services:
       retries: 10
 
   dbtools:
-    # OmniDB (dev only) at http://localhost/db; login with DBTOOLS_USER / DBTOOLS_PASSWORD.
+    # Development only: authenticated superadmin at the edge, then OmniDB's own login.
     image: omnidbteam/omnidb:3.0.3b
     entrypoint: ["sh", "/usr/local/bin/omnidb-entrypoint"]
     environment:

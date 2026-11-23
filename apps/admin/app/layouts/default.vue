@@ -1,17 +1,27 @@
 <script setup lang="ts">
 import type { BreadcrumbItem, DropdownMenuItem } from '@nuxt/ui'
-import { adminNavigation, type NavGroup } from '~/composables/useAdminNavigation'
+import { adminNavigation as navigation, type NavEntry, type NavGroup } from '~/composables/useAdminNavigation'
 
 const route = useRoute()
 const { active, isGroupActive } = useAdminNavigation()
-const { user } = useAdminAuth()
+const { user, can, logout } = useAdminAuth()
+const toast = useToast()
+const adminNavigation = computed(() => navigation.reduce<NavEntry[]>((items, entry) => {
+  if (entry.type === 'link') {
+    if (can(entry.permission)) items.push(entry)
+  } else {
+    const children = entry.children.filter(child => can(child.permission))
+    if (children.length) items.push({ ...entry, children })
+  }
+  return items
+}, []))
 const { data: health } = useApiHealth()
 
 const collapsed = ref(false)
 const openGroups = ref<Record<string, boolean>>({})
 
 watch(() => route.path, () => {
-  for (const entry of adminNavigation) {
+  for (const entry of adminNavigation.value) {
     if (entry.type === 'group' && isGroupActive(entry)) {
       openGroups.value[entry.label] = true
     }
@@ -23,16 +33,23 @@ const breadcrumb = computed<BreadcrumbItem[]>(() => [
   { label: active.value.label, class: 'text-primary font-medium' }
 ])
 
-const displayName = computed(() => user.value?.name ?? 'Staff')
+const displayName = computed(() => user.value?.display_name ?? 'Staff')
 const initials = computed(() => displayName.value.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase())
 
 const userMenu = computed<DropdownMenuItem[][]>(() => [
   [{ type: 'label', label: displayName.value, description: user.value?.email ?? 'Belum masuk' }],
   [
-    { label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' },
-    ...(import.meta.dev ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : [])
+    ...(can('admin.profile.view') ? [{ label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' }] : []),
+    ...(import.meta.dev && can('operator.logs.view') ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : []),
+    ...(import.meta.dev && can('operator.database.open') ? [{ label: 'OmniDB', icon: 'i-lucide-database', to: '/db/', external: true }] : [])
   ],
-  [{ label: 'Keluar', icon: 'i-lucide-log-out', color: 'error', to: '/login' }]
+  [{ label: 'Keluar', icon: 'i-lucide-log-out', color: 'error', onSelect: async () => {
+    try {
+      await logout()
+    } catch (error) {
+      toast.add({ title: authErrorMessage(error), color: 'error' })
+    }
+  } }]
 ])
 
 const groupItems = (group: NavGroup): DropdownMenuItem[] => group.children.map(child => ({

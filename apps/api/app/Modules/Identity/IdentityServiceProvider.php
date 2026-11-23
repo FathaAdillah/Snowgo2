@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Identity\Google\GoogleOidc;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Identity\Sessions\SurfaceSessionHandler;
+use App\Modules\Identity\Staff\StaffAccess;
 use App\Support\Http\ApiProblem;
 use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Auth\Access\Response;
@@ -15,11 +16,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use Laravel\Fortify\Fortify;
 
 final class IdentityServiceProvider extends ModuleServiceProvider
 {
     public function register(): void
     {
+        Fortify::ignoreRoutes();
         $this->app->bind(GoogleOidc::class, function () {
             $config = config('services.google');
             if (empty($config['client_id']) || empty($config['client_secret'])) {
@@ -53,6 +56,16 @@ final class IdentityServiceProvider extends ModuleServiceProvider
             Limit::perHour(6)->by('hour:'.$request->user()?->getAuthIdentifier()),
         ]);
 
+        Gate::before(static fn (User $user, string $ability, array $arguments) => $arguments === [] && str_contains($ability, '.') && ! Gate::has($ability)
+            ? StaffAccess::check($user, $ability) : null);
+        Gate::define('files.surface.staff', static function (User $user) {
+            if (! StaffAccess::active($user, request())) {
+                return false;
+            }
+            request()->session()->put('staff.seen', now()->timestamp);
+
+            return true;
+        });
         Gate::define('files.surface.customer', function (User $user) {
             if ($user->disabled_at !== null || $user->account_type !== User::CUSTOMER
                 || DeviceSessions::surface(request()) !== Surface::Customer) {

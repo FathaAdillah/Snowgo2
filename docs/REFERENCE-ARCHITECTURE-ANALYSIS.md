@@ -183,7 +183,7 @@ Layer 6  nginx :80 (vhost api./app./admin./minio.localhost)
 | `RateLimiter::for('login')`, `throttle:N,1` di route publik | **REUSE** |
 | Spatie Permission; string permission `<module>.<resource>.<action>` di `App\Enums\Permission`; role hanya dibuat oleh seeder | **REUSE** |
 | `RbacCatalog` mengelompokkan permission untuk UI role editor + test bahwa katalog = semua permission | **REUSE** |
-| Super admin = flag `users.is_admin` yang mem-bypass lewat `Gate::before` | **FIX** — tanpa bypass; role `super_admin` di-seed dengan seluruh permission sehingga otorisasi tetap berbasis permission dan dapat diaudit. |
+| Super admin = flag `users.is_admin` yang mem-bypass lewat `Gate::before` | **FIX TASK-007** — bukan flag user: hanya role sistem `web:super_admin` mendapat seluruh permission terdaftar setelah login + MFA; policy resource dan step-up tidak dilewati. |
 | Scoping data per cabang (organization) di controller | Tidak relevan untuk Snowego (satu toko). Scoping per gudang dipertimbangkan sebagai Future. |
 
 ## 9. Logging, Audit, Domain Pattern

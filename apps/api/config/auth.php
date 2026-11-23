@@ -3,6 +3,7 @@
 use App\Models\User;
 
 return [
+    'admin_url' => rtrim((string) env('ADMIN_URL', 'http://admin.localhost'), '/'),
 
     /*
     |--------------------------------------------------------------------------

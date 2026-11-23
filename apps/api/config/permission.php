@@ -118,7 +118,7 @@ return [
      * Set this to false if you want to implement custom logic for checking permissions.
      */
 
-    'register_permission_check_method' => true,
+    'register_permission_check_method' => false, // StaffAccess checks the authenticated surface first.
 
     /*
      * When set to true, Laravel\Octane\Events\OperationTerminated event listener will be registered
