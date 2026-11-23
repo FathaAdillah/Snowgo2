@@ -1,5 +1,5 @@
 export interface NavChild {
-  permission?: string
+  permission?: string | readonly string[]
   label: string
   icon: string
   to?: string
@@ -21,6 +21,14 @@ export interface NavGroup {
 }
 
 export type NavEntry = NavLink | NavGroup
+
+export const warehouseAccess = ['inventory.warehouse.view', 'inventory.warehouse.create'] as const
+export const operationAccess = ['inventory.receipt.create', 'inventory.adjustment.create', 'inventory.adjustment.view'] as const
+
+export function hasPageAccess(permission: unknown, can: (grant: string) => boolean): boolean {
+  if (typeof permission === 'string') return can(permission)
+  return Array.isArray(permission) && permission.every(p => typeof p === 'string') && permission.some(can)
+}
 
 // Menu groups follow docs/07-ADMIN-MENU-MATRIX.md; entries without `to` are not built yet.
 export const adminNavigation: NavEntry[] = [
@@ -78,11 +86,11 @@ export const adminNavigation: NavEntry[] = [
     label: 'Inventori',
     icon: 'i-lucide-warehouse',
     children: [
-      { label: 'Gudang', icon: 'i-lucide-building-2' },
-      { label: 'Stok', icon: 'i-lucide-package-search' },
-      { label: 'Mutasi', icon: 'i-lucide-arrow-left-right' },
+      { label: 'Gudang', icon: 'i-lucide-building-2', to: '/inventory/warehouses', permission: warehouseAccess },
+      { label: 'Saldo Stok', icon: 'i-lucide-package-search', to: '/inventory/stock', permission: 'inventory.stock.view' },
+      { label: 'Mutasi', icon: 'i-lucide-arrow-left-right', to: '/inventory/movements', permission: 'inventory.movement.view' },
       { label: 'Reservasi', icon: 'i-lucide-lock' },
-      { label: 'Penerimaan & Koreksi', icon: 'i-lucide-clipboard-pen' }
+      { label: 'Penerimaan & Koreksi', icon: 'i-lucide-clipboard-pen', to: '/inventory/operations', permission: operationAccess }
     ]
   },
   {

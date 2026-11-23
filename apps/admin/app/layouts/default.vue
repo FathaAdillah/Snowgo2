@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BreadcrumbItem, DropdownMenuItem } from '@nuxt/ui'
-import { adminNavigation as navigation, type NavEntry, type NavGroup } from '~/composables/useAdminNavigation'
+import { adminNavigation as navigation, hasPageAccess, type NavEntry, type NavGroup } from '~/composables/useAdminNavigation'
 
 const route = useRoute()
 const { active, isGroupActive } = useAdminNavigation()
@@ -10,7 +10,7 @@ const adminNavigation = computed(() => navigation.reduce<NavEntry[]>((items, ent
   if (entry.type === 'link') {
     if (can(entry.permission)) items.push(entry)
   } else {
-    const children = entry.children.filter(child => can(child.permission))
+    const children = entry.children.filter(child => hasPageAccess(child.permission, can))
     if (children.length) items.push({ ...entry, children })
   }
   return items

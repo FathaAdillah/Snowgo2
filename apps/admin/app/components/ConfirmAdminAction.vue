@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ApiError } from '@snowego/api-types'
+
 const props = defineProps<{
   action: { url: string, method: 'POST' | 'PATCH' | 'DELETE', body?: Record<string, unknown>, label: string }
 }>()
@@ -27,8 +29,9 @@ async function submit() {
     toast.add({ title: 'Perubahan tersimpan', color: 'success' })
     emit('saved')
   } catch (err) {
-    if ((err as { data?: { code?: string } }).data?.code === 'STEP_UP_REQUIRED') verify.value = true
-    else notice.value = authErrorMessage(err)
+    const data = (err as { data?: Partial<ApiError> }).data
+    if (data?.code === 'STEP_UP_REQUIRED') verify.value = true
+    else notice.value = Object.values(data?.errors ?? {}).flat().join(' ') || authErrorMessage(err)
   } finally {
     password.value = code.value = ''
     busy.value = false
