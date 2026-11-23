@@ -143,6 +143,9 @@ it('enforces global SKUs, canonical unordered options, one option per attribute 
     $api('PATCH', "variants/$id", ['active' => true, 'attribute_value_ids' => []])->assertOk();
     $api('POST', 'variants', ['sku' => 'PIN-2', 'attribute_value_ids' => []] + $input)->assertConflict();
     $api('POST', 'variants', ['sku' => 'PIN-2', 'attribute_value_ids' => [$small]] + $input)->assertCreated();
+    DB::table('units')->where('id', $input['unit_id'])->update(['active' => false]);
+    $api('PATCH', "variants/$id", ['active' => false])->assertOk();
+    $api('PATCH', "variants/$id", ['active' => true])->assertUnprocessable();
 });
 
 it('keeps staged images private, binds READY media to its actual owner, and reconciles exposure after publish and archive', function () {

@@ -32,7 +32,9 @@ final class CatalogEditor
                 break;
             case Resource::Variant:
                 self::immutableParent($before, $data, 'product_id');
-                self::activeIds('units', [$fields['unit_id']], 'unit_id');
+                if (! $before || $fields['active'] || (int) $fields['unit_id'] !== (int) $before->unit_id) {
+                    self::activeIds('units', [$fields['unit_id']], 'unit_id');
+                }
                 if ($fields['rts_enabled'] && ! isset($fields['rts_price_amount'])) {
                     self::invalid('rts_price_amount', 'Set a whole IDR price before enabling RTS.');
                 }
