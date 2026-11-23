@@ -147,6 +147,8 @@ Lihat [kamus tipe dan validasi](API-DATA-TYPES.md). Setiap response bertipe reso
 
 ## Admin API
 
+Semua perubahan di `/admin/auth/profile/*` berbagi batas 5 permintaan per menit per akun staf. `/admin/auth/step-up` memiliki batas terpisah dengan kuota yang sama. Jika salah satu kuota habis, hanya kelompok itu yang mengembalikan `429 THROTTLED`.
+
 | ID | Method dan path | Tujuan | Auth / permission | Body | Query | Respons | Error khusus | Efek | Event | Idempotensi |
 |---|---|---|---|---|---|---|---|---|---|---|
 | API-AUTH-014 | `POST /admin/auth/login` | Mulai sign-in staff | admin-auth | email:email,password:password | – | MfaChallenge | BAD_CREDENTIALS,THROTTLED | Buat challenge, atau sesi STAFF langsung jika staf biasa menonaktifkan MFA login | StaffSignedIn jika tidak perlu challenge | – |

@@ -21,8 +21,8 @@ Route::prefix('admin/auth')->name('staff.auth.')->middleware(StaffOrigin::class)
     Route::middleware(['auth:web', EnsureIdentity::class.':staff'])->group(function () {
         Route::get('me', [StaffAuthController::class, 'me'])->name('me');
         Route::post('logout', [AuthController::class, 'logout'])->block()->name('logout');
-        Route::post('step-up', [StaffAuthController::class, 'stepUp'])->middleware('throttle:5,1')->block()->name('step-up');
-        Route::prefix('profile')->middleware(['can:admin.profile.view', 'throttle:5,1'])->group(function () {
+        Route::post('step-up', [StaffAuthController::class, 'stepUp'])->middleware('throttle:5,1,staff-step-up:')->block()->name('step-up');
+        Route::prefix('profile')->middleware(['can:admin.profile.view', 'throttle:5,1,staff-profile:'])->group(function () {
             Route::post('name', [StaffProfileController::class, 'name'])->middleware('can:admin.profile.update')->block()->name('profile.name');
             Route::post('password', [StaffProfileController::class, 'password'])->middleware('can:admin.profile.change_password')->block()->name('profile.password');
             Route::post('mfa', [StaffProfileController::class, 'mfa'])->middleware('can:admin.profile.manage_mfa')->block()->name('profile.mfa');

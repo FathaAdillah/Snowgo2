@@ -1,4 +1,8 @@
-import { createApiClient, multipartBody } from './src/index'
+import { createApiClient, multipartBody, type paths } from './src/index'
+
+type EmailChange = '/admin/auth/profile/email' | '/admin/auth/profile/email/confirm'
+declare const conflict: paths[EmailChange]['post']['responses'][409]['content']['application/json']
+conflict.code satisfies 'IDENTITY_CONFLICT'
 
 const api = createApiClient()
 const params = { header: { 'Idempotency-Key': 'upload', 'X-XSRF-TOKEN': 'csrf' } }
