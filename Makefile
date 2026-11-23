@@ -64,7 +64,7 @@ contracts-check: ## Fail on backend/spec or spec/TypeScript drift without rewrit
 
 test-contract: ## Validate live API responses from the typed client against the committed schemas
 	$(COMPOSE) up -d --wait api-nginx
-	$(COMPOSE) run --rm --no-deps -e API_CONTRACT_ORIGIN=http://api-nginx:8000 storefront npm test -w @snowego/api-types
+	$(COMPOSE) run --rm --no-deps -e API_CONTRACT_ORIGIN=http://api-nginx:8000 -e CONTRACT_REGION_CODE storefront npm test -w @snowego/api-types
 
 lint: lint-api lint-web analyse ## Pint, Larastan, ESLint
 

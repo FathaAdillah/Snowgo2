@@ -17,6 +17,7 @@ class StaffRoleSeeder extends Seeder
             $role = Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
             if ($role->wasRecentlyCreated) {
                 $role->givePermissionTo('reporting.dashboard.view', 'admin.profile.view');
+                $role->givePermissionTo(GeographyPermissionsSeeder::initialGrants($name));
                 if ($name !== 'inventory_staff') {
                     $role->givePermissionTo('foundation.file.view', 'foundation.file.create', 'foundation.file.download');
                 }

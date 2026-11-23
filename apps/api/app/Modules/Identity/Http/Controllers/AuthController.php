@@ -15,9 +15,9 @@ use Illuminate\Validation\Rules\Password;
 
 final class AuthController
 {
-    public const ACK = 'array{success:bool,message:string,data:null,meta:array{request_id:string}}';
+    public const ACK = ApiResponse::ACK_SCHEMA;
 
-    public const ERROR = 'array{success:false,code:string,message:string,meta:array{request_id:string}}';
+    public const ERROR = ApiResponse::ERROR_SCHEMA;
 
     public const ME = 'array{success:bool,message:string,data:array{surface:string,display_name:string,email:string,email_verified:bool},meta:array{request_id:string}}';
 

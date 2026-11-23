@@ -18,7 +18,7 @@ final class Journal
         $this->requireTransaction();
         DB::table('audit_logs')->insert([
             'actor_id' => $actorId, 'action' => $action, 'subject_type' => $subject->value, 'subject_id' => $id,
-            'before' => $this->snapshot($before), 'after' => $this->snapshot($after),
+            'before' => $this->snapshot($before, $subject), 'after' => $this->snapshot($after, $subject),
             'ip' => request()->ip(), 'user_agent' => mb_substr(request()->userAgent() ?? '', 0, 255),
             'request_id' => Context::get('request_id') ?? RequestId::current(),
         ]);
@@ -35,12 +35,16 @@ final class Journal
     }
 
     /** @param array<string,mixed>|null $data */
-    private function snapshot(?array $data): ?string
+    private function snapshot(?array $data, Subject $subject): ?string
     {
         if ($data === null) {
             return null;
         }
-        $safe = array_intersect_key($data, array_flip(['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility']));
+        $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if (in_array($subject, [Subject::Region, Subject::Reason, Subject::Unit, Subject::TaxClass], true)) {
+            $fields = [...$fields, 'code', 'name', 'domain', 'label', 'rate_bps', 'parent_id', 'kind'];
+        }
+        $safe = array_intersect_key($data, array_flip($fields));
 
         return json_encode((object) array_filter($safe, is_scalar(...)), JSON_THROW_ON_ERROR);
     }

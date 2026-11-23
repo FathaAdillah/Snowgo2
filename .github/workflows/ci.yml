@@ -38,7 +38,14 @@ jobs:
       - name: Pint, Larastan, ESLint and Nuxt typechecks
         run: make lint test-web
       - name: PostgreSQL integration and live client contract tests
-        run: make test-api test-contract
+        run: |
+          make test-api
+          # The HTTP process uses the disposable application DB, not Pest's test database.
+          docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+            INSERT INTO regions (code,kind,name) VALUES ('ID','COUNTRY','Indonesia');
+            INSERT INTO regions (code,kind,name,parent_id) SELECT '11','PROVINCE','Aceh',id FROM regions WHERE code='ID';
+          SQL
+          CONTRACT_REGION_CODE=11 make test-contract
       - name: Verify storefront forwards the Google redirect to the browser
         env:
           GOOGLE_CLIENT_ID: ci-placeholder

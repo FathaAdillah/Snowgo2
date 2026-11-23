@@ -38,8 +38,8 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | Content | Content | Homepage, banner dan featured | Kurasi konten storefront | Super Admin, Admin, Content Manager | content.entry.view, content.entry.manage | API-CNT-002, API-CNT-003, API-CNT-004, API-CNT-005 | content_entries | P1 | MVP |
 | Content | Content | Pages, FAQ dan kebijakan | Terms, privacy, return, refund dan PO | Super Admin, Admin, Content Manager | content.entry.view, content.entry.manage | API-CNT-002, API-CNT-003, API-CNT-004, API-CNT-005 | content_entries | P1 | MVP |
 | Promotions | Marketing | Promo, coupon dan voucher | Eligibility, diskon dan kuota | Super Admin, Admin, Content Manager, Product Manager | promotions.promotion.view, promotions.promotion.manage, promotions.coupon.view, promotions.coupon.manage | API-PRM-001, API-PRM-002, API-PRM-003, API-PRM-004, API-PRM-005, API-PRM-006, API-PRM-007, API-PRM-008 | promotions, coupons, coupon_usages | P2 | Phase 2 |
-| Geography | Master Data | Countries, provinces, cities, districts | Hierarki wilayah dan import | Super Admin, Admin, Product Manager, Order Staff | geography.region.view, geography.region.manage | API-GEO-002, API-GEO-003, API-GEO-004, API-GEO-005, API-GEO-018 | regions, stored_files | P1 | MVP |
-| Geography | Master Data | Units, tax class dan reason codes | Data referensi lintas transaksi | Super Admin, Admin, Product Manager, Order Staff, Finance | geography.reason.view, geography.reason.manage, geography.unit.view, geography.unit.manage, geography.tax.view, geography.tax.manage | API-GEO-006, API-GEO-007, API-GEO-008, API-GEO-009, API-GEO-010, API-GEO-011, API-GEO-012, API-GEO-013, API-GEO-014, API-GEO-015, API-GEO-016, API-GEO-017 | reason_codes, units, tax_classes | P1 | MVP |
+| Geography | Master Data | Countries, provinces, cities, districts | Hierarki wilayah dan import | Super Admin, Admin, Product Manager, Order Staff | geography.region.view, geography.region.create, geography.region.update, geography.region.import | API-GEO-002, API-GEO-003, API-GEO-004, API-GEO-005, API-GEO-018 | regions, stored_files | P1 | MVP |
+| Geography | Master Data | Units, tax class dan reason codes | Data referensi lintas transaksi | Super Admin, Admin, Product Manager, Order Staff, Finance | geography.reason.view, geography.reason.create, geography.reason.update, geography.unit.view, geography.unit.create, geography.unit.update, geography.tax.view, geography.tax.create, geography.tax.update | API-GEO-006, API-GEO-007, API-GEO-008, API-GEO-009, API-GEO-010, API-GEO-011, API-GEO-012, API-GEO-013, API-GEO-014, API-GEO-015, API-GEO-016, API-GEO-017 | reason_codes, units, tax_classes | P1 | MVP |
 | Administration | Administration | Staff dan sessions | Undangan, assign role dan revoke device | Super Admin | admin.staff.view, admin.staff.create, admin.staff.update, admin.staff.assign_roles, admin.staff.change_status, admin.staff.sessions.delete | API-ADM-001, API-ADM-002, API-ADM-011, API-ADM-012, API-ADM-013, API-AUTH-018 | users, model_has_roles, sessions, staff_invitations | P0 | MVP |
 | Administration | Administration | Role & Izin | Kartu role dan katalog per modul/resource/aksi | Super Admin | admin.roles.view, admin.roles.create, admin.roles.update, admin.roles.assign_permissions, admin.roles.delete | API-ADM-003, API-ADM-004, API-ADM-005, API-ADM-014, API-ADM-015, API-ADM-018 | roles, role_has_permissions, permissions | P0 | MVP |
 | Administration | Administration | Audit logs | Filter actor, entity dan action | Super Admin, Admin, Finance | admin.audit.view | API-ADM-006 | audit_logs | P0 | MVP |
@@ -83,13 +83,13 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | customers.customer.view | Admin, Order Staff, Customer Service |
 | foundation.file.create / foundation.file.download | Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager |
 | foundation.file.view | Admin, Product Manager, Order Staff, Finance, Customer Service, Warehouse, Content Manager |
-| geography.reason.manage | Admin |
+| geography.reason.create, geography.reason.update | Admin |
 | geography.reason.view | Admin, Product Manager, Order Staff, Finance |
-| geography.region.manage | Admin |
+| geography.region.create, geography.region.update, geography.region.import | Admin |
 | geography.region.view | Admin, Product Manager, Order Staff |
-| geography.tax.manage | Admin |
+| geography.tax.create, geography.tax.update | Admin |
 | geography.tax.view | Admin, Product Manager, Order Staff, Finance |
-| geography.unit.manage | Admin |
+| geography.unit.create, geography.unit.update | Admin |
 | geography.unit.view | Admin, Product Manager, Order Staff |
 | inventory.adjustment.create | Admin, Inventory Staff, Warehouse |
 | inventory.adjustment.view | Admin, Inventory Staff, Warehouse |

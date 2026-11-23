@@ -15,4 +15,8 @@ enum Subject: string
     case Inventory = 'inventory';
     case Product = 'product';
     case File = 'stored_file';
+    case Region = 'region';
+    case Reason = 'reason_code';
+    case Unit = 'unit';
+    case TaxClass = 'tax_class';
 }

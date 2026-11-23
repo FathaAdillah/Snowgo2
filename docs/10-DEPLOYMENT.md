@@ -119,3 +119,43 @@ Baseline usulan RPO 24 jam dan RTO 4 jam. Snapshot/pg_dump konsisten harian dan 
 - Alihkan traffic setelah rekonsiliasi dan review; catat waktu RTO, data gap RPO dan tindakan follow-up. Uji restore tiap kuartal dan sebelum go-live.
 
 [Arsitektur](03-TECH-STACK-ARCHITECTURE.md) · [Testing](09-TESTING-STRATEGY.md) · [Task tracker](11-TASK-PROGRESS-TRACKER.md)
+
+## Sinkronisasi wilayah Indonesia
+
+Sumber TASK-008: [API Wilayah Indonesia v2](https://fathaadillah.github.io/api-wilayah-indonesia/v2/provinces.json), diterbitkan dari [repo referensi](https://github.com/FathaAdillah/api-wilayah-indonesia). Pembeli membaca PostgreSQL, bukan GitHub Pages. Sinkronisasi dilakukan eksplisit oleh operator; `migrate` dan `db:seed` tidak menghubungi layanan luar.
+
+```sh
+docker compose exec api php artisan migrate
+docker compose exec api php artisan db:seed --class=PermissionSeeder
+```
+
+**Untuk mencoba satu cabang**, jalankan dari atas ke bawah. Setiap perintah mengambil **satu** daftar dari host tersebut, tanpa API key. Perintah pertama tidak otomatis mengimpor kecamatan seluruh Indonesia.
+
+```sh
+docker compose exec api php artisan geography:sync-wilayah --parent=ID
+docker compose exec api php artisan geography:sync-wilayah --parent=11
+docker compose exec api php artisan geography:sync-wilayah --parent=11.01
+```
+
+Ketiganya mengambil `provinces.json`, `regencies/11.json`, dan `districts/11.01.json`. Periksa `GET /api/v1/regions?parent=11.01&kind=DISTRICT`: Bakongan berkode `11.01.01`. `CITY` mencakup kabupaten maupun kota; `DISTRICT` adalah kecamatan. Desa, kode pos, koordinat, dan poligon tidak diimpor.
+
+**Untuk seluruh Indonesia**, unduh satu [arsip branch publikasi `gh-pages`](https://github.com/FathaAdillah/api-wilayah-indonesia/archive/refs/heads/gh-pages.zip) (atau arsip SHA tertentu agar dapat direproduksi). Ekstrak di luar checkout Snowgo2. Dari hasil ekstraksi gunakan direktori `v2` yang berisi `stats.json`, `provinces.json`, `regencies/`, dan `districts/`. Contoh bila direktori tersebut tersedia sebagai `./v2` dan tujuan di container belum ada:
+
+```sh
+docker compose cp ./v2 api:/tmp/wilayah-v2
+docker compose exec api php artisan geography:sync-wilayah --snapshot=/tmp/wilayah-v2
+```
+
+Snapshot divalidasi menurut relasi, jumlah per level dan tanggal publikasi sebelum commit. Kegagalan tidak menerapkan sebagian data. Sinkronisasi mempertahankan arsip lokal dan tidak menghapus kode yang tidak lagi dikirim sumber; tinjau perubahan administratif sebelum menonaktifkan wilayah. Impor ulang data identik melaporkan `Changed regions: 0`, tanpa audit/event tambahan.
+
+**Impor CSV oleh staf:** unggah melalui `POST /api/v1/admin/files` dengan `owner_type=staging`, `owner_ref=regions`, `collection=region_import` dan file UTF-8 (maks. 5 MiB, 20.000 baris). Perlu `foundation.file.create` dan `geography.region.import`. Tunggu pemeriksaan antivirus: status file dapat dibaca dengan `foundation.file.view`. Kirim `{"file_id":"<ULID>"}` ke `POST /api/v1/admin/region-imports` dengan `Idempotency-Key` baru; `202` berarti perubahan sudah tersimpan. File harus milik pengunggah dan `READY`; staging berumur lebih dari sehari dibersihkan oleh scheduler harian.
+
+```csv
+kind,code,name,parent_code,active
+COUNTRY,ID,Indonesia,,1
+PROVINCE,11,Aceh,ID,1
+CITY,11.01,Kabupaten Aceh Selatan,11,1
+DISTRICT,11.01.01,Bakongan,11.01,1
+```
+
+CSV memakai `1`/`0` untuk aktif/arsip dan boleh tidak berurutan. Kode duplikat, induk salah tingkat, atau penonaktifan induk yang masih memiliki anak aktif membatalkan seluruh impor. Izin baru untuk role yang sudah ada diberikan secara eksplisit melalui **Role & Izin**, bukan ditambahkan kembali oleh reseed.
