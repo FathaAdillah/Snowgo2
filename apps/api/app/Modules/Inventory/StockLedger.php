@@ -60,7 +60,8 @@ final class StockLedger
         $reason = DB::table('reason_codes')->where(['domain' => 'inventory', 'code' => $input['reason_code'], 'active' => true])->sharedLock()->value('id')
             ?? throw ValidationException::withMessages(['reason_code' => 'Select an active inventory reason.']);
         $movement = DB::table('inventory_movements')->insertGetId(['level_id' => $level->id, 'actor_id' => $actor, 'type' => $type,
-            'source_key' => $operation.':'.hash('sha256', "$actor:$key"), 'reason_id' => $reason, 'note' => $input['note'] ?? null, 'on_hand_delta' => $delta]);
+            'source_key' => $operation.':'.hash('sha256', "$actor:$key"), 'reason_id' => $reason,
+            'reason_code' => $input['reason_code'], 'note' => $input['note'] ?? null, 'on_hand_delta' => $delta]);
         $event = $operation === 'receipt' ? 'StockReceived' : 'StockAdjusted';
         app(Journal::class)->audit($event, Subject::Inventory, $level->id, $actor, ['quantity' => $level->on_hand], ['quantity' => $level->on_hand + $delta]);
         app(Outbox::class)->record($event, 'inventory', $level->id, ['movement_id' => $movement, 'delta' => $delta]);

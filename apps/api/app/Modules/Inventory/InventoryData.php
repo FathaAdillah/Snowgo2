@@ -44,14 +44,14 @@ final class InventoryData
 
     public static function movements(): Builder
     {
-        return DB::table('inventory_movements as m')->join('reason_codes as r', 'r.id', '=', 'm.reason_id')
-            ->select('m.id', 'm.level_id', 'm.type', 'm.source_key', 'm.on_hand_delta', 'm.reserved_delta', 'm.committed_delta', 'r.code as reason_code', 'm.occurred_at');
+        return DB::table('inventory_movements as m')
+            ->select('m.id', 'm.level_id', 'm.type', 'm.source_key', 'm.on_hand_delta', 'm.reserved_delta', 'm.committed_delta', 'm.reason_code', 'm.occurred_at');
     }
 
     public static function adjustments(): Builder
     {
-        return DB::table('stock_adjustments as a')->join('reason_codes as r', 'r.id', '=', 'a.reason_id')
-            ->select('a.id', 'a.level_id', 'a.delta', 'r.code as reason_code', 'a.created_at');
+        return DB::table('stock_adjustments as a')->join('inventory_movements as m', 'm.id', '=', 'a.movement_id')
+            ->select('a.id', 'a.level_id', 'a.delta', 'm.reason_code', 'a.created_at');
     }
 
     public static function detail(Builder $query, string $idColumn, int $id, int $status = 200): JsonResponse

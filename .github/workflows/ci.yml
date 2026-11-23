@@ -55,8 +55,8 @@ jobs:
             INSERT INTO warehouses(code,name,address,district_id,is_default) SELECT 'ci-wh','Fixture','Fixture',id,true FROM regions WHERE code='11.01.01';
             INSERT INTO inventory_levels(warehouse_id,variant_id) SELECT w.id,v.id FROM warehouses w,product_variants v WHERE w.code='ci-wh' AND v.sku='CI-SKU';
             INSERT INTO reason_codes(domain,code,label) VALUES ('inventory','opening','Opening');
-            INSERT INTO inventory_movements(level_id,type,source_key,on_hand_delta,reason_id)
-              SELECT l.id,'INITIAL','ci-opening',1,r.id FROM inventory_levels l,reason_codes r WHERE r.domain='inventory' AND r.code='opening';
+            INSERT INTO inventory_movements(level_id,type,source_key,on_hand_delta,reason_id,reason_code)
+              SELECT l.id,'INITIAL','ci-opening',1,r.id,r.code FROM inventory_levels l,reason_codes r WHERE r.domain='inventory' AND r.code='opening';
           SQL
           CONTRACT_REGION_CODE=11 CONTRACT_PRODUCT_SLUG=ci-fixture make test-contract
       - name: Verify storefront forwards the Google redirect to the browser

@@ -170,6 +170,18 @@ it('requires clearing every warehouse before retiring a variant', function () {
     $api('POST', 'stock-receipts', ['warehouse_id' => $other] + $this->receipt)->assertNotFound();
 });
 
+it('preserves the posted reason on movements and adjustments after a master rename', function () {
+    $this->actor->assignRole('inventory_staff')->givePermissionTo('geography.reason.update');
+    $api = $this->api;
+    $level = $api('POST', 'stock-receipts', ['warehouse_id' => ($this->open)()] + $this->receipt)->assertOk()->json('data.id');
+    $adjust = ['level_id' => $level, 'delta' => -1, 'reason_code' => 'COUNT'];
+    $id = $api('POST', 'stock-adjustments', $adjust)->assertCreated()->json('data.id');
+    $api('PATCH', 'reason-codes/'.DB::table('reason_codes')->where('code', 'COUNT')->value('id'), ['code' => 'RECOUNT'])->assertOk();
+    $api('GET', 'stock-movements')->assertOk()->assertJsonPath('data.0.reason_code', 'COUNT')->assertJsonPath('data.1.reason_code', 'COUNT');
+    $api('GET', "stock-adjustments/$id")->assertOk()->assertJsonPath('data.reason_code', 'COUNT');
+    $api('POST', 'stock-adjustments', ['reason_code' => 'RECOUNT'] + $adjust)->assertCreated()->assertJsonPath('data.reason_code', 'RECOUNT');
+});
+
 function inventoryWriter(array $input, int $actor): Closure
 {
     return static function () use ($input, $actor) {
