@@ -139,9 +139,9 @@ final class StaffMfa
     {
         Auth::guard('web')->login($user);
         $this->sessions->start($request, Surface::Staff);
-        $request->session()->put(['staff.version' => $user->staff_session_version, 'staff.started' => now()->timestamp, 'staff.seen' => now()->timestamp]);
-
-        $request->session()->put('staff.password_only', $passwordOnly);
+        // Only MFA-authenticated sessions may carry the version key accepted by older releases.
+        $versionKey = $passwordOnly ? StaffAccess::PASSWORD_ONLY_VERSION : 'staff.version';
+        $request->session()->put([$versionKey => $user->staff_session_version, 'staff.started' => now()->timestamp, 'staff.seen' => now()->timestamp]);
     }
 
     public function stepUp(Request $request, string $password, string $code): void

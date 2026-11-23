@@ -338,6 +338,7 @@ it('allows an enrolled ordinary staff member to toggle login MFA only with a gra
     ($this->auth)('profile/mfa', ['enabled' => false, ...$proof])->assertOk();
     ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
     ($this->auth)('login', $credentials)->assertOk()->assertJsonPath('data.challenge_required', false);
+    expect(session()->has('staff.version'))->toBeFalse();
     ($this->send)('GET', '/api/v1/admin/auth/me')->assertOk()->assertJsonPath('data.login_mfa_required', false);
     $this->travel(31)->seconds();
     ($this->auth)('profile/mfa', ['enabled' => true, ...$proof, 'code' => ($this->otp)($staff->two_factor_secret)])->assertOk();
