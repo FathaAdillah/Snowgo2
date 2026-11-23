@@ -148,4 +148,4 @@ System logs, Horizon dan metrics berada pada permukaan operator privat melalui I
 
 Di Compose development, hanya superadmin aktif yang melihat **Profil → Log Viewer** di bawah **Pengaturan**, lalu **OmniDB**. URL langsung dan API Log Viewer memakai gate yang sama. Grant operator yang sengaja diberikan ke role biasa tetap tidak membuka konsol.
 
-[Lihat kontrak dan endpoint](05-API-CONTRACT.md) · [Keamanan](08-SECURITY.md)
+[Pola tabel admin dan tombol per aksi](ADMIN-TABLES.md) · [Lihat kontrak dan endpoint](05-API-CONTRACT.md) · [Keamanan](08-SECURITY.md)
