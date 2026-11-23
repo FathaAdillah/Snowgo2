@@ -41,7 +41,11 @@ export function useAdminAuth() {
   }
 
   async function logout() {
-    await post('/api/v1/admin/auth/logout', {})
+    try {
+      await post('/api/v1/admin/auth/logout', {})
+    } catch (error) {
+      if ((error as { status?: number }).status !== 401) throw error
+    }
     user.value = null
     clearNuxtData()
     await navigateTo('/login', { replace: true })
