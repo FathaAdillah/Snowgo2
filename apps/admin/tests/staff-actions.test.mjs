@@ -17,7 +17,7 @@ Object.assign(globalThis, {
   computed, ref, watch, useStaffFilters, definePageMeta() {}, useHead() {}, useToast: () => ({}),
   useAdminAuth: () => ({ can: permission => grants.has(permission), user: ref({ id: 1 }) })
 })
-async function render(permissions, component = page, requests = [], buttons = {}) {
+async function render(permissions, component = page, requests = [], buttons = {}, fixture = {}) {
   grants.clear()
   permissions.forEach(permission => grants.add(permission))
   globalThis.useFetch = (url, options) => {
@@ -25,22 +25,32 @@ async function render(permissions, component = page, requests = [], buttons = {}
     if (options.immediate !== false) execute()
     const fixtures = url.endsWith('/roles')
       ? [openRole, { ...openRole, id: 3, name: 'super_admin', system: true, editable: false, deletable: false }]
-      : [staff, { ...staff, id: 1, email: 'self@example.test', manageable: false }]
-    return { data: ref({ data: fixtures, meta: { last_page: 2, page: 1, per_page: 25, total: 31 } }), error: ref(null), status: ref('success'), execute }
+      : fixture.rows ?? [staff, { ...staff, id: 1, email: 'self@example.test', manageable: false }]
+    const total = fixture.total ?? 31
+    fixture.query = options.query ?? fixture.query
+    return { data: ref({ data: fixtures, meta: { last_page: Math.max(1, Math.ceil(total / 25)), page: 1, per_page: 25, total } }), error: ref(null), status: ref('success'), execute }
   }
   const app = createSSRApp(component)
-  for (const name of ['UCard', 'UBadge', 'UFormField', 'UInput', 'UAlert', 'USelect', 'ConfirmAdminAction']) {
+  for (const name of ['UCard', 'UBadge', 'UFormField', 'UInput', 'UAlert', 'USelect']) {
     app.component(name, { setup: (_, { attrs, slots }) => () => h('div', {}, [attrs.label, slots.header?.(), slots.default?.(), slots.footer?.()]) })
   }
+  app.component('ConfirmAdminAction', (_, { attrs }) => {
+    fixture.confirm = attrs.action
+    return h('aside', attrs.action.label)
+  })
+  app.component('UAvatar', (_, { attrs }) => h('span', attrs.text))
   app.component('UButton', (_, { attrs }) => {
-    buttons[attrs.label] = attrs.onClick
-    return h('button', attrs.label)
+    buttons[attrs.label ?? attrs['aria-label']] = attrs.onClick
+    return h('button', { 'aria-label': attrs['aria-label'], 'data-icon': attrs.icon, 'data-variant': attrs.variant }, attrs.label)
   })
   app.component('UTable', (_, { attrs, slots }) => h('table', attrs.data.map(original => h('tr', attrs.columns.map(({ id, accessorKey }) =>
     h('td', slots[`${id ?? accessorKey}-cell`]?.({ row: { original } }) ?? original[accessorKey]))))))
   app.component('UPagination', {
     props: ['total', 'itemsPerPage'],
-    setup: props => () => h('nav', `${props.total} / ${props.itemsPerPage}`)
+    setup: (props, { attrs }) => {
+      fixture.pager = attrs
+      return () => h('nav', `${props.total} / ${props.itemsPerPage}`)
+    }
   })
   return renderToString(app)
 }
@@ -49,18 +59,18 @@ test('read access does not render any mutation control', async () => {
   assert.match(html, /staff@example.test/)
   assert.match(html, /Anda/)
   assert.match(html, /31 \/ 25/)
-  assert.doesNotMatch(html, /Tambah pengguna|Nonaktifkan|Cabut sesi/)
+  assert.doesNotMatch(html, /Tambah Pengguna|aria-label="Edit |Nonaktifkan|Cabut sesi/)
 })
 test('role choices are only requested when opening a form with assign permission', async () => {
   const requests = []
   const buttons = {}
   await render(['admin.staff.update'], page, requests, buttons)
-  buttons.Edit()
+  buttons['Edit staff@example.test']()
   assert.deepEqual(requests, ['/api/v1/admin/staff'])
   requests.length = 0
   await render(['admin.staff.create', 'admin.staff.assign_roles'], page, requests, buttons)
   assert.deepEqual(requests, ['/api/v1/admin/staff'])
-  buttons['Tambah pengguna']()
+  buttons['Tambah Pengguna']()
   assert.deepEqual(requests, ['/api/v1/admin/staff', '/api/v1/admin/staff/role-options'])
 })
 test('typing coalesces into one server query and each filter resets pagination', async (t) => {
@@ -87,14 +97,56 @@ test('typing coalesces into one server query and each filter resets pagination',
   await nextTick()
   assert.deepEqual(params.value, { page: 1, search: undefined, status: undefined })
 })
-test('create, update and delete-session controls require their own grants', async () => {
-  const partial = await render(['admin.staff.create', 'admin.staff.update', 'admin.staff.sessions.delete'])
-  assert.match(partial, /Cabut sesi/)
-  assert.doesNotMatch(partial, /Tambah pengguna|Nonaktifkan/)
-  const edit = await render(['admin.staff.create', 'admin.staff.assign_roles', 'admin.staff.update', 'admin.staff.change_status'])
-  assert.match(edit, /Tambah pengguna/)
-  assert.equal(edit.match(/>Nonaktifkan</g)?.length, 1)
-  assert.doesNotMatch(edit, /Cabut sesi/)
+test('row actions are named outline icons and restricted by status, grants and target', async () => {
+  const partial = await render(['admin.staff.create', 'admin.staff.sessions.delete'])
+  assert.match(partial, /aria-label="Cabut sesi staff@example.test"/)
+  assert.doesNotMatch(partial, /Tambah Pengguna|aria-label="Edit |Nonaktifkan/)
+  const edit = await render(['admin.staff.create', 'admin.staff.assign_roles', 'admin.staff.update', 'admin.staff.change_status', 'admin.staff.sessions.delete'])
+  assert.match(edit, /Tambah Pengguna/)
+  assert.match(edit, /aria-label="Edit staff@example.test" data-icon="i-lucide-pencil" data-variant="outline"/)
+  assert.match(edit, /aria-label="Nonaktifkan staff@example.test" data-icon="i-lucide-trash-2" data-variant="outline"/)
+  assert.doesNotMatch(edit, /Cabut sesi|aria-label="[^"]*self@example.test"/)
+  const rows = [{ ...staff, active: false }, { ...staff, id: 3, email: 'protected@example.test', manageable: false }]
+  const disabled = await render(['admin.staff.update', 'admin.staff.change_status'], page, [], {}, { rows })
+  assert.match(disabled, /aria-label="Aktifkan staff@example.test" data-icon="i-lucide-user-check"/)
+  assert.doesNotMatch(disabled, /aria-label="[^"]*protected@example.test"/)
+})
+test('edit keeps session revocation accessible and the red table icon only changes account status', async () => {
+  const fixture = {}
+  const buttons = {}
+  let state
+  const persistentPage = { ...page, setup: (props, ctx) => (state ??= page.setup(props, ctx)) }
+  const show = () => render(['admin.staff.update', 'admin.staff.sessions.delete', 'admin.staff.change_status'], persistentPage, [], buttons, fixture)
+  await show()
+  buttons['Nonaktifkan staff@example.test']()
+  await show()
+  assert.equal(fixture.confirm.method, 'PATCH')
+  assert.deepEqual(fixture.confirm.body, { active: false })
+  state = undefined
+  await show()
+  buttons['Edit staff@example.test']()
+  assert.match(await show(), /Cabut sesi/)
+  buttons['Cabut sesi']()
+  await show()
+  assert.equal(fixture.confirm.method, 'DELETE')
+  assert.equal(fixture.confirm.url, '/api/v1/admin/staff/2/sessions')
+})
+test('pager retains all four controls on one page and sends page changes to the server query', async () => {
+  for (const total of [0, 10, 80]) {
+    const fixture = { total }
+    await render(['admin.staff.view'], page, [], {}, fixture)
+    if (!total) {
+      assert.equal(fixture.pager, undefined)
+      continue
+    }
+    assert.equal(fixture.pager.page, 1)
+    assert.deepEqual(['first-icon', 'prev-icon', 'next-icon', 'last-icon'].map(key => fixture.pager[key]),
+      ['i-lucide-chevrons-left', 'i-lucide-chevron-left', 'i-lucide-chevron-right', 'i-lucide-chevrons-right'])
+    if (total > 25) {
+      fixture.pager['onUpdate:page'](3)
+      assert.equal(fixture.query.value.page, 3)
+    }
+  }
 })
 test('role mutations require individual grants and the card must allow the action', async () => {
   const partial = await render(['admin.roles.view', 'admin.roles.create', 'admin.roles.update'], roleCards)

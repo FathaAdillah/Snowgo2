@@ -12,6 +12,7 @@ const canAssign = computed(() => can('admin.staff.assign_roles'))
 const canInvite = computed(() => can('admin.staff.create') && canAssign.value)
 const canUpdate = computed(() => can('admin.staff.update'))
 const canChangeStatus = computed(() => canUpdate.value && can('admin.staff.change_status'))
+const canRevoke = computed(() => can('admin.staff.sessions.delete'))
 const base = '/api/v1/admin/staff'
 const options = { cache: 'no-store' as const, headers: { Accept: 'application/json' } }
 const columns: TableColumn<Staff>[] = [
@@ -19,7 +20,7 @@ const columns: TableColumn<Staff>[] = [
   { accessorKey: 'email', header: 'Email' },
   { accessorKey: 'roles', header: 'Role' },
   { id: 'status', header: 'Status' },
-  { id: 'actions', header: 'Aksi' }
+  { id: 'actions', header: 'Aksi', meta: { class: { th: 'w-28', td: 'w-28' } } }
 ]
 const statuses = [
   { label: 'Semua status', value: 'all' },
@@ -80,19 +81,21 @@ async function saved() {
 </script>
 
 <template>
-  <section class="space-y-6">
+  <section class="staff-directory min-w-0 space-y-6">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold text-highlighted">
           Pengguna
         </h1><p class="text-sm text-muted">
-          Kelola akun staf, role, dan akses perangkat.
+          Kelola akun internal, role, dan status akses.
         </p>
       </div>
       <UButton
         v-if="canInvite"
-        icon="i-lucide-user-plus"
-        label="Tambah pengguna"
+        icon="i-lucide-plus"
+        label="Tambah Pengguna"
+        color="success"
+        size="lg"
         @click="form()"
       />
     </div>
@@ -153,6 +156,16 @@ async function saved() {
         />
         <div class="flex items-end justify-end gap-2 sm:col-span-2">
           <UButton
+            v-if="mode === 'edit' && target?.manageable && target.id !== user?.id && canRevoke"
+            type="button"
+            label="Cabut sesi"
+            icon="i-lucide-log-out"
+            color="error"
+            variant="outline"
+            class="me-auto"
+            @click="revoke(target)"
+          />
+          <UButton
             label="Batal"
             variant="outline"
             @click="mode = undefined"
@@ -165,28 +178,29 @@ async function saved() {
         </div>
       </form>
     </UCard>
-    <UCard>
-      <template #header>
-        <form
-          class="flex flex-wrap items-center gap-2"
-          role="search"
-          @submit.prevent="applyFilters"
-        >
-          <UInput
-            v-model="query"
-            type="search"
-            maxlength="100"
-            aria-label="Cari pengguna"
-            placeholder="Cari nama atau email"
-            icon="i-lucide-search"
-          />
-          <USelect
-            v-model="statusFilter"
-            :items="statuses"
-            aria-label="Filter status pengguna"
-          />
-        </form>
-      </template>
+    <UCard :ui="{ body: 'p-3 sm:p-6' }">
+      <form
+        class="flex flex-wrap items-center gap-2 border-b border-default px-4 py-4"
+        role="search"
+        @submit.prevent="applyFilters"
+      >
+        <UInput
+          v-model="query"
+          type="search"
+          maxlength="100"
+          aria-label="Cari pengguna"
+          placeholder="Cari pengguna..."
+          icon="i-lucide-search"
+          size="lg"
+          class="w-full sm:w-80"
+        />
+        <USelect
+          v-model="statusFilter"
+          :items="statuses"
+          aria-label="Filter status pengguna"
+          size="lg"
+        />
+      </form>
       <UAlert
         v-if="error"
         color="error"
@@ -200,6 +214,7 @@ async function saved() {
         :data="data?.data ?? []"
         :get-row-id="row => String(row.id)"
         :watch-options="{ deep: false }"
+        :ui="{ th: 'py-4', td: 'h-18 py-3' }"
         :loading="loading"
         empty="Tidak ada pengguna yang cocok."
       >
@@ -207,24 +222,27 @@ async function saved() {
           <span role="status">Memuat pengguna…</span>
         </template>
         <template #display_name-cell="{ row: { original: staff } }">
-          {{ staff.display_name || '—' }}
-          <UBadge
-            v-if="staff.id === user?.id"
-            size="sm"
-            variant="subtle"
-          >
-            Anda
-          </UBadge>
+          <div class="flex items-center gap-3 font-semibold text-toned">
+            <UAvatar
+              :text="(staff.display_name || staff.email).charAt(0).toUpperCase()"
+              aria-hidden="true"
+              size="md"
+            />
+            {{ staff.display_name || '—' }}
+          </div>
         </template>
         <template #roles-cell="{ row: { original: staff } }">
           <div class="flex flex-wrap gap-1">
             <UBadge
               v-for="role in staff.roles"
               :key="role"
+              color="success"
               variant="subtle"
+              class="capitalize"
             >
-              {{ role }}
+              {{ role.replaceAll('_', ' ') }}
             </UBadge>
+            <span v-if="!staff.roles.length">—</span>
           </div>
         </template>
         <template #status-cell="{ row: { original: staff } }">
@@ -236,49 +254,71 @@ async function saved() {
           </UBadge>
         </template>
         <template #actions-cell="{ row: { original: staff } }">
+          <span
+            v-if="staff.id === user?.id"
+            class="text-xs font-bold uppercase"
+          >Anda</span>
           <div
-            v-if="staff.manageable && staff.id !== user?.id"
-            class="flex flex-wrap gap-1"
+            v-else-if="staff.manageable && (canUpdate || canRevoke)"
+            class="flex items-center gap-2"
           >
             <UButton
               v-if="canUpdate"
-              label="Edit"
-              variant="ghost"
+              icon="i-lucide-pencil"
+              :aria-label="`Edit ${staff.email}`"
+              title="Edit pengguna"
+              color="neutral"
+              variant="outline"
+              square
               @click="form(staff)"
             />
             <UButton
               v-if="canChangeStatus"
-              :label="staff.active ? 'Nonaktifkan' : 'Aktifkan'"
-              variant="ghost"
+              :icon="staff.active ? 'i-lucide-trash-2' : 'i-lucide-user-check'"
+              :aria-label="`${staff.active ? 'Nonaktifkan' : 'Aktifkan'} ${staff.email}`"
+              :title="staff.active ? 'Nonaktifkan pengguna' : 'Aktifkan pengguna'"
+              :color="staff.active ? 'error' : 'success'"
+              variant="outline"
+              square
               @click="status(staff)"
             />
             <UButton
-              v-if="can('admin.staff.sessions.delete')"
-              label="Cabut sesi"
+              v-if="canRevoke && !canUpdate"
+              icon="i-lucide-log-out"
+              :aria-label="`Cabut sesi ${staff.email}`"
+              title="Cabut sesi"
               color="error"
-              variant="ghost"
+              variant="outline"
+              square
               @click="revoke(staff)"
             />
           </div>
+          <span v-else>—</span>
         </template>
       </UTable>
-      <template
+      <div
         v-if="data && !error"
-        #footer
+        class="flex flex-wrap items-center justify-end gap-2 border-t border-default px-4 py-4"
       >
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-sm text-muted">{{ data.meta.total }} pengguna</span>
-          <UPagination
-            v-if="data.meta.last_page > 1"
-            :page="params.page"
-            :total="data.meta.total"
-            :items-per-page="data.meta.per_page"
-            :sibling-count="1"
-            aria-label="Halaman pengguna"
-            @update:page="changePage"
-          />
-        </div>
-      </template>
+        <span class="sr-only">{{ data.meta.total }} pengguna</span>
+        <UPagination
+          v-if="data.meta.total > 0"
+          :page="params.page"
+          :total="data.meta.total"
+          :items-per-page="data.meta.per_page"
+          :sibling-count="1"
+          show-controls
+          first-icon="i-lucide-chevrons-left"
+          prev-icon="i-lucide-chevron-left"
+          next-icon="i-lucide-chevron-right"
+          last-icon="i-lucide-chevrons-right"
+          active-color="success"
+          size="lg"
+          :ui="{ item: 'min-w-9 justify-center', label: 'min-w-0' }"
+          aria-label="Halaman pengguna"
+          @update:page="changePage"
+        />
+      </div>
     </UCard>
     <ConfirmAdminAction
       v-if="pending"
