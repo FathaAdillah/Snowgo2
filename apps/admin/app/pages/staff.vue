@@ -95,7 +95,6 @@ async function saved() {
         v-if="canInvite"
         icon="i-lucide-plus"
         label="Tambah Pengguna"
-        color="success"
         size="lg"
         @click="form()"
       />
@@ -313,7 +312,6 @@ async function saved() {
           prev-icon="i-lucide-chevron-left"
           next-icon="i-lucide-chevron-right"
           last-icon="i-lucide-chevrons-right"
-          active-color="success"
           size="lg"
           :ui="{ item: 'min-w-9 justify-center', label: 'min-w-0' }"
           aria-label="Halaman pengguna"
