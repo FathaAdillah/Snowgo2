@@ -29,6 +29,18 @@ API publik terjangkau same-origin melalui storefront/admin menurut route surface
 
 Runbook initial: filter logs berdasarkan request ID dan job ID. Cek DB/Redis/storage probes, Horizon failed jobs dan outbox backlog. Untuk retry, cocokkan event key, DB state dan apakah side effect eksternal sudah terjadi. Replay job only dari objek sumber dengan audit/lease; untuk transfer ambigu cek mutasi sebelum retry. Jadwal default, expiry tiap menit, quote/charge expiry tiap menit, completion tiap jam, rekonsiliasi dan backup harian, polling provider Phase 2 sesuai policy. Horizon queue critical, default, notifications, low memiliki supervisor eksplisit, retry backoff/jitter (default 10s, 60s, 300s), timeout worker lebih pendek dari retry_after. Audit key dan destination disanitasi sebelum log.
 
+### Admin lokal cepat (tanpa hot reload)
+
+Di stack development yang sudah berjalan, gunakan bundle admin siap pakai untuk mencoba dashboard seperti pengguna. Host dan port tetap sama; Laravel tetap lokal dengan pemeriksaan sesi, MFA, dan izin biasa. Tidak perlu migrasi atau menghapus volume.
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin
+```
+
+Ulangi perintah itu setelah mengubah frontend, atau kembali ke Vite untuk hot reload langsung: `docker compose -f docker-compose.yml up -d --no-deps --wait admin`. Compose biasa tetap menggunakan mode development; gunakan kedua `-f` setiap kali ingin mempertahankan mode preview saat membuat ulang stack.
+
+Untuk mengukur waktu render, request frontend dan latensi API secara terpisah, gunakan [skill admin-performance](../.agents/skills/admin-performance/SKILL.md).
+
 ### Operasi file (TASK-003)
 
 - Development: `docker compose build api`, `docker compose run --rm --no-deps minio-init`, `docker compose run --rm migrate`, lalu `docker compose up -d --wait`. Perintah init juga memperketat policy bucket lama. Sediakan RAM untuk database signature ClamAV (disarankan 4 GiB untuk scanner); jangan publish port 3310. Mount signature volume dan izinkan outbound FreshClam. Pantau health, usia signature dan pembaruan image.

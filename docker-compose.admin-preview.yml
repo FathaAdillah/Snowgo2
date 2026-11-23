@@ -1,0 +1,7 @@
+# Daily local use: keep the dev edge/API and swap only Vite for the compiled admin.
+services:
+  admin:
+    image: snowego/admin:local-preview
+    build:
+      target: prod
+    volumes: !reset []
