@@ -84,6 +84,14 @@ Buka [Mailpit](http://localhost:8025), ikuti **Aktifkan akun staf**, lalu buat d
 
 Untuk staf biasa gunakan `--role=admin`, atau undang melalui **Administrasi → Pengguna**. Mutasi keamanan meminta password dan TOTP baru; kode pemulihan tidak berlaku untuk konfirmasi ini. SMTP selain Mailpit harus dikonfigurasi di produksi.
 
+### Akun demo per role staf (lokal)
+
+Setelah migrasi, jalankan `docker compose exec api php artisan db:seed --class=StaffDemoUsersSeeder`. Seeder opsional ini tidak dijalankan oleh `make seed` atau saat deploy. Hanya environment `local` dan `testing` yang diizinkan.
+
+Setiap role Spatie `web`, termasuk role kustom, mendapat satu undangan ke `<kode_role>@staff.snowego.test`. Contoh: `super_admin@staff.snowego.test`, `admin@staff.snowego.test`, dan `finance@staff.snowego.test`. Role lama dengan kode di luar format admin memakai `role-<id>@staff.snowego.test`. Alamat dicetak oleh perintah. Buka email di [Mailpit](http://localhost:8025) untuk membuat password dan mengaktifkan MFA seperti panduan di atas; tidak ada password demo bersama untuk staf.
+
+Jalankan ulang setelah menambah role. Email yang sudah terdaftar dilewati, termasuk akun nonaktif atau akun yang role-nya telah diubah; tidak ada perubahan password, MFA, role, atau tautan undangan. Untuk undangan **kedaluwarsa**, kirim ulang secara eksplisit, misalnya `docker compose exec api php artisan staff:invite finance@staff.snowego.test --role=finance`.
+
 ### Manajemen staf dan role
 
 Setelah memperbarui kode, jalankan `docker compose run --rm migrate` lalu `docker compose exec api php artisan db:seed --class=PermissionSeeder --force`. Seeder ini tidak mengganti grant role yang sudah ada. Jika memakai mode admin preview, bangun ulang bundle seperti langkah preview di bawah.

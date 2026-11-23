@@ -10,15 +10,14 @@ use App\Support\Http\ApiProblem;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Spatie\Permission\Contracts\Role as RoleContract;
 use Spatie\Permission\Models\Role;
 
 final class StaffInvitations
 {
     public function invite(string $email, string $role, ?int $actor = null): User
     {
-        $token = Str::random(64);
-
-        return DB::transaction(function () use ($email, $role, $token, $actor) {
+        return DB::transaction(function () use ($email, $role, $actor) {
             $grant = Role::findByName($role, 'web');
             $user = User::query()->firstOrCreate(['email' => $email], ['account_type' => User::STAFF]);
             $new = $user->wasRecentlyCreated;
@@ -27,15 +26,31 @@ final class StaffInvitations
                 || (! $new && ! $user->hasRole($grant))) {
                 throw new ApiProblem(409, 'IDENTITY_CONFLICT', 'Not a pending staff invitation for this role');
             }
-            $user->assignRole($grant);
-            DB::table('staff_invitations')->updateOrInsert(['user_id' => $user->id], [
-                'token_hash' => hash('sha256', $token), 'expires_at' => now()->addHour(),
-                'delivery_ciphertext' => Crypt::encryptString($token), 'created_at' => now()->format('Y-m-d H:i:s.uP'),
-            ]);
-            app(Journal::class)->audit('staff.invited', Subject::User, $user->id, $actor, after: ['role' => $role]);
-            app(Outbox::class)->record('StaffInvited', 'user', $user->id, []);
 
-            return $user;
+            return $this->issue($user, $grant, $actor);
         });
+    }
+
+    public function inviteIfMissing(string $email, string $role): ?User
+    {
+        return DB::transaction(function () use ($email, $role) {
+            $user = User::query()->firstOrCreate(['email' => $email], ['account_type' => User::STAFF]);
+
+            return $user->wasRecentlyCreated ? $this->issue($user, Role::findByName($role, 'web'), null) : null;
+        });
+    }
+
+    private function issue(User $user, RoleContract $grant, ?int $actor): User
+    {
+        $user->assignRole($grant);
+        $token = Str::random(64);
+        DB::table('staff_invitations')->updateOrInsert(['user_id' => $user->id], [
+            'token_hash' => hash('sha256', $token), 'expires_at' => now()->addHour(),
+            'delivery_ciphertext' => Crypt::encryptString($token), 'created_at' => now()->format('Y-m-d H:i:s.uP'),
+        ]);
+        app(Journal::class)->audit('staff.invited', Subject::User, $user->id, $actor, after: ['role' => $grant->name]);
+        app(Outbox::class)->record('StaffInvited', 'user', $user->id, []);
+
+        return $user;
     }
 }
