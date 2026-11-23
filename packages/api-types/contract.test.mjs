@@ -61,3 +61,33 @@ test('the file client sends a multipart File and the required headers', async ()
     bodySerializer: multipartBody
   })
 })
+
+test('customer account endpoints reject guests with the documented error envelope', async () => {
+  for (const path of ['/profile', '/addresses', '/wishlist']) {
+    const result = await client.GET(path)
+    assert.equal(result.response.status, 401)
+    validateResponse(path, 401, result.error)
+    assert.equal(result.error.code, 'UNAUTHENTICATED')
+  }
+})
+
+test('public catalog and missing product use their published schemas', async () => {
+  for (const path of ['/products', '/categories']) {
+    const result = await client.GET(path, { params: { query: { per_page: 1 } } })
+    assert.equal(result.response.status, 200)
+    validateResponse(path, 200, result.data)
+  }
+  if (process.env.CONTRACT_PRODUCT_SLUG) {
+    const slug = process.env.CONTRACT_PRODUCT_SLUG
+    const result = await client.GET('/products/{slug}', { params: { path: { slug } } })
+    assert.equal(result.response.status, 200)
+    validateResponse('/products/{slug}', 200, result.data)
+    assert.equal(result.data.data.variants[0].offers[0].unit_amount, 25000)
+    const list = await client.GET('/products', { params: { query: { method: 'RTS', q: 'fixture' } } })
+    validateResponse('/products', 200, list.data)
+    assert.equal(list.data.data[0]?.slug, slug)
+  }
+  const missing = await client.GET('/products/{slug}', { params: { path: { slug: 'ci-missing-5b025cdf' } } })
+  assert.equal(missing.response.status, 404)
+  validateResponse('/products/{slug}', 404, missing.error)
+})

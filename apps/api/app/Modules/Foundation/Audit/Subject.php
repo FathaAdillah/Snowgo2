@@ -14,6 +14,14 @@ enum Subject: string
     case Shipment = 'shipment';
     case Inventory = 'inventory';
     case Product = 'product';
+    case Variant = 'variant';
+    case Category = 'category';
+    case Brand = 'brand';
+    case Collection = 'collection';
+    case Tag = 'tag';
+    case Attribute = 'attribute';
+    case AttributeValue = 'attribute_value';
+    case ProductMedia = 'product_media';
     case File = 'stored_file';
     case Region = 'region';
     case Reason = 'reason_code';

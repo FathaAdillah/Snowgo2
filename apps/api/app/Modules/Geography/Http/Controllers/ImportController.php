@@ -4,8 +4,8 @@ namespace App\Modules\Geography\Http\Controllers;
 
 use App\Modules\Foundation\Files\StoredFiles;
 use App\Modules\Foundation\Idempotency\IdempotentMutation;
-use App\Modules\Geography\References;
 use App\Modules\Geography\RegionBatch;
+use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
 use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\IgnoreResponse;
@@ -28,7 +28,7 @@ final class ImportController
     public function __invoke(Request $request, StoredFiles $files, IdempotentMutation $guard): JsonResponse
     {
         $data = $request->validate(['file_id' => 'required|string|ulid']);
-        References::fields($request, $data);
+        ApiInput::fields($request, $data);
         $actor = $request->user();
         $ready = fn () => $files->requireReady($data['file_id'], 'staging', $actor->id, 'region_import');
 
