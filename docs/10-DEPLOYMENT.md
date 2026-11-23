@@ -165,3 +165,9 @@ CSV memakai `1`/`0` untuk aktif/arsip dan boleh tidak berurutan. Kode duplikat, 
 Sesudah pull TASK-009, jalankan `docker compose exec api php artisan migrate`, lalu `docker compose exec api php artisan db:seed --class=PermissionSeeder`. Tidak perlu membuat ulang akun atau build frontend. Sinkronkan minimal satu **kecamatan** sebelum mencoba membuat alamat; data provinsi saja belum cukup.
 
 Pada role baru, `admin` dan `customer_service` memperoleh izin ringkasan dan alamat, sedangkan `order_staff` hanya ringkasan. Untuk role lama pilih izin `customers.customer.view` (daftar, detail, aktivitas) dan, hanya bila diperlukan, `customers.customer.pii_view` (alamat lengkap) di **Role & Izin**. Reseed tidak memulihkan izin yang sengaja dicabut. Belum ada menu Customers baru di admin.
+
+## Mengaktifkan katalog (TASK-010)
+
+Sesudah deploy API, jalankan migrasi dan `PermissionSeeder` seperti di atas. Identitas produk TASK-009 tetap memakai ID yang sama; produk lama berstatus PUBLISHED kembali menjadi DRAFT sampai memiliki kategori dan varian aktif. Wishlist tidak dihapus. Tidak ada perubahan storefront.
+
+Untuk role yang sudah ada, berikan izin Catalog yang diperlukan di **Role & Izin**. Seeder tidak mengembalikan izin yang pernah dicabut. Jalankan ulang worker Horizon dengan kode baru dan pastikan scheduler/relay berjalan untuk publikasi serta pencabutan media. `S3_PUBLIC_URL` harus menunjuk bucket katalog yang dapat dibaca browser, bukan bucket privat.

@@ -23,10 +23,9 @@ final class WishlistController
         ApiInput::fields($request, $filters);
         $page = ProductDirectory::published()->join('wishlists as w', 'w.product_id', '=', 'products.id')
             ->where('w.user_id', $request->user()->id)->orderByDesc('w.id')
-            ->paginate((int) ($filters['per_page'] ?? 20), ['products.slug', 'products.name'])
-            ->through(ProductDirectory::card(...));
+            ->paginate((int) ($filters['per_page'] ?? 20), ['products.id', 'products.slug', 'products.name', 'products.brand_id']);
 
-        return CustomerResponse::ok($page->items(), meta: ['page' => $page->currentPage(), 'per_page' => $page->perPage(),
+        return CustomerResponse::ok(ProductDirectory::cards($page->getCollection()), meta: ['page' => $page->currentPage(), 'per_page' => $page->perPage(),
             'total' => $page->total(), 'last_page' => $page->lastPage()]);
     }
 

@@ -22,12 +22,12 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | Shipping | Shipping | Sinkronisasi provider | Refresh tracking dengan audit | Super Admin, Admin, Order Staff, Warehouse | shipping.tracking.manage | API-SHP-020 | shipments, webhook_events | P2 | Phase 2 |
 | Refunds | Finance | Refund dan bukti transfer | Review, cap, execute, proof dan histori transfer | Super Admin, Admin, Finance, Customer Service | refunds.refund.view, refunds.refund.review, refunds.refund.execute | API-RFD-004, API-RFD-005, API-RFD-006, API-RFD-007, API-RFD-008, API-RFD-009 | refunds, refund_items, refund_transactions, payment_allocations, orders, payments, audit_logs | P0 | MVP |
 | Returns | Commerce | Return dan inspection | Review, instruksi, receipt, inspeksi dan resolusi | Super Admin, Admin, Customer Service, Warehouse | returns.return.view, returns.return.review, returns.return.inspect | API-RTN-005, API-RTN-006, API-RTN-007, API-RTN-008, API-RTN-009, API-RTN-010 | returns, return_items, inventory_movements, refunds, shipments | P0 | MVP |
-| Catalog | Catalog | Produk | Master, publish, harga, media dan SEO | Super Admin, Admin, Product Manager, Content Manager | catalog.product.view, catalog.product.manage | API-CAT-004, API-CAT-005, API-CAT-006, API-CAT-007 | products, product_categories, product_tags, product_collections | P1 | MVP |
-| Catalog | Catalog | Varian dan SKU | Harga, berat dan opsi | Super Admin, Admin, Product Manager, Content Manager | catalog.variant.view, catalog.variant.manage | API-CAT-008, API-CAT-009, API-CAT-010, API-CAT-011 | product_variants, variant_attribute_values | P1 | MVP |
-| Catalog | Catalog | Kategori dan brand | Taksonomi produk | Super Admin, Admin, Product Manager, Content Manager | catalog.category.view, catalog.category.manage, catalog.brand.view, catalog.brand.manage | API-CAT-012, API-CAT-013, API-CAT-014, API-CAT-015, API-CAT-016, API-CAT-017, API-CAT-018, API-CAT-019 | categories, brands | P1 | MVP |
-| Catalog | Catalog | Koleksi dan tags | Kurasi dan filter | Super Admin, Admin, Product Manager, Content Manager | catalog.collection.view, catalog.collection.manage, catalog.tag.view, catalog.tag.manage | API-CAT-020, API-CAT-021, API-CAT-022, API-CAT-023, API-CAT-024, API-CAT-025, API-CAT-026, API-CAT-027 | collections, tags | P1 | MVP |
-| Catalog | Catalog | Atribut dan nilai | Opsi varian | Super Admin, Admin, Product Manager, Content Manager | catalog.attribute.view, catalog.attribute.manage | API-CAT-028, API-CAT-029, API-CAT-030, API-CAT-031, API-CAT-032, API-CAT-033, API-CAT-034, API-CAT-035 | attributes, attribute_values | P1 | MVP |
-| Catalog | Catalog | Media | Gambar produk/varian, alt dan urutan | Super Admin, Admin, Product Manager, Content Manager | catalog.media.view, catalog.media.manage | API-CAT-036, API-CAT-037, API-CAT-038, API-CAT-039 | product_media, stored_files | P1 | MVP |
+| Catalog | Catalog | Produk | Master, publish, harga, media dan SEO | Super Admin, Admin, Product Manager, Content Manager | catalog.product.view, catalog.product.create, catalog.product.update, catalog.product.archive, catalog.product.publish | API-CAT-004, API-CAT-005, API-CAT-006, API-CAT-007 | products, product_categories, product_tags, product_collections | P1 | MVP |
+| Catalog | Catalog | Varian dan SKU | Harga, berat dan opsi | Super Admin, Admin, Product Manager, Content Manager | catalog.variant.view, catalog.variant.create, catalog.variant.update, catalog.variant.archive | API-CAT-008, API-CAT-009, API-CAT-010, API-CAT-011 | product_variants, variant_attribute_values | P1 | MVP |
+| Catalog | Catalog | Kategori dan brand | Taksonomi produk | Super Admin, Admin, Product Manager, Content Manager | catalog.category.view, catalog.category.create, catalog.category.update, catalog.category.archive, catalog.brand.view, catalog.brand.create, catalog.brand.update, catalog.brand.archive | API-CAT-012, API-CAT-013, API-CAT-014, API-CAT-015, API-CAT-016, API-CAT-017, API-CAT-018, API-CAT-019 | categories, brands | P1 | MVP |
+| Catalog | Catalog | Koleksi dan tags | Kurasi dan filter | Super Admin, Admin, Product Manager, Content Manager | catalog.collection.view, catalog.collection.create, catalog.collection.update, catalog.collection.archive, catalog.tag.view, catalog.tag.create, catalog.tag.update, catalog.tag.archive | API-CAT-020, API-CAT-021, API-CAT-022, API-CAT-023, API-CAT-024, API-CAT-025, API-CAT-026, API-CAT-027 | collections, tags | P1 | MVP |
+| Catalog | Catalog | Atribut dan nilai | Opsi varian | Super Admin, Admin, Product Manager, Content Manager | catalog.attribute.view, catalog.attribute.create, catalog.attribute.update, catalog.attribute.archive, catalog.attribute_value.view, catalog.attribute_value.create, catalog.attribute_value.update, catalog.attribute_value.archive | API-CAT-028, API-CAT-029, API-CAT-030, API-CAT-031, API-CAT-032, API-CAT-033, API-CAT-034, API-CAT-035 | attributes, attribute_values | P1 | MVP |
+| Catalog | Catalog | Media | Gambar produk/varian, alt dan urutan | Super Admin, Admin, Product Manager, Content Manager | catalog.media.view, catalog.media.create, catalog.media.update, catalog.media.archive | API-CAT-036, API-CAT-037, API-CAT-038, API-CAT-039 | product_media, stored_files | P1 | MVP |
 | Inventory | Inventory | Warehouses | Gudang, alamat dan default | Super Admin, Admin, Inventory Staff, Warehouse | inventory.warehouse.view, inventory.warehouse.manage | API-INV-001, API-INV-002, API-INV-003, API-INV-004 | warehouses | P0 | MVP |
 | Inventory | Inventory | Stocks dan low stock | Saldo per gudang dan filter low_stock | Super Admin, Admin, Product Manager, Inventory Staff, Warehouse | inventory.stock.view | API-INV-005, API-INV-006 | inventory_levels | P0 | MVP |
 | Inventory | Inventory | Movements | Ledger dan sumber transaksi | Super Admin, Admin, Inventory Staff, Warehouse | inventory.movement.view | API-INV-007, API-INV-008 | inventory_movements | P0 | MVP |
@@ -62,21 +62,21 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | admin.staff.update / admin.staff.change_status | — |
 | admin.staff.sessions.delete | — |
 | admin.staff.view | — |
-| catalog.attribute.manage | Admin, Product Manager |
+| catalog.attribute.create, catalog.attribute.update, catalog.attribute.archive, catalog.attribute_value.view, catalog.attribute_value.create, catalog.attribute_value.update, catalog.attribute_value.archive | Admin, Product Manager |
 | catalog.attribute.view | Admin, Product Manager, Content Manager |
-| catalog.brand.manage | Admin, Product Manager |
+| catalog.brand.create, catalog.brand.update, catalog.brand.archive | Admin, Product Manager |
 | catalog.brand.view | Admin, Product Manager, Content Manager |
-| catalog.category.manage | Admin, Product Manager |
+| catalog.category.create, catalog.category.update, catalog.category.archive | Admin, Product Manager |
 | catalog.category.view | Admin, Product Manager, Content Manager |
-| catalog.collection.manage | Admin, Product Manager |
+| catalog.collection.create, catalog.collection.update, catalog.collection.archive | Admin, Product Manager |
 | catalog.collection.view | Admin, Product Manager, Content Manager |
-| catalog.media.manage | Admin, Product Manager |
+| catalog.media.create, catalog.media.update, catalog.media.archive | Admin, Product Manager |
 | catalog.media.view | Admin, Product Manager, Content Manager |
-| catalog.product.manage | Admin, Product Manager |
+| catalog.product.create, catalog.product.update, catalog.product.archive, catalog.product.publish | Admin, Product Manager |
 | catalog.product.view | Admin, Product Manager, Content Manager |
-| catalog.tag.manage | Admin, Product Manager |
+| catalog.tag.create, catalog.tag.update, catalog.tag.archive | Admin, Product Manager |
 | catalog.tag.view | Admin, Product Manager, Content Manager |
-| catalog.variant.manage | Admin, Product Manager |
+| catalog.variant.create, catalog.variant.update, catalog.variant.archive | Admin, Product Manager |
 | catalog.variant.view | Admin, Product Manager, Content Manager |
 | content.entry.manage | Admin, Content Manager |
 | content.entry.view | Admin, Content Manager |

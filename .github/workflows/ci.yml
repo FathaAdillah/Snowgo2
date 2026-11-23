@@ -44,8 +44,14 @@ jobs:
           docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
             INSERT INTO regions (code,kind,name) VALUES ('ID','COUNTRY','Indonesia');
             INSERT INTO regions (code,kind,name,parent_id) SELECT '11','PROVINCE','Aceh',id FROM regions WHERE code='ID';
+            INSERT INTO units(code,name) VALUES ('ci-unit','Unit');
+            INSERT INTO categories(slug,name) VALUES ('ci-category','Category');
+            INSERT INTO products(slug,name,status,published_at) VALUES ('ci-fixture','Fixture','PUBLISHED',now());
+            INSERT INTO product_categories SELECT p.id,c.id FROM products p,categories c WHERE p.slug='ci-fixture' AND c.slug='ci-category';
+            INSERT INTO product_variants(product_id,unit_id,sku,option_key,name,weight_g,rts_enabled,rts_price_amount)
+              SELECT p.id,u.id,'CI-SKU','default','Fixture',100,true,25000 FROM products p,units u WHERE p.slug='ci-fixture' AND u.code='ci-unit';
           SQL
-          CONTRACT_REGION_CODE=11 make test-contract
+          CONTRACT_REGION_CODE=11 CONTRACT_PRODUCT_SLUG=ci-fixture make test-contract
       - name: Verify storefront forwards the Google redirect to the browser
         env:
           GOOGLE_CLIENT_ID: ci-placeholder
