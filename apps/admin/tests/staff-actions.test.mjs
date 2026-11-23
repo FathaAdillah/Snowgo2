@@ -28,7 +28,7 @@ async function render(permissions, component = page, requests = [], buttons = {}
       : fixture.rows ?? [staff, { ...staff, id: 1, email: 'self@example.test', manageable: false }]
     const total = fixture.total ?? 31
     fixture.query = options.query ?? fixture.query
-    return { data: ref({ data: fixtures, meta: { last_page: Math.max(1, Math.ceil(total / 25)), page: 1, per_page: 25, total } }), error: ref(null), status: ref('success'), execute }
+    return { data: ref({ data: fixtures, meta: { last_page: Math.max(1, Math.ceil(total / 25)), page: 1, per_page: 25, total } }), error: ref(null), status: ref('success'), execute, refresh: execute }
   }
   const app = createSSRApp(component)
   for (const name of ['UCard', 'UBadge', 'UFormField', 'UInput', 'UAlert', 'USelect']) {
@@ -36,6 +36,7 @@ async function render(permissions, component = page, requests = [], buttons = {}
   }
   app.component('ConfirmAdminAction', (_, { attrs }) => {
     fixture.confirm = attrs.action
+    fixture.saved = attrs.onSaved
     return h('aside', attrs.action.label)
   })
   app.component('UAvatar', (_, { attrs }) => h('span', attrs.text))
@@ -126,10 +127,18 @@ test('edit keeps session revocation accessible and the red table icon only chang
   await show()
   buttons['Edit staff@example.test']()
   assert.match(await show(), /Cabut sesi/)
+  state.display.value = 'Draf nama'
   buttons['Cabut sesi']()
   await show()
   assert.equal(fixture.confirm.method, 'DELETE')
   assert.equal(fixture.confirm.url, '/api/v1/admin/staff/2/sessions')
+  await fixture.saved()
+  assert.match(await show(), /Edit pengguna/)
+  state.submit()
+  await show()
+  assert.deepEqual(fixture.confirm.body, { display_name: 'Draf nama' })
+  await fixture.saved()
+  assert.doesNotMatch(await show(), /<h2[^>]*>Edit pengguna/)
 })
 test('pager retains all four controls on one page and sends page changes to the server query', async () => {
   for (const total of [0, 10, 80]) {

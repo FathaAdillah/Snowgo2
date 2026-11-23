@@ -6,7 +6,7 @@ import type { StaffStatusFilter } from '~/composables/useStaffFilters'
 definePageMeta({ permission: 'admin.staff.view' })
 useHead({ title: 'Pengguna · Snowego Admin' })
 type Staff = StaffList['data'][number]
-type Pending = { url: string, method: 'POST' | 'PATCH' | 'DELETE', label: string, body?: Record<string, unknown> }
+type Pending = { url: string, method: 'POST' | 'PATCH' | 'DELETE', label: string, body?: Record<string, unknown>, closesForm?: boolean }
 const { can, user } = useAdminAuth()
 const canAssign = computed(() => can('admin.staff.assign_roles'))
 const canInvite = computed(() => can('admin.staff.create') && canAssign.value)
@@ -57,14 +57,14 @@ function form(staff?: Staff) {
 }
 function submit() {
   if (mode.value === 'invite' && canInvite.value && invitedRole.value) {
-    pending.value = { url: base, method: 'POST', label: `Undang ${email.value} sebagai ${invitedRole.value}?`,
+    pending.value = { closesForm: true, url: base, method: 'POST', label: `Undang ${email.value} sebagai ${invitedRole.value}?`,
       body: { email: email.value, role: invitedRole.value, display_name: display.value.trim() || null } }
   } else if (mode.value === 'edit' && target.value && canUpdate.value) {
     const staff = target.value
     const body: Record<string, unknown> = {}
     if (display.value.trim() && display.value.trim() !== staff.display_name) body.display_name = display.value.trim()
     if (canAssign.value && [...selected.value].sort().join() !== [...staff.roles].sort().join()) body.roles = selected.value
-    if (Object.keys(body).length) pending.value = { url: `${base}/${staff.id}`, method: 'PATCH', label: `Simpan perubahan untuk ${staff.email}?`, body }
+    if (Object.keys(body).length) pending.value = { closesForm: true, url: `${base}/${staff.id}`, method: 'PATCH', label: `Simpan perubahan untuk ${staff.email}?`, body }
     else mode.value = undefined
   }
 }
@@ -75,7 +75,8 @@ function revoke(staff: Staff) {
   pending.value = { url: `${base}/${staff.id}/sessions`, method: 'DELETE', label: `Keluar dari seluruh perangkat ${staff.email}?` }
 }
 async function saved() {
-  pending.value = mode.value = undefined
+  if (pending.value?.closesForm) mode.value = undefined
+  pending.value = undefined
   await refresh()
 }
 </script>
