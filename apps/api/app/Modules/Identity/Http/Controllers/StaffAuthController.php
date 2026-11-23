@@ -16,12 +16,12 @@ final class StaffAuthController
     private const ME = 'array{success:bool,message:string,data:array{id:int,surface:string,display_name:string,email:string,roles:list<string>,permissions:list<string>},meta:array{request_id:string}}';
 
     #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
-    #[Response(200, 'Enroll the displayed manual authenticator key', type: 'array{success:bool,message:string,data:array{secret:string},meta:array{request_id:string}}')]
+    #[Response(200, 'Provision authenticator for the invited account', type: 'array{success:bool,message:string,data:array{otpauth_uri:string,expires_at:string,secret:string},meta:array{request_id:string}}')]
     public function enroll(Request $request, StaffMfa $mfa): JsonResponse
     {
         $data = $request->validate(['token' => 'required|string|size:64', 'password' => 'required|string|min:12|max:128']);
 
-        return ApiResponse::success(['secret' => $mfa->enroll($request, $data['token'], $data['password'])]);
+        return ApiResponse::success($mfa->enroll($request, $data['token'], $data['password']));
     }
 
     #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]

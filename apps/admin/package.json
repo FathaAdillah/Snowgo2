@@ -17,6 +17,7 @@
     "@nuxt/ui": "^4.13.0",
     "nuxt": "^4.6.3",
     "tailwindcss": "^4.3.3",
+    "uqr": "0.1.3",
     "@snowego/api-types": "*"
   },
   "devDependencies": {

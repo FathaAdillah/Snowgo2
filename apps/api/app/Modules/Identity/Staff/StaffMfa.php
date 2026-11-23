@@ -10,7 +10,9 @@ use App\Modules\Identity\Challenges\EmailVerifications;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Identity\Surface;
 use App\Support\Http\ApiProblem;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -22,17 +24,23 @@ final class StaffMfa
 {
     public function __construct(private readonly Google2FA $totp, private readonly DeviceSessions $sessions) {}
 
-    public function enroll(Request $request, string $token, string $password): string
+    /** @return array{secret:string,otpauth_uri:string,expires_at:string} */
+    public function enroll(Request $request, string $token, string $password): array
     {
         $hash = hash('sha256', $token);
-        $this->invitation($hash);
+        $invitation = $this->invitation($hash)->join('users', 'users.id', '=', 'staff_invitations.user_id')->whereNull('users.disabled_at')
+            ->first(['users.email', 'staff_invitations.expires_at']) ?? throw EmailVerifications::invalid();
         $secret = $this->totp->generateSecretKey(32);
         $request->session()->regenerate(true);
         $request->session()->put('staff.enroll', [
             'token' => $hash, 'secret' => Crypt::encryptString($secret), 'password' => Hash::make($password),
         ]);
 
-        return $secret;
+        return [
+            'secret' => $secret,
+            'otpauth_uri' => $this->totp->getQRCodeUrl('Snowego Admin', $invitation->email, $secret),
+            'expires_at' => Carbon::parse($invitation->expires_at)->toISOString(),
+        ];
     }
 
     /** @return list<string> */
@@ -44,7 +52,7 @@ final class StaffMfa
             throw EmailVerifications::invalid();
         }
         $codes = DB::transaction(function () use ($hash, $pending, $code) {
-            $id = $this->invitation($hash);
+            $id = $this->invitation($hash)->value('user_id') ?? throw EmailVerifications::invalid();
             $user = User::query()->lockForUpdate()->findOrFail($id);
             if ($user->account_type !== User::STAFF || $user->disabled_at || $user->two_factor_confirmed_at
                 || ! DB::table('staff_invitations')->where('user_id', $id)->where('token_hash', $hash)->where('expires_at', '>', now())->delete()) {
@@ -64,10 +72,9 @@ final class StaffMfa
         return $codes;
     }
 
-    private function invitation(string $hash): int
+    private function invitation(string $hash): Builder
     {
-        return DB::table('staff_invitations')->where('token_hash', $hash)->where('expires_at', '>', now())->value('user_id')
-            ?? throw EmailVerifications::invalid();
+        return DB::table('staff_invitations')->where('token_hash', $hash)->where('expires_at', '>', now());
     }
 
     public function begin(Request $request, string $email, string $password): string

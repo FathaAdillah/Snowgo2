@@ -68,7 +68,7 @@ docker compose restart horizon scheduler
 docker compose exec api php artisan staff:invite nama@example.test --role=super_admin
 ```
 
-Buka [Mailpit](http://localhost:8025), ikuti **Aktifkan akun staf**, buat password, masukkan kunci ke authenticator berbasis waktu dan verifikasi kode. Simpan kode pemulihan yang hanya ditampilkan sekali. Buka [login admin](http://admin.localhost:8080/login) dan masuk dengan password serta **kode berikutnya**. Pastikan `ADMIN_URL` dan `SANCTUM_STATEFUL_DOMAINS` di environment sesuai host dan port. Undangan kedaluwarsa setelah satu jam; ulangi perintah dengan role yang sama untuk mengirim pengganti.
+Buka [Mailpit](http://localhost:8025), ikuti **Aktifkan akun staf**, lalu buat dan konfirmasi kata sandi. Pindai QR menggunakan aplikasi authenticator pada perangkat lain dan masukkan kode enam digit dari aplikasi. QR dibuat langsung di browser; jangan bagikan tangkapan layarnya. Simpan kode pemulihan yang hanya ditampilkan sekali. Buka [login admin](http://admin.localhost:8080/login) dan masuk dengan kata sandi serta **kode berikutnya**. Pastikan `ADMIN_URL` dan `SANCTUM_STATEFUL_DOMAINS` di environment sesuai host dan port. Undangan kedaluwarsa setelah satu jam; ulangi perintah dengan role yang sama untuk mengirim pengganti.
 
 Untuk staf biasa gunakan `--role=admin`, atau undang melalui **Administrasi → Staff & Sesi**. Mutasi keamanan meminta password dan TOTP baru; kode pemulihan tidak berlaku untuk konfirmasi ini. SMTP selain Mailpit harus dikonfigurasi di produksi.
 
