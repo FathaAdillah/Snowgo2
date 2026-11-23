@@ -46,6 +46,8 @@ Schedule::command('files:prune')->daily()->withoutOverlapping();
 Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=', now())->delete())
     ->name('prune-idempotency-keys')->daily();
 Schedule::command('auth:clear-resets')->hourly();
+Schedule::call(fn () => DB::table('staff_email_changes')->where('expires_at', '<=', now())->delete())
+    ->name('prune-staff-email-changes')->hourly();
 Schedule::call(fn () => DB::table('staff_invitations')->where('expires_at', '<=', now())->delete())
     ->name('prune-staff-invitations')->hourly();
 Schedule::call(fn () => DB::table('oauth_link_requests')->where('expires_at', '<=', now())->delete())

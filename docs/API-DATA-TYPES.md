@@ -55,7 +55,7 @@ Field list di bawah memakai snake_case. Field status, amount, date, media dan re
 |---|---|
 | Health, Metrics, Redirect302 | Health {status:ok/degraded,checks?:[{component,status}]} (checks internal saja); Metrics text/plain Prometheus; redirect Location tujuan allowlist |
 | Ack, AuthAck, Me | Ack data null; Me {surface,display_name,email,email_verified,permissions?:code[]} |
-| MfaChallenge, Enrollment | {challenge_required:true,expires_at}; {otpauth_uri,expires_at} sekali dengan Cache-Control no-store |
+| MfaChallenge, Enrollment | {challenge_required:bool,expires_at:string\|null}; `false` berarti sesi staf telah terbentuk tanpa challenge login, bukan enrollment yang belum selesai. Enrollment: {otpauth_uri,expires_at} sekali dengan Cache-Control no-store |
 | Session, Profile, Address | Session {session_ref,device_label,last_active_at,current}; Profile {display_name,email,phone?,marketing_opt_in}; Address {id ULID,recipient,phone,district_code,line1,line2?,postal_code,is_default} |
 | Product, ProductDetail, Variant, Media | Product {slug,name,brand_slug?,category_slugs,cover_url?,offers:[{method,from_amount,campaign_slug?,available}]}; Detail + {description,variants,seo_title?,seo_description?,media}; Variant {sku,name,options:[{code,label}],weight_g,offers:[{method,unit_amount,campaign_slug?,available}]}; Media {id? admin,url,alt,position,sku?} |
 | Category, Dictionary, AttributeValue, Region, Reason, TaxClass | Category {slug,name,parent_slug?,description?,active? admin}; Dictionary {id? admin,code? atau slug,name,active?}; AttributeValue {id,attribute_id,code,label,position}; Region {code,kind,name,parent_code?,active?}; Reason {id,domain,code,label,active}; TaxClass {id,code,name,rate_bps,active} |

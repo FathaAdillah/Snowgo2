@@ -39,7 +39,7 @@ const initials = computed(() => displayName.value.split(' ').map(part => part[0]
 const userMenu = computed<DropdownMenuItem[][]>(() => [
   [{ type: 'label', label: displayName.value, description: user.value?.email ?? 'Belum masuk' }],
   [
-    ...(can('admin.profile.view') ? [{ label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings' }] : []),
+    ...(can('admin.profile.view') ? [{ label: 'Setting', icon: 'i-lucide-settings', to: '/settings' }] : []),
     ...(can('operator.logs.view') ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : []),
     ...(can('operator.database.open') ? [{ label: 'OmniDB', icon: 'i-lucide-database', to: '/db/', external: true }] : [])
   ],
@@ -155,7 +155,7 @@ const groupItems = (group: NavGroup): DropdownMenuItem[] => group.children.map(c
                 />
               </button>
               <template #content>
-                <div class="ms-5 mt-0.5 mb-1 flex flex-col gap-0.5 border-s border-default ps-2">
+                <div class="ms-5 mt-0.5 mb-1 flex flex-col gap-0.5 border-s border-default ps-2 dark:border-(--ui-text-dimmed)">
                   <template
                     v-for="child in entry.children"
                     :key="child.label"

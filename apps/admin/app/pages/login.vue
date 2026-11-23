@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { FormError, FormSubmitEvent } from '@nuxt/ui'
+import type { StaffMe } from '@snowego/api-types'
 
 definePageMeta({ layout: false })
 useHead({ title: 'Masuk · Snowego Admin' })
 
-const { login, verifyMfa } = useAdminAuth()
+const { login, verifyMfa, refresh } = useAdminAuth()
 
 const step = ref<'credentials' | 'mfa'>('credentials')
 const loading = ref(false)
@@ -27,9 +28,14 @@ async function submitCredentials(event: FormSubmitEvent<typeof state>) {
   loading.value = true
   error.value = null
   try {
-    await login(event.data.email, event.data.password)
+    const response = await login(event.data.email, event.data.password)
     state.password = ''
-    step.value = 'mfa'
+    if (response.data.challenge_required) step.value = 'mfa'
+    else {
+      const account = await refresh()
+      if (!account) throw new Error('Login gagal')
+      await openAdmin(account)
+    }
   } catch (err) {
     error.value = authErrorMessage(err)
   } finally {
@@ -37,14 +43,18 @@ async function submitCredentials(event: FormSubmitEvent<typeof state>) {
   }
 }
 
+async function openAdmin(account: StaffMe) {
+  const links = adminNavigation.flatMap(entry => entry.type === 'link' ? [entry] : entry.children)
+  const first = links.find(link => link.to && link.permission && account.permissions.includes(link.permission))
+  await navigateTo(first?.to ?? (account.permissions.includes('admin.profile.view') ? '/settings' : '/'))
+}
+
 async function submitMfa() {
   loading.value = true
   error.value = null
   try {
     const account = await verifyMfa(otp.value.trim())
-    const links = adminNavigation.flatMap(entry => entry.type === 'link' ? [entry] : entry.children)
-    const first = links.find(link => link.to && link.permission && account.permissions.includes(link.permission))
-    await navigateTo(first?.to ?? '/')
+    await openAdmin(account)
   } catch (err) {
     error.value = authErrorMessage(err)
     otp.value = ''

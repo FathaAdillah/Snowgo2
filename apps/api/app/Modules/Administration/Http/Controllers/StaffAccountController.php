@@ -161,6 +161,9 @@ final class StaffAccountController
                     abort_unless($requested->count() === count($data['roles']) && $requested->every(fn (Role $role) => $role->name !== StaffAccess::SUPER && $role->permissions->pluck('name')->diff($available)->isEmpty()), 403);
                 }
                 $target->syncRoles($data['roles']);
+                if (in_array(StaffAccess::SUPER, $data['roles'], true)) {
+                    $target->forceFill(['staff_password_only' => false])->save();
+                }
                 $this->delegable($target, $super, $available);
             }
             if (array_key_exists('active', $data)) {

@@ -146,6 +146,8 @@ Maker-checker untuk refund dan recovery payment membedakan actor meskipun permis
 
 System logs, Horizon dan metrics berada pada permukaan operator privat melalui IAM. Dokumen pembayaran, private attachment, detail alamat customer dan aktivitas sensitif mengikuti policy parent, scope dan masking. Menu Phase 2 disembunyikan sampai flag dan readiness aktif.
 
-Di Compose development, hanya superadmin aktif yang melihat **Profil → Log Viewer** di bawah **Pengaturan**, lalu **OmniDB**. URL langsung dan API Log Viewer memakai gate yang sama. Grant operator yang sengaja diberikan ke role biasa tetap tidak membuka konsol.
+**Profil → Setting** adalah pengaturan akun sendiri, bukan submenu Administrasi atau pengaturan sistem. Halaman memerlukan `admin.profile.view`; tombol dan API perubahan memakai izin terpisah: `admin.profile.update` (nama), `admin.profile.change_email`, `admin.profile.change_password`, dan `admin.profile.manage_mfa`. Superadmin tidak dapat mematikan MFA meski memiliki izin efektif.
+
+Di Compose development, hanya superadmin aktif yang melihat **Log Viewer** di bawah **Setting**, lalu **OmniDB**. URL langsung dan API Log Viewer memakai gate yang sama. Grant operator yang sengaja diberikan ke role biasa tetap tidak membuka konsol.
 
 [Pola tabel admin dan tombol per aksi](ADMIN-TABLES.md) · [Lihat kontrak dan endpoint](05-API-CONTRACT.md) · [Keamanan](08-SECURITY.md)

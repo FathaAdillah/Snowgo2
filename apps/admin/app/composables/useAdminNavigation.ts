@@ -118,7 +118,6 @@ export const adminNavigation: NavEntry[] = [
       { label: 'Pengguna', icon: 'i-lucide-user-cog', to: '/staff', permission: 'admin.staff.view' },
       { label: 'Role & Izin', icon: 'i-lucide-key-round', to: '/roles', permission: 'admin.roles.view' },
       { label: 'Audit Log', icon: 'i-lucide-scroll-text' },
-      { label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings', permission: 'admin.profile.view' },
       { label: 'Integrasi', icon: 'i-lucide-plug' }
     ]
   }
@@ -135,6 +134,7 @@ export function useAdminNavigation() {
   const route = useRoute()
 
   const active = computed(() => {
+    if (matches(route.path, '/settings')) return { label: 'Setting' }
     for (const entry of adminNavigation) {
       if (entry.type === 'link' && matches(route.path, entry.to)) {
         return { label: entry.label }

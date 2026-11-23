@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Modules\Administration\Http\Middleware\LocalOperatorAccess;
 use App\Modules\Foundation\Outbox\Relay;
+use App\Modules\Identity\Mail\StaffEmailChange;
 use App\Modules\Identity\Mail\StaffInvitation;
 use App\Modules\Identity\Staff\StaffAccess;
 use Database\Factories\UserFactory;
@@ -322,4 +323,114 @@ it('rejects bypass on another role and refuses to promote a preexisting role wit
     $reserved->update(['bypasses_permissions' => false]);
     expect(fn () => app(PermissionSeeder::class)->run())->toThrow(LogicException::class);
     expect($reserved->fresh()->getAttribute('bypasses_permissions'))->toBeFalse();
+});
+
+it('allows an enrolled ordinary staff member to toggle login MFA only with a grant and fresh credentials', function () {
+    $this->freezeTime();
+    $staff = ($this->staff)('warehouse');
+    $credentials = ['email' => $staff->email, 'password' => UserFactory::PASSWORD];
+    ($this->login)($staff);
+    $this->travel(31)->seconds();
+    $proof = ['current_password' => UserFactory::PASSWORD, 'code' => ($this->otp)($staff->two_factor_secret)];
+    ($this->auth)('profile/mfa', ['enabled' => false, ...$proof])->assertForbidden();
+    $staff->givePermissionTo('admin.profile.manage_mfa');
+    ($this->auth)('profile/mfa', ['enabled' => false, ...$proof, 'current_password' => 'incorrect'])->assertUnprocessable();
+    ($this->auth)('profile/mfa', ['enabled' => false, ...$proof])->assertOk();
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
+    ($this->auth)('login', $credentials)->assertOk()->assertJsonPath('data.challenge_required', false);
+    expect(session()->has('staff.version'))->toBeFalse();
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertOk()->assertJsonPath('data.login_mfa_required', false);
+    $this->travel(31)->seconds();
+    ($this->auth)('profile/mfa', ['enabled' => true, ...$proof, 'code' => ($this->otp)($staff->two_factor_secret)])->assertOk();
+    ($this->auth)('login', $credentials)->assertOk()->assertJsonPath('data.challenge_required', true);
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
+});
+
+it('blocks password-only sessions on promotion and forbids even the superadmin from opting out', function () {
+    $this->freezeTime();
+    $staff = ($this->staff)('admin');
+    $staff->forceFill(['staff_password_only' => true])->save();
+    $credentials = ['email' => $staff->email, 'password' => UserFactory::PASSWORD];
+    ($this->auth)('login', $credentials)->assertOk()->assertJsonPath('data.challenge_required', false);
+    $staff->assignRole(StaffAccess::SUPER);
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
+    ($this->auth)('login', $credentials)->assertOk()->assertJsonPath('data.challenge_required', true);
+    ($this->auth)('mfa-challenges', ['code' => ($this->otp)($staff->two_factor_secret)])->assertOk()->assertJsonPath('data.login_mfa_required', true);
+    $this->travel(31)->seconds();
+    ($this->auth)('profile/mfa', ['enabled' => false, 'current_password' => UserFactory::PASSWORD, 'code' => ($this->otp)($staff->two_factor_secret)])->assertForbidden();
+});
+
+it('updates only the signed-in staff name and rejects a password change without current credentials', function () {
+    $this->freezeTime();
+    $staff = ($this->staff)('admin');
+    $other = ($this->staff)('admin');
+    ($this->login)($staff);
+    ($this->auth)('profile/name', ['display_name' => 'Nama baru'])->assertForbidden();
+    $staff->givePermissionTo('admin.profile.update', 'admin.profile.change_password');
+    ($this->auth)('profile/name', ['display_name' => 'Nama baru', 'id' => $other->id])->assertOk();
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertOk()->assertJsonPath('data.display_name', 'Nama baru');
+    expect($other->fresh()->getAttribute('staff_display_name'))->toBeNull();
+    $this->travel(31)->seconds();
+    $data = ['password' => 'replacement-password', 'password_confirmation' => 'replacement-password', 'code' => ($this->otp)($staff->two_factor_secret)];
+    ($this->auth)('profile/password', [...$data, 'current_password' => 'incorrect'])->assertUnprocessable();
+    ($this->auth)('profile/password', [...$data, 'current_password' => UserFactory::PASSWORD])->assertOk();
+    ($this->auth)('login', ['email' => $staff->email, 'password' => UserFactory::PASSWORD])->assertUnauthorized();
+    ($this->auth)('login', ['email' => $staff->email, 'password' => $data['password']])->assertOk()->assertJsonPath('data.challenge_required', true);
+});
+
+it('changes the login email only after mailbox proof and consumes the request once', function () {
+    $this->freezeTime();
+    $staff = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($staff);
+    $this->travel(31)->seconds();
+    $email = 'updated-login@example.test';
+    $proof = ['current_password' => UserFactory::PASSWORD, 'code' => ($this->otp)($staff->two_factor_secret)];
+    ($this->auth)('profile/email', [...$proof, 'email' => strtoupper($staff->email)])->assertConflict();
+    ($this->auth)('profile/email', [...$proof, 'email' => $email])->assertOk();
+    expect($staff->fresh()->email)->toBe($staff->email);
+    app(Relay::class)->publish();
+    $mail = Mail::sent(StaffEmailChange::class)->sole();
+    expect($mail->hasTo($email))->toBeTrue();
+    ($this->auth)('profile/email/confirm', ['token' => str_repeat('0', 24)])->assertUnprocessable();
+    ($this->auth)('profile/email/confirm', ['token' => $mail->token])->assertOk();
+    $this->assertDatabaseEmpty('staff_email_changes');
+    ($this->auth)('login', ['email' => $staff->email, 'password' => UserFactory::PASSWORD])->assertUnauthorized();
+    $this->travel(31)->seconds();
+    ($this->login)($staff->fresh());
+    ($this->auth)('profile/email/confirm', ['token' => $mail->token])->assertUnprocessable();
+});
+
+it('binds a login email change to its owner, expiry and security version', function (string $invalidatedBy) {
+    $this->freezeTime();
+    $owner = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($owner);
+    $this->travel(31)->seconds();
+    ($this->auth)('profile/email', ['email' => 'new@example.test', 'current_password' => UserFactory::PASSWORD,
+        'code' => ($this->otp)($owner->two_factor_secret)])->assertOk();
+    app(Relay::class)->publish();
+    $proof = ['token' => Mail::sent(StaffEmailChange::class)->sole()->token];
+    if ($invalidatedBy === 'different account') {
+        ($this->login)(($this->staff)(StaffAccess::SUPER));
+    } elseif ($invalidatedBy === 'expired') {
+        $this->travel(16)->minutes();
+    } else {
+        $owner->increment('staff_session_version');
+        $this->travel(31)->seconds();
+        ($this->login)($owner->fresh());
+    }
+    ($this->auth)('profile/email/confirm', $proof)->assertUnprocessable();
+    expect($owner->fresh()->email)->toBe($owner->email);
+})->with(['different account', 'expired', 'revoked sessions']);
+
+it('delivers a replacement for an expired login email request', function () {
+    $this->freezeTime();
+    $owner = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($owner);
+    foreach (['old@example.test', 'replacement@example.test'] as $email) {
+        $this->travel(16)->minutes();
+        ($this->auth)('profile/email', ['email' => $email, 'current_password' => UserFactory::PASSWORD,
+            'code' => ($this->otp)($owner->two_factor_secret)])->assertOk();
+    }
+    app(Relay::class)->publish();
+    expect(Mail::sent(StaffEmailChange::class)->sole()->hasTo('replacement@example.test'))->toBeTrue();
 });
