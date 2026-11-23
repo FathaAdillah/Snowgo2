@@ -55,6 +55,14 @@ final class IdentityServiceProvider extends ModuleServiceProvider
             Limit::perMinute(1)->by('minute:'.$request->user()?->getAuthIdentifier()),
             Limit::perHour(6)->by('hour:'.$request->user()?->getAuthIdentifier()),
         ]);
+        RateLimiter::for('staff-mfa', function (Request $request) {
+            $userId = $request->hasSession() ? $request->session()->get('staff.challenge.user') : null;
+
+            return array_filter([
+                Limit::perMinute(10)->by('ip:'.$request->ip()),
+                is_int($userId) ? Limit::perMinutes(5, 5)->by('account:'.$userId) : null,
+            ]);
+        });
 
         Gate::before(static fn (User $user, string $ability, array $arguments) => $arguments === [] && str_contains($ability, '.') && ! Gate::has($ability)
             ? StaffAccess::check($user, $ability) : null);

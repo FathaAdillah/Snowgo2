@@ -15,8 +15,8 @@ Route::prefix('admin/auth')->name('staff.auth.')->middleware(StaffOrigin::class)
     Route::middleware('throttle:10,1')->group(function () {
         Route::post('mfa-enrollments', [StaffAuthController::class, 'enroll'])->block()->name('enroll');
         Route::post('mfa-enrollment-verifications', [StaffAuthController::class, 'confirm'])->block()->name('confirm');
-        Route::post('mfa-challenges', [StaffAuthController::class, 'verify'])->block()->name('verify');
     });
+    Route::post('mfa-challenges', [StaffAuthController::class, 'verify'])->middleware('throttle:staff-mfa')->block()->name('verify');
     Route::middleware(['auth:web', EnsureIdentity::class.':staff'])->group(function () {
         Route::get('me', [StaffAuthController::class, 'me'])->name('me');
         Route::post('logout', [AuthController::class, 'logout'])->block()->name('logout');

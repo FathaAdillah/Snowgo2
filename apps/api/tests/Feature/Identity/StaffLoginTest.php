@@ -94,6 +94,20 @@ it('rejects a customer session, incomplete MFA, disabled staff, bad passwords an
     ($this->send)('GET', '/api/v1/admin/staff')->assertForbidden();
 });
 
+it('retains the MFA account limit across a new password challenge', function () {
+    $staff = ($this->staff)('admin');
+    $credentials = ['email' => $staff->email, 'password' => UserFactory::PASSWORD];
+    ($this->auth)('login', $credentials)->assertOk();
+    foreach (range(1, 5) as $_) {
+        ($this->auth)('mfa-challenges', ['code' => 'invalid-recovery'])->assertUnprocessable();
+    }
+    ($this->auth)('login', $credentials)->assertOk();
+    ($this->auth)('mfa-challenges', ['code' => ($this->otp)($staff->two_factor_secret)])->assertTooManyRequests()->assertJsonPath('code', 'THROTTLED');
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
+    $this->travel(5)->minutes();
+    ($this->login)($staff);
+});
+
 it('expires an idle or absolutely expired staff session', function (bool $keepActive) {
     ($this->login)(($this->staff)('admin'));
     if ($keepActive) {
