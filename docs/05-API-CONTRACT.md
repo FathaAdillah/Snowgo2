@@ -363,3 +363,11 @@ Semua perubahan di `/admin/auth/profile/*` berbagi batas 5 permintaan per menit 
 ### Wilayah Indonesia (TASK-008)
 
 `GET /regions?parent=11.01&kind=DISTRICT` membaca anak langsung yang aktif dari PostgreSQL. `parent` adalah kode v2 bertitik, bukan ID tabel. Tanpa filter, semua level aktif dipaginasi (20 per halaman, maksimum 100). Mutasi admin memerlukan sesi staf, izin per aksi, CSRF, dan `Idempotency-Key`. Tidak ada hard delete. [Sumber, format CSV, dan cara mengisi data](10-DEPLOYMENT.md#sinkronisasi-wilayah-indonesia).
+
+### Akun pelanggan (TASK-009)
+
+- `profile`, `addresses`, dan `wishlist` memakai sesi pembeli terverifikasi. Owner selalu dari sesi. PATCH profil tidak menerima email, role, atau ID akun. Nomor telepon mengikuti E.164 (`+628…`); `phone: null` menghapus telepon profil. Semua mutasi cookie memerlukan header CSRF.
+- Alamat pertama selalu menjadi default. Untuk menggantinya, PATCH alamat tujuan dengan `{"is_default":true}`. Mengosongkan flag pada default saat ini ditolak (`422`); mengarsipkannya mempromosikan alamat aktif tertua. PATCH/DELETE atas ULID akun lain atau alamat yang sudah diarsipkan → `404`. Penambahan atau pembaruan memerlukan kecamatan aktif.
+- Checkout/Orders memanggil `AddressSnapshot::capture($ownerId, $addressUlid)` **di dalam transaksi pembuatan order**, lalu menyimpan hasilnya ke `order_addresses`. Hasil berisi salinan penerima, telepon, baris alamat, kode pos, serta pasangan kode/nama negara, provinsi, kabupaten/kota dan kecamatan. Arsip wilayah menolak snapshot baru; histori tidak membaca ulang data master. Penyimpanan order masuk TASK-015.
+- Wishlist memakai slug produk terbit; PUT berulang tidak membuat duplikat, DELETE idempoten. Produk draf, arsip dan soft-delete disaring **sebelum** pagination. Identitas produk dimiliki Catalog; kategori, media dan penawaran pada kartu belum terisi sampai modul terkait tersedia.
+- Admin membaca daftar/detail dengan `customers.customer.view`. Alamat membutuhkan `customers.customer.pii_view`. Pembacaan alamat dan aktivitas oleh support dicatat tanpa menyalin PII ke audit/outbox. Aktivitas saat ini memuat akses support; `order_count` dan aktivitas order akan memakai data Orders di TASK-015. Layar akun storefront masuk TASK-033.

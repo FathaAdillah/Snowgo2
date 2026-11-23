@@ -61,3 +61,12 @@ test('the file client sends a multipart File and the required headers', async ()
     bodySerializer: multipartBody
   })
 })
+
+test('customer account endpoints reject guests with the documented error envelope', async () => {
+  for (const path of ['/profile', '/addresses', '/wishlist']) {
+    const result = await client.GET(path)
+    assert.equal(result.response.status, 401)
+    validateResponse(path, 401, result.error)
+    assert.equal(result.error.code, 'UNAUTHENTICATED')
+  }
+})

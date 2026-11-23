@@ -159,3 +159,9 @@ DISTRICT,11.01.01,Bakongan,11.01,1
 ```
 
 CSV memakai `1`/`0` untuk aktif/arsip dan boleh tidak berurutan. Kode duplikat, induk salah tingkat, atau penonaktifan induk yang masih memiliki anak aktif membatalkan seluruh impor. Izin baru untuk role yang sudah ada diberikan secara eksplisit melalui **Role & Izin**, bukan ditambahkan kembali oleh reseed.
+
+## Mengaktifkan API akun pelanggan
+
+Sesudah pull TASK-009, jalankan `docker compose exec api php artisan migrate`, lalu `docker compose exec api php artisan db:seed --class=PermissionSeeder`. Tidak perlu membuat ulang akun atau build frontend. Sinkronkan minimal satu **kecamatan** sebelum mencoba membuat alamat; data provinsi saja belum cukup.
+
+Pada role baru, `admin` dan `customer_service` memperoleh izin ringkasan dan alamat, sedangkan `order_staff` hanya ringkasan. Untuk role lama pilih izin `customers.customer.view` (daftar, detail, aktivitas) dan, hanya bila diperlukan, `customers.customer.pii_view` (alamat lengkap) di **Role & Izin**. Reseed tidak memulihkan izin yang sengaja dicabut. Belum ada menu Customers baru di admin.

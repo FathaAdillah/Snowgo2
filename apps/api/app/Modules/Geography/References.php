@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Idempotency\IdempotentMutation;
 use App\Modules\Foundation\Outbox\Outbox;
+use App\Support\Http\ApiInput;
 use App\Support\Http\ApiProblem;
 use App\Support\Http\ApiResponse;
 use Illuminate\Database\Query\Builder;
@@ -17,27 +18,13 @@ use Illuminate\Validation\ValidationException;
 
 final class References
 {
-    public const PAGE = ['page' => 'sometimes|integer|min:1|max:2147483647', 'per_page' => 'sometimes|integer|min:1|max:100'];
+    public const PAGE = ApiInput::PAGE;
 
     public const ADMIN_FILTERS = [...self::PAGE, 'q' => 'sometimes|required|string|max:120', 'active' => 'sometimes|string|in:0,1,true,false'];
 
     public const CODE = 'regex:/\A[A-Za-z0-9_.-]+\z/D';
 
     public const REGION_KINDS = 'in:COUNTRY,PROVINCE,CITY,DISTRICT';
-
-    /** @param array<string,mixed> $data */
-    public static function fields(Request $request, array $data): void
-    {
-        if (array_diff_key($request->all(), $data) || ($request->isMethod('PATCH') && ! $data)
-            || (! $request->isMethod('GET') && $request->query->count() > 0)) {
-            throw ValidationException::withMessages(['fields' => 'Use only documented fields; PATCH requires at least one.']);
-        }
-        foreach ($data as $name => $value) {
-            if (is_string($value) && str_contains($value, "\0")) {
-                throw ValidationException::withMessages([$name => 'Invalid text.']);
-            }
-        }
-    }
 
     private function query(Master $master, bool $public = false): Builder
     {
@@ -60,7 +47,7 @@ final class References
     /** @param array<string,mixed> $filters */
     public function page(Request $request, Master $master, array $filters, bool $public = false): JsonResponse
     {
-        self::fields($request, $filters);
+        ApiInput::fields($request, $filters);
         $query = $this->query($master, $public);
         if (isset($filters['kind'])) {
             $query->where('r.kind', $filters['kind']);
@@ -90,7 +77,7 @@ final class References
     /** @param array<string,mixed> $data */
     public function save(Request $request, Master $master, array $data, ?int $id = null): JsonResponse
     {
-        self::fields($request, $data);
+        ApiInput::fields($request, $data);
         $actor = $request->user();
         assert($actor instanceof User);
         $ability = $master->permission($id === null ? 'create' : 'update');
