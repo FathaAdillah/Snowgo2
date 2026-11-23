@@ -5,6 +5,7 @@ namespace App\Modules\Foundation\Audit;
 enum Subject: string
 {
     case User = 'user';
+    case Role = 'role';
     case Order = 'order';
     case Payment = 'payment';
     case Invoice = 'invoice';

@@ -22,14 +22,25 @@ use Spatie\Permission\Models\Role;
 
 final class StaffAccountController
 {
-    #[Response(200, 'Staff accounts', type: 'array{success:bool,message:string,data:list<array{id:int,email:string,active:bool,roles:list<string>}>,meta:array{request_id:string,page:int,last_page:int}}')]
+    #[Response(200, 'Staff accounts', type: 'array{success:bool,message:string,data:list<array{id:int,email:string,display_name:string|null,active:bool,mfa_confirmed:bool,manageable:bool,roles:list<string>}>,meta:array{request_id:string,page:int,last_page:int}}')]
     public function index(Request $request): JsonResponse
     {
-        $request->validate(['page' => 'sometimes|integer|min:1']);
-        $page = User::query()->where('account_type', User::STAFF)->with('roles')->orderBy('id')->paginate(25);
+        $data = $request->validate(['page' => 'sometimes|integer|min:1', 'search' => 'nullable|string|max:100']);
+        $query = User::query()->where('account_type', User::STAFF)->with(['permissions', 'roles.permissions']);
+        if (! empty($data['search'])) {
+            $term = '%'.addcslashes($data['search'], '\\%_').'%';
+            $query->where(fn ($q) => $q->whereLike('email', $term)->orWhereLike('staff_display_name', $term));
+        }
+        $page = $query->orderBy('id')->paginate(25);
+        $actor = $request->user();
+        assert($actor instanceof User);
+        $super = StaffAccess::super($actor);
+        $available = $super ? [] : StaffAccess::permissions($actor);
 
         return ApiResponse::success($page->getCollection()->map(fn (User $user) => [
-            'id' => $user->id, 'email' => $user->email, 'active' => $user->disabled_at === null, 'roles' => $user->getRoleNames(),
+            'id' => $user->id, 'email' => $user->email, 'display_name' => $user->getAttribute('staff_display_name'),
+            'mfa_confirmed' => $user->two_factor_confirmed_at !== null, 'active' => $user->disabled_at === null, 'roles' => $user->getRoleNames(),
+            'manageable' => $actor->id !== $user->id && ($super || (! StaffAccess::super($user) && ! array_diff(StaffAccess::permissions($user), $available))),
         ]), meta: ['page' => $page->currentPage(), 'last_page' => $page->lastPage()]);
     }
 
@@ -38,7 +49,7 @@ final class StaffAccountController
     #[Response(201, 'Invitation queued', type: 'array{success:bool,message:string,data:null,meta:array{request_id:string}}')]
     public function create(Request $request, IdempotentMutation $guard, StaffInvitations $invitations): JsonResponse
     {
-        $data = $request->validate(['email' => 'required|email|max:254', 'role' => ['required', 'string', Rule::exists('roles', 'name')->where('guard_name', 'web')]]);
+        $data = $request->validate(['email' => 'required|email|max:254', 'display_name' => 'nullable|string|max:100', 'role' => ['required', 'string', Rule::exists('roles', 'name')->where('guard_name', 'web')]]);
         $actor = $request->user();
         assert($actor instanceof User);
         $authorize = function () use ($actor, $data, $request) {
@@ -55,7 +66,11 @@ final class StaffAccountController
             DB::select('select pg_advisory_xact_lock(713007)');
             $actor->refresh();
             $authorize();
-            $invitations->invite($data['email'], $data['role'], $actor->id);
+            $invited = $invitations->invite($data['email'], $data['role'], $actor->id);
+            $this->delegable($invited, StaffAccess::super($actor), StaffAccess::permissions($actor));
+            if (isset($data['display_name'])) {
+                $invited->setAttribute('staff_display_name', $data['display_name'])->save();
+            }
 
             return ApiResponse::success(null, 'Invitation queued', 201);
         });
@@ -71,6 +86,7 @@ final class StaffAccountController
         $authorize = function () use ($actor, $request, $id) {
             $this->stepUp($request);
             abort_unless($actor->can('admin.staff.sessions.delete'), 403);
+            abort_if($actor->id === $id, 403);
             $this->delegable($this->target($id), StaffAccess::super($actor), StaffAccess::permissions($actor));
 
             return 'user:'.$actor->id;
@@ -106,7 +122,8 @@ final class StaffAccountController
     #[Response(200, 'Staff updated', type: 'array{success:bool,message:string,data:array{id:int,email:string,active:bool,mfa_confirmed:bool,roles:list<string>},meta:array{request_id:string}}')]
     public function update(Request $request, int $id, IdempotentMutation $guard, DeviceSessions $sessions): JsonResponse
     {
-        $data = $request->validate(['active' => 'required_without:roles|boolean', 'roles' => 'required_without:active|array|min:1',
+        $data = $request->validate(['active' => 'required_without_all:roles,display_name|boolean', 'roles' => 'required_without_all:active,display_name|array|min:1',
+            'display_name' => 'required_without_all:active,roles|string|max:100',
             'roles.*' => ['required', 'string', 'distinct', Rule::exists('roles', 'name')->where('guard_name', 'web')]]);
         $actor = $request->user();
         assert($actor instanceof User);
@@ -114,6 +131,9 @@ final class StaffAccountController
             abort_unless($actor->can('admin.staff.update') && (! isset($data['roles']) || $actor->can('admin.staff.assign_roles'))
                 && (! isset($data['active']) || $actor->can('admin.staff.change_status')), 403);
             $this->stepUp($request);
+            if ($actor->id === $id) {
+                throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Tidak dapat mengubah akun sendiri di manajemen staf.');
+            }
             $this->delegable($this->target($id), StaffAccess::super($actor), StaffAccess::permissions($actor));
 
             return 'user:'.$actor->id;
@@ -129,12 +149,19 @@ final class StaffAccountController
             $this->delegable($target, $super, $available);
             $wasManager = $this->manager($target);
             if (isset($data['roles'])) {
+                if (! $super) {
+                    $requested = Role::query()->where('guard_name', 'web')->whereIn('name', $data['roles'])->with('permissions')->get();
+                    abort_unless($requested->count() === count($data['roles']) && $requested->every(fn (Role $role) => $role->name !== StaffAccess::SUPER && $role->permissions->pluck('name')->diff($available)->isEmpty()), 403);
+                }
                 $target->syncRoles($data['roles']);
                 $this->delegable($target, $super, $available);
             }
             if (array_key_exists('active', $data)) {
                 $target->disabled_at = $data['active'] ? null : now();
                 $target->save();
+            }
+            if (isset($data['display_name'])) {
+                $target->setAttribute('staff_display_name', $data['display_name'])->save();
             }
             if ($wasManager && ! $this->manager($target)
                 && ! User::query()->whereKeyNot($id)->where('account_type', User::STAFF)->whereNull('disabled_at')

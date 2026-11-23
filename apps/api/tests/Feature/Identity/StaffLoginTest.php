@@ -162,6 +162,77 @@ it('applies the registered permission bypass only after MFA and protects the las
     ($this->send)('DELETE', "/api/v1/admin/staff/{$other->id}/sessions")->assertForbidden();
 });
 
+it('manages staff roles with revision checks, protected roles and idempotent writes', function () {
+    $roles = '/api/v1/admin/roles';
+    ($this->send)('GET', $roles)->assertUnauthorized();
+    $root = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($root);
+    $catalog = ($this->send)('GET', '/api/v1/admin/permissions')->assertOk()->json('data');
+    expect(collect($catalog)->pluck('name'))->toContain('admin.roles.assign_permissions')->not->toContain(StaffAccess::DB, StaffAccess::LOGS);
+    $data = ['name' => 'packing', 'display_name' => 'Packing', 'description' => 'Pengepakan', 'permissions' => ['reporting.dashboard.view']];
+    ($this->send)('POST', $roles, $data)->assertForbidden()->assertJsonPath('code', 'STEP_UP_REQUIRED');
+    $this->travel(31)->seconds();
+    ($this->auth)('step-up', ['password' => UserFactory::PASSWORD, 'code' => ($this->otp)($root->two_factor_secret)])->assertOk();
+    ($this->send)('POST', $roles, $data)->assertCreated();
+    ($this->send)('POST', $roles, $data)->assertCreated();
+    $role = Role::findByName('packing', 'web');
+    $id = $role->getKey();
+    $path = "$roles/$id";
+    ($this->send)('GET', $path)->assertOk()->assertJsonPath('data.revision', 1)->assertJsonPath('data.deletable', true);
+    $changes = ['display_name' => 'Packing Team', 'permissions' => [], 'revision' => 1];
+    foreach ([StaffAccess::DB, 'missing.permission'] as $denied) {
+        ($this->send)('PATCH', $path, [...$changes, 'permissions' => [$denied]])->assertForbidden();
+    }
+    $staff = ($this->staff)('packing');
+    $version = $staff->fresh()->staff_session_version;
+    ($this->send)('PATCH', $path, $changes)->assertOk();
+    expect($staff->fresh()->staff_session_version)->toBe($version + 1);
+    ($this->send)('PATCH', $path, $changes, headers: ['Idempotency-Key' => 'stale'])->assertConflict();
+    ($this->send)('PATCH', "$roles/".Role::findByName(StaffAccess::SUPER)->getKey(), $changes, headers: ['Idempotency-Key' => 'protected'])->assertForbidden();
+    ($this->send)('DELETE', "$roles/".Role::findByName('admin')->getKey(), ['revision' => 1])->assertConflict();
+    ($this->send)('DELETE', $path, ['revision' => 2])->assertConflict();
+    $staff->removeRole($role);
+    ($this->send)('DELETE', $path, ['revision' => 2])->assertOk();
+    ($this->send)('DELETE', $path, ['revision' => 2])->assertOk();
+    ($this->send)('GET', $path)->assertNotFound();
+    expect(DB::table('audit_logs')->where('subject_type', 'role')->count())->toBe(3);
+});
+
+it('limits read access and delegation to registered grants on staff accounts', function () {
+    $staff = ($this->staff)('admin');
+    $customer = User::factory()->create();
+    ($this->login)($staff);
+    ($this->send)('GET', '/api/v1/admin/roles')->assertForbidden();
+    ($this->send)('GET', '/api/v1/admin/permissions')->assertForbidden();
+    ($this->send)('GET', '/api/v1/admin/staff/role-options')->assertForbidden();
+    $staff->givePermissionTo('admin.staff.view', 'admin.staff.assign_roles', 'admin.roles.view', 'admin.roles.create');
+    ($this->send)('GET', '/api/v1/admin/staff?search='.urlencode($customer->email))->assertOk()->assertJsonCount(0, 'data');
+    $options = ($this->send)('GET', '/api/v1/admin/staff/role-options')->assertOk()->json('data');
+    expect(array_column($options, 'value'))->toContain('admin')->not->toContain(StaffAccess::SUPER);
+    $data = ['name' => 'new_role', 'display_name' => 'New', 'permissions' => ['admin.staff.update']];
+    ($this->send)('POST', '/api/v1/admin/roles', $data)->assertForbidden();
+    $staff->givePermissionTo('admin.roles.assign_permissions');
+    $this->travel(31)->seconds();
+    ($this->auth)('step-up', ['password' => UserFactory::PASSWORD, 'code' => ($this->otp)($staff->two_factor_secret)])->assertOk();
+    ($this->send)('POST', '/api/v1/admin/roles', $data)->assertForbidden();
+    ($this->send)('POST', '/api/v1/admin/roles', [...$data, 'permissions' => []])->assertCreated();
+});
+
+it('finds and paginates staff by display name and persists a delegated role change', function () {
+    $root = ($this->staff)(StaffAccess::SUPER);
+    $accounts = User::factory()->staff()->count(26)->create(['staff_display_name' => 'Packing Crew']);
+    $first = $accounts->first();
+    ($this->login)($root);
+    $staff = '/api/v1/admin/staff';
+    ($this->send)('GET', "$staff?search=packing&page=2")->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('meta.last_page', 2);
+    ($this->send)('GET', "$staff?search=".urlencode($root->email))->assertOk()->assertJsonPath('data.0.manageable', false);
+    $this->travel(31)->seconds();
+    ($this->auth)('step-up', ['password' => UserFactory::PASSWORD, 'code' => ($this->otp)($root->two_factor_secret)])->assertOk();
+    ($this->send)('PATCH', "$staff/$first->id", ['display_name' => 'Team Lead', 'roles' => ['warehouse']])->assertOk();
+    ($this->send)('GET', "$staff?search=team%20lead")->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.display_name', 'Team Lead')->assertJsonPath('data.0.roles.0', 'warehouse');
+});
+
 it('advertises operator actions only to a local MFA-authenticated superadmin', function (string $env, string $role) {
     $user = ($this->staff)($role);
     if ($role !== StaffAccess::SUPER) {

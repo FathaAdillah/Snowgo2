@@ -40,7 +40,7 @@ final class Journal
         if ($data === null) {
             return null;
         }
-        $safe = array_intersect_key($data, array_flip(['status', 'active', 'amount_idr', 'quantity', 'role', 'visibility']));
+        $safe = array_intersect_key($data, array_flip(['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility']));
 
         return json_encode((object) array_filter($safe, is_scalar(...)), JSON_THROW_ON_ERROR);
     }

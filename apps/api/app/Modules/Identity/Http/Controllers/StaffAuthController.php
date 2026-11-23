@@ -77,7 +77,7 @@ final class StaffAuthController
             $permissions = array_values(array_diff($permissions, [StaffAccess::LOGS, StaffAccess::DB]));
         }
 
-        return ApiResponse::success(['id' => $user->id, 'surface' => User::STAFF, 'display_name' => $user->email,
+        return ApiResponse::success(['id' => $user->id, 'surface' => User::STAFF, 'display_name' => $user->getAttribute('staff_display_name') ?? $user->email,
             'email' => $user->email, 'roles' => $user->getRoleNames()->values(), 'permissions' => $permissions]);
     }
 }

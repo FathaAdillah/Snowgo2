@@ -41,7 +41,7 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | Geography | Master Data | Countries, provinces, cities, districts | Hierarki wilayah dan import | Super Admin, Admin, Product Manager, Order Staff | geography.region.view, geography.region.manage | API-GEO-002, API-GEO-003, API-GEO-004, API-GEO-005, API-GEO-018 | regions, stored_files | P1 | MVP |
 | Geography | Master Data | Units, tax class dan reason codes | Data referensi lintas transaksi | Super Admin, Admin, Product Manager, Order Staff, Finance | geography.reason.view, geography.reason.manage, geography.unit.view, geography.unit.manage, geography.tax.view, geography.tax.manage | API-GEO-006, API-GEO-007, API-GEO-008, API-GEO-009, API-GEO-010, API-GEO-011, API-GEO-012, API-GEO-013, API-GEO-014, API-GEO-015, API-GEO-016, API-GEO-017 | reason_codes, units, tax_classes | P1 | MVP |
 | Administration | Administration | Staff dan sessions | Undangan, assign role dan revoke device | Super Admin | admin.staff.view, admin.staff.create, admin.staff.update, admin.staff.assign_roles, admin.staff.change_status, admin.staff.sessions.delete | API-ADM-001, API-ADM-002, API-ADM-011, API-ADM-012, API-ADM-013, API-AUTH-018 | users, model_has_roles, sessions, staff_invitations | P0 | MVP |
-| Administration | Administration | Roles dan permissions | Bundle permission dan katalog | Super Admin | admin.role.view, admin.role.manage | API-ADM-003, API-ADM-004, API-ADM-005, API-ADM-014, API-ADM-015 | roles, role_has_permissions, permissions | P0 | MVP |
+| Administration | Administration | Role & Izin | Kartu role dan katalog per modul/resource/aksi | Super Admin | admin.roles.view, admin.roles.create, admin.roles.update, admin.roles.assign_permissions, admin.roles.delete | API-ADM-003, API-ADM-004, API-ADM-005, API-ADM-014, API-ADM-015, API-ADM-018 | roles, role_has_permissions, permissions | P0 | MVP |
 | Administration | Administration | Audit logs | Filter actor, entity dan action | Super Admin, Admin, Finance | admin.audit.view | API-ADM-006 | audit_logs | P0 | MVP |
 | Administration | Administration | Settings dan feature flags | Typed settings dengan audit | Super Admin, Admin | admin.setting.view, admin.setting.manage | API-ADM-007, API-ADM-008, API-ADM-016 | settings | P0 | MVP |
 | Administration | Administration | Integrations dan credential references | Konfigurasi provider dan secret reference | Super Admin, Admin | admin.integration.view, admin.integration.manage | API-ADM-009, API-ADM-010, API-ADM-017 | integration_configs | P0 | MVP |
@@ -54,8 +54,8 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | admin.audit.view | Admin, Finance |
 | admin.integration.manage | Admin |
 | admin.integration.view | Admin |
-| admin.role.manage | — |
-| admin.role.view | — |
+| admin.roles.create / admin.roles.update / admin.roles.assign_permissions / admin.roles.delete | — |
+| admin.roles.view | — |
 | admin.setting.manage | Admin |
 | admin.setting.view | Admin |
 | admin.staff.create / admin.staff.assign_roles | — |

@@ -1,206 +1,294 @@
 <script setup lang="ts">
-import type { StaffList } from '@snowego/api-types'
+import type { StaffList, StaffRoleOptions } from '@snowego/api-types'
 
 definePageMeta({ permission: 'admin.staff.view' })
-useHead({ title: 'Staf dan sesi · Snowego Admin' })
-type Account = StaffList['data'][number]
-const { can, csrf, stepUp, user } = useAdminAuth()
-const toast = useToast()
+useHead({ title: 'Pengguna · Snowego Admin' })
+type Staff = StaffList['data'][number]
+type Pending = { url: string, method: 'POST' | 'PATCH' | 'DELETE', label: string, body?: Record<string, unknown> }
+const { can, user } = useAdminAuth()
+const canAssign = computed(() => can('admin.staff.assign_roles'))
+const canInvite = computed(() => can('admin.staff.create') && canAssign.value)
+const canUpdate = computed(() => can('admin.staff.update'))
+const canChangeStatus = computed(() => canUpdate.value && can('admin.staff.change_status'))
+const base = '/api/v1/admin/staff'
+const options = { cache: 'no-store' as const, headers: { Accept: 'application/json' } }
 const page = ref(1)
-const { data, error, refresh } = await useFetch<StaffList>('/api/v1/admin/staff', {
-  query: { page }, cache: 'no-store', headers: { Accept: 'application/json' }
-})
+const search = ref('')
+const query = ref('')
+const { data, error, refresh } = await useFetch<StaffList>(base, { ...options, query: { page, search } })
+const choices = canAssign.value ? await useFetch<StaffRoleOptions>(`${base}/role-options`, options) : undefined
+const roles = computed(() => choices?.data.value?.data ?? [])
+const mode = ref<'invite' | 'edit'>()
+const target = ref<Staff>()
+const display = ref('')
 const email = ref('')
-const role = ref('admin')
-const canInvite = computed(() => can('admin.staff.create') && can('admin.staff.assign_roles'))
-const canChangeStatus = computed(() => can('admin.staff.update') && can('admin.staff.change_status'))
-const pending = ref<{ method: 'POST' | 'PATCH' | 'DELETE', url: string, body?: Record<string, string | boolean>, label: string, key: string }>()
-const stepRequired = ref(false)
-const password = ref('')
-const code = ref('')
-const busy = ref(false)
-const notice = ref('')
-function reset() {
-  pending.value = undefined
-  stepRequired.value = false
-  password.value = code.value = notice.value = ''
+const invitedRole = ref('')
+const selected = ref<string[]>([])
+const pending = ref<Pending>()
+function applySearch() {
+  page.value = 1
+  search.value = query.value.trim()
 }
-function select(action: 'invite' | 'status' | 'revoke', staff?: Account) {
-  reset()
-  const base = '/api/v1/admin/staff'
-  const key = crypto.randomUUID()
-  if (action === 'invite' && canInvite.value) {
-    pending.value = { method: 'POST', url: base, body: { email: email.value, role: role.value }, label: `Kirim undangan ke ${email.value} (${role.value})`, key }
-  } else if (staff && action === 'status' && canChangeStatus.value) {
-    pending.value = { method: 'PATCH', url: `${base}/${staff.id}`, body: { active: !staff.active }, label: `${staff.active ? 'Nonaktifkan' : 'Aktifkan'} ${staff.email}`, key }
-  } else if (staff && action === 'revoke' && can('admin.staff.sessions.delete')) {
-    pending.value = { method: 'DELETE', url: `${base}/${staff.id}/sessions`, label: `Cabut semua sesi ${staff.email}`, key }
+function form(staff?: Staff) {
+  mode.value = staff ? 'edit' : 'invite'
+  target.value = staff
+  display.value = staff?.display_name ?? ''
+  email.value = staff?.email ?? ''
+  selected.value = [...(staff?.roles ?? [])]
+  invitedRole.value = ''
+}
+function submit() {
+  if (mode.value === 'invite' && canInvite.value && invitedRole.value) {
+    pending.value = { url: base, method: 'POST', label: `Undang ${email.value} sebagai ${invitedRole.value}?`,
+      body: { email: email.value, role: invitedRole.value, display_name: display.value.trim() || null } }
+  } else if (mode.value === 'edit' && target.value && canUpdate.value) {
+    const staff = target.value
+    const body: Record<string, unknown> = {}
+    if (display.value.trim() && display.value.trim() !== staff.display_name) body.display_name = display.value.trim()
+    if (canAssign.value && [...selected.value].sort().join() !== [...staff.roles].sort().join()) body.roles = selected.value
+    if (Object.keys(body).length) pending.value = { url: `${base}/${staff.id}`, method: 'PATCH', label: `Simpan perubahan untuk ${staff.email}?`, body }
+    else mode.value = undefined
   }
 }
-async function execute() {
-  const action = pending.value
-  if (!action || busy.value) return
-  busy.value = true
-  notice.value = ''
-  try {
-    if (stepRequired.value) {
-      await stepUp(password.value, code.value)
-      stepRequired.value = false
-    }
-    await $fetch(action.url, { method: action.method, body: action.body,
-      headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': await csrf(), 'Idempotency-Key': action.key } })
-    reset()
-    email.value = ''
-    toast.add({ title: 'Perubahan tersimpan', color: 'success' })
-    await refresh()
-  } catch (err) {
-    if ((err as { data?: { code?: string } }).data?.code === 'STEP_UP_REQUIRED') stepRequired.value = true
-    else notice.value = authErrorMessage(err)
-  } finally {
-    password.value = code.value = ''
-    busy.value = false
-  }
+function status(staff: Staff) {
+  pending.value = { url: `${base}/${staff.id}`, method: 'PATCH', label: `${staff.active ? 'Nonaktifkan' : 'Aktifkan'} ${staff.email}?`, body: { active: !staff.active } }
+}
+function revoke(staff: Staff) {
+  pending.value = { url: `${base}/${staff.id}/sessions`, method: 'DELETE', label: `Keluar dari seluruh perangkat ${staff.email}?` }
+}
+async function saved() {
+  pending.value = mode.value = undefined
+  await refresh()
 }
 </script>
 
 <template>
-  <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-highlighted">
-      Staf dan sesi
-    </h1>
-    <UAlert
-      v-if="error"
-      color="error"
-      title="Daftar staf tidak dapat dimuat."
-    />
-    <UCard v-if="canInvite">
+  <section class="space-y-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-highlighted">
+          Pengguna
+        </h1><p class="text-sm text-muted">
+          Kelola akun staf, role, dan akses perangkat.
+        </p>
+      </div>
+      <UButton
+        v-if="canInvite"
+        icon="i-lucide-user-plus"
+        label="Tambah pengguna"
+        @click="form()"
+      />
+    </div>
+    <UCard v-if="mode">
       <template #header>
         <h2 class="font-semibold">
-          Undang staf
+          {{ mode === 'invite' ? 'Undang pengguna' : 'Edit pengguna' }}
         </h2>
       </template>
       <form
-        class="flex flex-wrap items-end gap-3"
-        @submit.prevent="select('invite')"
+        class="grid gap-4 sm:grid-cols-2"
+        @submit.prevent="submit"
       >
+        <UFormField label="Nama tampilan">
+          <UInput
+            v-model="display"
+            maxlength="100"
+            class="w-full"
+          />
+        </UFormField>
         <UFormField label="Email">
           <UInput
             v-model="email"
             type="email"
             required
+            :readonly="mode === 'edit'"
+            class="w-full"
           />
         </UFormField>
-        <UFormField label="Nama role">
-          <UInput
-            v-model="role"
-            required
+        <UFormField
+          v-if="canAssign"
+          label="Role"
+        >
+          <USelect
+            v-if="mode === 'invite'"
+            v-model="invitedRole"
+            :items="roles"
+            placeholder="Pilih role"
+            class="w-full"
+          />
+          <USelect
+            v-else
+            v-model="selected"
+            multiple
+            :items="roles"
+            class="w-full"
           />
         </UFormField>
-        <UButton
-          type="submit"
-          label="Buat undangan"
-          :disabled="!!pending"
-        />
-      </form>
-    </UCard>
-    <UCard v-if="pending">
-      <template #header>
-        <h2 class="font-semibold">
-          Konfirmasi: {{ pending.label }}
-        </h2>
-      </template>
-      <form
-        class="space-y-3"
-        @submit.prevent="execute"
-      >
         <UAlert
-          v-if="notice"
-          :title="notice"
+          v-if="choices?.error.value"
+          title="Daftar role tidak dapat dimuat."
           color="error"
         />
-        <template v-if="stepRequired">
-          <p>Untuk aksi ini, masukkan password dan kode authenticator yang belum dipakai.</p>
-          <UFormField label="Password">
-            <UInput
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              required
-            />
-          </UFormField>
-          <UFormField label="Kode authenticator">
-            <UInput
-              v-model="code"
-              autocomplete="one-time-code"
-              pattern="[0-9]{6}"
-              required
-            />
-          </UFormField>
-        </template>
-        <div class="flex gap-2">
+        <div class="flex items-end justify-end gap-2 sm:col-span-2">
           <UButton
-            type="submit"
-            :loading="busy"
-            label="Konfirmasi"
+            label="Batal"
+            variant="outline"
+            @click="mode = undefined"
           />
           <UButton
-            variant="outline"
-            :disabled="busy"
-            label="Batal"
-            @click="reset"
+            type="submit"
+            :label="mode === 'invite' ? 'Kirim undangan' : 'Simpan'"
+            :disabled="mode === 'invite' ? !invitedRole : canAssign && !selected.length"
           />
         </div>
       </form>
     </UCard>
-    <UCard v-if="data && !error">
-      <ul class="divide-y divide-default">
-        <li
-          v-for="staff in data.data"
-          :key="staff.id"
-          class="flex flex-wrap items-center justify-between gap-3 py-3"
+    <UCard>
+      <template #header>
+        <form
+          class="flex gap-2"
+          @submit.prevent="applySearch"
         >
-          <div>
-            <p>{{ staff.email }}</p><p class="text-sm text-muted">
-              {{ staff.roles.join(', ') }} · {{ staff.active ? 'Aktif' : 'Nonaktif' }}
-            </p>
-          </div>
-          <div
-            v-if="staff.id !== user?.id"
-            class="flex gap-2"
-          >
-            <UButton
-              v-if="canChangeStatus"
-              variant="outline"
-              :disabled="!!pending"
-              :label="staff.active ? 'Nonaktifkan' : 'Aktifkan'"
-              @click="select('status', staff)"
-            />
-            <UButton
-              v-if="can('admin.staff.sessions.delete')"
-              color="error"
-              variant="outline"
-              :disabled="!!pending"
-              label="Cabut sesi"
-              @click="select('revoke', staff)"
-            />
-          </div>
-        </li>
-      </ul>
+          <UInput
+            v-model="query"
+            type="search"
+            maxlength="100"
+            aria-label="Cari pengguna"
+            placeholder="Cari nama atau email"
+            icon="i-lucide-search"
+          />
+          <UButton
+            type="submit"
+            label="Cari"
+            variant="outline"
+          />
+        </form>
+      </template>
+      <UAlert
+        v-if="error"
+        color="error"
+        title="Daftar pengguna tidak dapat dimuat."
+      />
       <div
-        v-if="data.meta.last_page > 1"
-        class="mt-4 flex gap-2"
+        v-else
+        class="overflow-x-auto"
       >
-        <UButton
-          :disabled="page <= 1"
-          label="Sebelumnya"
-          @click="page--"
-        />
-        <UButton
-          :disabled="page >= data.meta.last_page"
-          label="Berikutnya"
-          @click="page++"
-        />
+        <table class="w-full text-left text-sm">
+          <thead class="text-muted">
+            <tr>
+              <th
+                v-for="col in ['Nama', 'Email', 'Role', 'Status', 'Aksi']"
+                :key="col"
+                scope="col"
+                class="p-3"
+              >
+                {{ col }}
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-default">
+            <tr
+              v-for="staff in data?.data"
+              :key="staff.id"
+            >
+              <th
+                scope="row"
+                class="p-3 font-medium"
+              >
+                {{ staff.display_name || '—' }} <UBadge
+                  v-if="staff.id === user?.id"
+                  size="sm"
+                  variant="subtle"
+                >
+                  Anda
+                </UBadge>
+              </th>
+              <td class="p-3">
+                {{ staff.email }}
+              </td>
+              <td class="p-3">
+                <div class="flex flex-wrap gap-1">
+                  <UBadge
+                    v-for="role in staff.roles"
+                    :key="role"
+                    variant="subtle"
+                  >
+                    {{ role }}
+                  </UBadge>
+                </div>
+              </td>
+              <td class="p-3">
+                <UBadge
+                  :color="!staff.active ? 'neutral' : staff.mfa_confirmed ? 'success' : 'warning'"
+                  variant="subtle"
+                >
+                  {{ !staff.active ? 'Nonaktif' : staff.mfa_confirmed ? 'Aktif' : 'Diundang' }}
+                </UBadge>
+              </td>
+              <td class="p-3">
+                <div
+                  v-if="staff.manageable && staff.id !== user?.id"
+                  class="flex flex-wrap gap-1"
+                >
+                  <UButton
+                    v-if="canUpdate"
+                    label="Edit"
+                    variant="ghost"
+                    @click="form(staff)"
+                  />
+                  <UButton
+                    v-if="canChangeStatus"
+                    :label="staff.active ? 'Nonaktifkan' : 'Aktifkan'"
+                    variant="ghost"
+                    @click="status(staff)"
+                  />
+                  <UButton
+                    v-if="can('admin.staff.sessions.delete')"
+                    label="Cabut sesi"
+                    color="error"
+                    variant="ghost"
+                    @click="revoke(staff)"
+                  />
+                </div>
+              </td>
+            </tr>
+            <tr v-if="data && !data.data.length">
+              <td
+                colspan="5"
+                class="p-6 text-center text-muted"
+              >
+                Tidak ada pengguna yang cocok.
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+      <template
+        v-if="data && data.meta.last_page > 1"
+        #footer
+      >
+        <div class="flex items-center justify-end gap-2">
+          <UButton
+            :disabled="page <= 1"
+            label="Sebelumnya"
+            variant="outline"
+            @click="page--"
+          />
+          <span>{{ data.meta.page }} / {{ data.meta.last_page }}</span>
+          <UButton
+            :disabled="page >= data.meta.last_page"
+            label="Berikutnya"
+            variant="outline"
+            @click="page++"
+          />
+        </div>
+      </template>
     </UCard>
-  </div>
+    <ConfirmAdminAction
+      v-if="pending"
+      :action="pending"
+      @cancel="pending = undefined"
+      @saved="saved"
+    />
+  </section>
 </template>

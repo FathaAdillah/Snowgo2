@@ -82,7 +82,15 @@ docker compose exec api php artisan staff:invite nama@example.test --role=super_
 
 Buka [Mailpit](http://localhost:8025), ikuti **Aktifkan akun staf**, lalu buat dan konfirmasi kata sandi. Pindai QR menggunakan aplikasi authenticator pada perangkat lain dan masukkan kode enam digit dari aplikasi. QR dibuat langsung di browser; jangan bagikan tangkapan layarnya. Simpan kode pemulihan yang hanya ditampilkan sekali. Buka [login admin](http://admin.localhost:8080/login) dan masuk dengan kata sandi serta **kode berikutnya**. Pastikan `ADMIN_URL` dan `SANCTUM_STATEFUL_DOMAINS` di environment sesuai host dan port. Undangan kedaluwarsa setelah satu jam; ulangi perintah dengan role yang sama untuk mengirim pengganti.
 
-Untuk staf biasa gunakan `--role=admin`, atau undang melalui **Administrasi → Staff & Sesi**. Mutasi keamanan meminta password dan TOTP baru; kode pemulihan tidak berlaku untuk konfirmasi ini. SMTP selain Mailpit harus dikonfigurasi di produksi.
+Untuk staf biasa gunakan `--role=admin`, atau undang melalui **Administrasi → Pengguna**. Mutasi keamanan meminta password dan TOTP baru; kode pemulihan tidak berlaku untuk konfirmasi ini. SMTP selain Mailpit harus dikonfigurasi di produksi.
+
+### Manajemen staf dan role
+
+Setelah memperbarui kode, jalankan `docker compose run --rm migrate` lalu `docker compose exec api php artisan db:seed --class=PermissionSeeder --force`. Seeder ini tidak mengganti grant role yang sudah ada. Jika memakai mode admin preview, bangun ulang bundle seperti langkah preview di bawah.
+
+**Pengguna** hanya menampilkan staf internal. Cari berdasarkan nama atau email, undang staf dan pilih role, ubah nama/role, nonaktifkan akun atau cabut semua sesi. Tidak ada hapus permanen atau kolom organisasi: Snowego memisahkan pelanggan dan tidak menggunakan struktur cabang CrowdFunding.
+
+**Role & Izin** mengadaptasi katalog CrowdFunding ke seeder per fitur Snowego, bukan menyalin role fundraising. Pilih bagian, resource, kemudian aksi. Nama izin berasal dari seeder Spatie, tidak dapat dibuat lewat formulir. Staf hanya dapat memberikan izin yang dimilikinya. Role `super_admin` dilindungi; Log Viewer dan OmniDB tidak ada dalam pilihan izin. Mengubah grant role mengeluarkan anggotanya dari sesi lama. Role bawaan atau yang masih memiliki anggota tidak dapat dihapus.
 
 Saat deploy fitur baru, jalankan migrasi lalu `php artisan db:seed --class=PermissionSeeder --force` sebelum membuka traffic. Seeder permission ini tidak membuat user atau data demo. Bila nama `super_admin` sudah dipakai role non-sistem, seeder berhenti tanpa mempromosikan anggotanya: periksa anggota dan ubah nama role lama sebelum melanjutkan.
 

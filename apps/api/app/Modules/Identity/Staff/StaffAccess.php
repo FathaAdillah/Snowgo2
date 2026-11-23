@@ -17,6 +17,8 @@ final class StaffAccess
 
     public const DB = 'operator.database.open';
 
+    public const DEFAULT_ROLES = ['admin', 'product_manager', 'inventory_staff', 'order_staff', 'finance', 'customer_service', 'warehouse', 'content_manager'];
+
     public static function super(User $user): bool
     {
         return $user->account_type === User::STAFF && $user->roles->contains(fn ($role) => $role->getAttribute('name') === self::SUPER

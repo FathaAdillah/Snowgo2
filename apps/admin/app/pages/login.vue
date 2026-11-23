@@ -41,8 +41,10 @@ async function submitMfa() {
   loading.value = true
   error.value = null
   try {
-    await verifyMfa(otp.value.trim())
-    await navigateTo('/')
+    const account = await verifyMfa(otp.value.trim())
+    const links = adminNavigation.flatMap(entry => entry.type === 'link' ? [entry] : entry.children)
+    const first = links.find(link => link.to && link.permission && account.permissions.includes(link.permission))
+    await navigateTo(first?.to ?? '/')
   } catch (err) {
     error.value = authErrorMessage(err)
     otp.value = ''

@@ -32,6 +32,10 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError
 export type MfaChallenge = paths['/admin/auth/login']['post']['responses'][200]['content']['application/json']['data']
 export type StaffMe = paths['/admin/auth/me']['get']['responses'][200]['content']['application/json']['data']
 export type StaffList = paths['/admin/staff']['get']['responses'][200]['content']['application/json']
+export type StaffRoleOptions = paths['/admin/staff/role-options']['get']['responses'][200]['content']['application/json']
+export type RoleList = paths['/admin/roles']['get']['responses'][200]['content']['application/json']
+export type RoleDetail = paths['/admin/roles/{id}']['get']['responses'][200]['content']['application/json']
+export type PermissionCatalog = paths['/admin/permissions']['get']['responses'][200]['content']['application/json']
 export type Enrollment = paths['/admin/auth/mfa-enrollments']['post']['responses'][200]['content']['application/json']['data']
 export type RecoveryCodes = paths['/admin/auth/mfa-enrollment-verifications']['post']['responses'][200]['content']['application/json']['data']
 

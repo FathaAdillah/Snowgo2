@@ -115,8 +115,8 @@ export const adminNavigation: NavEntry[] = [
     label: 'Administrasi',
     icon: 'i-lucide-shield-check',
     children: [
-      { label: 'Staff & Sesi', icon: 'i-lucide-user-cog', to: '/staff', permission: 'admin.staff.view' },
-      { label: 'Role & Izin', icon: 'i-lucide-key-round' },
+      { label: 'Pengguna', icon: 'i-lucide-user-cog', to: '/staff', permission: 'admin.staff.view' },
+      { label: 'Role & Izin', icon: 'i-lucide-key-round', to: '/roles', permission: 'admin.roles.view' },
       { label: 'Audit Log', icon: 'i-lucide-scroll-text' },
       { label: 'Pengaturan', icon: 'i-lucide-settings', to: '/settings', permission: 'admin.profile.view' },
       { label: 'Integrasi', icon: 'i-lucide-plug' }
