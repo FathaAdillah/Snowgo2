@@ -2,36 +2,90 @@ import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import vue from '@vitejs/plugin-vue'
 import { createServer } from 'vite'
-import { computed, createSSRApp, h, ref } from 'vue'
+import { computed, createSSRApp, effectScope, h, nextTick, ref, watch } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
 const server = await createServer({ configFile: false, plugins: [vue()], server: { middlewareMode: true, hmr: false }, appType: 'custom' })
 after(() => server.close())
 const { default: page } = await server.ssrLoadModule('/app/pages/staff.vue')
 const { default: roleCards } = await server.ssrLoadModule('/app/pages/roles/index.vue')
+const { useStaffFilters } = await server.ssrLoadModule('/app/composables/useStaffFilters.ts')
 const openRole = { id: 2, name: 'packing', display_name: 'Packing', description: '', members: 0, system: false, editable: true, deletable: true, permissions: ['foundation.file.view'] }
 const staff = { id: 2, email: 'staff@example.test', roles: ['admin'], active: true, manageable: true }
 const grants = new Set()
 Object.assign(globalThis, {
-  computed, ref, definePageMeta() {}, useHead() {}, useToast: () => ({}),
-  useAdminAuth: () => ({ can: permission => grants.has(permission), user: ref({ id: 1 }) }),
-  useFetch: url => ({ data: ref({ data: url.endsWith('/roles') ? [openRole, { ...openRole, id: 3, name: 'super_admin', system: true, editable: false, deletable: false }] : [staff, { ...staff, id: 1, email: 'self@example.test', manageable: false }], meta: { last_page: 2, page: 1 } }), error: ref(null) })
+  computed, ref, watch, useStaffFilters, definePageMeta() {}, useHead() {}, useToast: () => ({}),
+  useAdminAuth: () => ({ can: permission => grants.has(permission), user: ref({ id: 1 }) })
 })
-async function render(permissions, component = page) {
+async function render(permissions, component = page, requests = [], buttons = {}) {
   grants.clear()
   permissions.forEach(permission => grants.add(permission))
+  globalThis.useFetch = (url, options) => {
+    const execute = () => requests.push(url)
+    if (options.immediate !== false) execute()
+    const fixtures = url.endsWith('/roles')
+      ? [openRole, { ...openRole, id: 3, name: 'super_admin', system: true, editable: false, deletable: false }]
+      : [staff, { ...staff, id: 1, email: 'self@example.test', manageable: false }]
+    return { data: ref({ data: fixtures, meta: { last_page: 2, page: 1, per_page: 25, total: 31 } }), error: ref(null), status: ref('success'), execute }
+  }
   const app = createSSRApp(component)
-  for (const name of ['UCard', 'UBadge', 'UFormField', 'UInput', 'UAlert', 'UButton', 'USelect', 'ConfirmAdminAction']) {
+  for (const name of ['UCard', 'UBadge', 'UFormField', 'UInput', 'UAlert', 'USelect', 'ConfirmAdminAction']) {
     app.component(name, { setup: (_, { attrs, slots }) => () => h('div', {}, [attrs.label, slots.header?.(), slots.default?.(), slots.footer?.()]) })
   }
+  app.component('UButton', (_, { attrs }) => {
+    buttons[attrs.label] = attrs.onClick
+    return h('button', attrs.label)
+  })
+  app.component('UTable', (_, { attrs, slots }) => h('table', attrs.data.map(original => h('tr', attrs.columns.map(({ id, accessorKey }) =>
+    h('td', slots[`${id ?? accessorKey}-cell`]?.({ row: { original } }) ?? original[accessorKey]))))))
+  app.component('UPagination', {
+    props: ['total', 'itemsPerPage'],
+    setup: props => () => h('nav', `${props.total} / ${props.itemsPerPage}`)
+  })
   return renderToString(app)
 }
 test('read access does not render any mutation control', async () => {
   const html = await render(['admin.staff.view'])
   assert.match(html, /staff@example.test/)
   assert.match(html, /Anda/)
-  assert.match(html, /Berikutnya/)
+  assert.match(html, /31 \/ 25/)
   assert.doesNotMatch(html, /Tambah pengguna|Nonaktifkan|Cabut sesi/)
+})
+test('role choices are only requested when opening a form with assign permission', async () => {
+  const requests = []
+  const buttons = {}
+  await render(['admin.staff.update'], page, requests, buttons)
+  buttons.Edit()
+  assert.deepEqual(requests, ['/api/v1/admin/staff'])
+  requests.length = 0
+  await render(['admin.staff.create', 'admin.staff.assign_roles'], page, requests, buttons)
+  assert.deepEqual(requests, ['/api/v1/admin/staff'])
+  buttons['Tambah pengguna']()
+  assert.deepEqual(requests, ['/api/v1/admin/staff', '/api/v1/admin/staff/role-options'])
+})
+test('typing coalesces into one server query and each filter resets pagination', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const scope = effectScope()
+  t.after(() => scope.stop())
+  const { query, statusFilter, params, changePage } = scope.run(useStaffFilters)
+  changePage(3)
+  query.value = 'pa'
+  await nextTick()
+  t.mock.timers.tick(200)
+  query.value = ' packing '
+  await nextTick()
+  t.mock.timers.tick(200)
+  assert.deepEqual(params.value, { page: 3 })
+  t.mock.timers.tick(100)
+  assert.deepEqual(params.value, { page: 1, search: 'packing', status: undefined })
+  changePage(2)
+  statusFilter.value = 'disabled'
+  await nextTick()
+  assert.deepEqual(params.value, { page: 1, search: 'packing', status: 'disabled' })
+  statusFilter.value = 'all'
+  query.value = ''
+  await nextTick()
+  assert.deepEqual(params.value, { page: 1, search: undefined, status: undefined })
 })
 test('create, update and delete-session controls require their own grants', async () => {
   const partial = await render(['admin.staff.create', 'admin.staff.update', 'admin.staff.sessions.delete'])

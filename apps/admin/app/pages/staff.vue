@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
 import type { StaffList, StaffRoleOptions } from '@snowego/api-types'
+import type { StaffStatusFilter } from '~/composables/useStaffFilters'
 
 definePageMeta({ permission: 'admin.staff.view' })
 useHead({ title: 'Pengguna · Snowego Admin' })
@@ -12,12 +14,27 @@ const canUpdate = computed(() => can('admin.staff.update'))
 const canChangeStatus = computed(() => canUpdate.value && can('admin.staff.change_status'))
 const base = '/api/v1/admin/staff'
 const options = { cache: 'no-store' as const, headers: { Accept: 'application/json' } }
-const page = ref(1)
-const search = ref('')
-const query = ref('')
-const { data, error, refresh } = await useFetch<StaffList>(base, { ...options, query: { page, search } })
-const choices = canAssign.value ? await useFetch<StaffRoleOptions>(`${base}/role-options`, options) : undefined
-const roles = computed(() => choices?.data.value?.data ?? [])
+const columns: TableColumn<Staff>[] = [
+  { accessorKey: 'display_name', header: 'Nama' },
+  { accessorKey: 'email', header: 'Email' },
+  { accessorKey: 'roles', header: 'Role' },
+  { id: 'status', header: 'Status' },
+  { id: 'actions', header: 'Aksi' }
+]
+const statuses = [
+  { label: 'Semua status', value: 'all' },
+  { label: 'Aktif', value: 'active' },
+  { label: 'Diundang', value: 'invited' },
+  { label: 'Nonaktif', value: 'disabled' }
+] satisfies { label: string, value: StaffStatusFilter }[]
+const { query, statusFilter, params, changePage, applyFilters } = useStaffFilters()
+const { data, error, refresh, status: listStatus } = useFetch<StaffList>(base, {
+  ...options, key: 'staff-list', query: params, lazy: true, deep: false
+})
+const loading = computed(() => listStatus.value === 'pending' || listStatus.value === 'idle')
+const { data: choices, status: roleStatus, execute: loadRoles } = useFetch<StaffRoleOptions>(`${base}/role-options`, {
+  ...options, immediate: false
+})
 const mode = ref<'invite' | 'edit'>()
 const target = ref<Staff>()
 const display = ref('')
@@ -25,10 +42,9 @@ const email = ref('')
 const invitedRole = ref('')
 const selected = ref<string[]>([])
 const pending = ref<Pending>()
-function applySearch() {
-  page.value = 1
-  search.value = query.value.trim()
-}
+watch(data, (result) => {
+  if (result && result.meta.page === params.value.page && result.meta.page > result.meta.last_page) changePage(result.meta.last_page)
+})
 function form(staff?: Staff) {
   mode.value = staff ? 'edit' : 'invite'
   target.value = staff
@@ -36,6 +52,7 @@ function form(staff?: Staff) {
   email.value = staff?.email ?? ''
   selected.value = [...(staff?.roles ?? [])]
   invitedRole.value = ''
+  if (canAssign.value) void loadRoles()
 }
 function submit() {
   if (mode.value === 'invite' && canInvite.value && invitedRole.value) {
@@ -112,7 +129,9 @@ async function saved() {
           <USelect
             v-if="mode === 'invite'"
             v-model="invitedRole"
-            :items="roles"
+            :items="choices?.data ?? []"
+            :loading="roleStatus === 'pending'"
+            :disabled="roleStatus !== 'success'"
             placeholder="Pilih role"
             class="w-full"
           />
@@ -120,14 +139,17 @@ async function saved() {
             v-else
             v-model="selected"
             multiple
-            :items="roles"
+            :items="choices?.data ?? []"
+            :loading="roleStatus === 'pending'"
+            :disabled="roleStatus !== 'success'"
             class="w-full"
           />
         </UFormField>
         <UAlert
-          v-if="choices?.error.value"
+          v-if="canAssign && roleStatus === 'error'"
           title="Daftar role tidak dapat dimuat."
           color="error"
+          :actions="[{ label: 'Coba lagi', onClick: () => loadRoles() }]"
         />
         <div class="flex items-end justify-end gap-2 sm:col-span-2">
           <UButton
@@ -146,8 +168,9 @@ async function saved() {
     <UCard>
       <template #header>
         <form
-          class="flex gap-2"
-          @submit.prevent="applySearch"
+          class="flex flex-wrap items-center gap-2"
+          role="search"
+          @submit.prevent="applyFilters"
         >
           <UInput
             v-model="query"
@@ -157,10 +180,10 @@ async function saved() {
             placeholder="Cari nama atau email"
             icon="i-lucide-search"
           />
-          <UButton
-            type="submit"
-            label="Cari"
-            variant="outline"
+          <USelect
+            v-model="statusFilter"
+            :items="statuses"
+            aria-label="Filter status pengguna"
           />
         </form>
       </template>
@@ -168,118 +191,91 @@ async function saved() {
         v-if="error"
         color="error"
         title="Daftar pengguna tidak dapat dimuat."
+        :actions="[{ label: 'Coba lagi', onClick: () => refresh() }]"
       />
-      <div
+      <UTable
         v-else
-        class="overflow-x-auto"
+        caption="Daftar pengguna staf"
+        :columns="columns"
+        :data="data?.data ?? []"
+        :get-row-id="row => String(row.id)"
+        :watch-options="{ deep: false }"
+        :loading="loading"
+        empty="Tidak ada pengguna yang cocok."
       >
-        <table class="w-full text-left text-sm">
-          <thead class="text-muted">
-            <tr>
-              <th
-                v-for="col in ['Nama', 'Email', 'Role', 'Status', 'Aksi']"
-                :key="col"
-                scope="col"
-                class="p-3"
-              >
-                {{ col }}
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-default">
-            <tr
-              v-for="staff in data?.data"
-              :key="staff.id"
+        <template #loading>
+          <span role="status">Memuat pengguna…</span>
+        </template>
+        <template #display_name-cell="{ row: { original: staff } }">
+          {{ staff.display_name || '—' }}
+          <UBadge
+            v-if="staff.id === user?.id"
+            size="sm"
+            variant="subtle"
+          >
+            Anda
+          </UBadge>
+        </template>
+        <template #roles-cell="{ row: { original: staff } }">
+          <div class="flex flex-wrap gap-1">
+            <UBadge
+              v-for="role in staff.roles"
+              :key="role"
+              variant="subtle"
             >
-              <th
-                scope="row"
-                class="p-3 font-medium"
-              >
-                {{ staff.display_name || '—' }} <UBadge
-                  v-if="staff.id === user?.id"
-                  size="sm"
-                  variant="subtle"
-                >
-                  Anda
-                </UBadge>
-              </th>
-              <td class="p-3">
-                {{ staff.email }}
-              </td>
-              <td class="p-3">
-                <div class="flex flex-wrap gap-1">
-                  <UBadge
-                    v-for="role in staff.roles"
-                    :key="role"
-                    variant="subtle"
-                  >
-                    {{ role }}
-                  </UBadge>
-                </div>
-              </td>
-              <td class="p-3">
-                <UBadge
-                  :color="!staff.active ? 'neutral' : staff.mfa_confirmed ? 'success' : 'warning'"
-                  variant="subtle"
-                >
-                  {{ !staff.active ? 'Nonaktif' : staff.mfa_confirmed ? 'Aktif' : 'Diundang' }}
-                </UBadge>
-              </td>
-              <td class="p-3">
-                <div
-                  v-if="staff.manageable && staff.id !== user?.id"
-                  class="flex flex-wrap gap-1"
-                >
-                  <UButton
-                    v-if="canUpdate"
-                    label="Edit"
-                    variant="ghost"
-                    @click="form(staff)"
-                  />
-                  <UButton
-                    v-if="canChangeStatus"
-                    :label="staff.active ? 'Nonaktifkan' : 'Aktifkan'"
-                    variant="ghost"
-                    @click="status(staff)"
-                  />
-                  <UButton
-                    v-if="can('admin.staff.sessions.delete')"
-                    label="Cabut sesi"
-                    color="error"
-                    variant="ghost"
-                    @click="revoke(staff)"
-                  />
-                </div>
-              </td>
-            </tr>
-            <tr v-if="data && !data.data.length">
-              <td
-                colspan="5"
-                class="p-6 text-center text-muted"
-              >
-                Tidak ada pengguna yang cocok.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              {{ role }}
+            </UBadge>
+          </div>
+        </template>
+        <template #status-cell="{ row: { original: staff } }">
+          <UBadge
+            :color="!staff.active ? 'neutral' : staff.mfa_confirmed ? 'success' : 'warning'"
+            variant="subtle"
+          >
+            {{ !staff.active ? 'Nonaktif' : staff.mfa_confirmed ? 'Aktif' : 'Diundang' }}
+          </UBadge>
+        </template>
+        <template #actions-cell="{ row: { original: staff } }">
+          <div
+            v-if="staff.manageable && staff.id !== user?.id"
+            class="flex flex-wrap gap-1"
+          >
+            <UButton
+              v-if="canUpdate"
+              label="Edit"
+              variant="ghost"
+              @click="form(staff)"
+            />
+            <UButton
+              v-if="canChangeStatus"
+              :label="staff.active ? 'Nonaktifkan' : 'Aktifkan'"
+              variant="ghost"
+              @click="status(staff)"
+            />
+            <UButton
+              v-if="can('admin.staff.sessions.delete')"
+              label="Cabut sesi"
+              color="error"
+              variant="ghost"
+              @click="revoke(staff)"
+            />
+          </div>
+        </template>
+      </UTable>
       <template
-        v-if="data && data.meta.last_page > 1"
+        v-if="data && !error"
         #footer
       >
-        <div class="flex items-center justify-end gap-2">
-          <UButton
-            :disabled="page <= 1"
-            label="Sebelumnya"
-            variant="outline"
-            @click="page--"
-          />
-          <span>{{ data.meta.page }} / {{ data.meta.last_page }}</span>
-          <UButton
-            :disabled="page >= data.meta.last_page"
-            label="Berikutnya"
-            variant="outline"
-            @click="page++"
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-sm text-muted">{{ data.meta.total }} pengguna</span>
+          <UPagination
+            v-if="data.meta.last_page > 1"
+            :page="params.page"
+            :total="data.meta.total"
+            :items-per-page="data.meta.per_page"
+            :sibling-count="1"
+            aria-label="Halaman pengguna"
+            @update:page="changePage"
           />
         </div>
       </template>

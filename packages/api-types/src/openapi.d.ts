@@ -1497,6 +1497,7 @@ export interface operations {
             query?: {
                 page?: number;
                 search?: string | null;
+                status?: "active" | "invited" | "disabled";
             };
             header?: never;
             path?: never;
@@ -1524,7 +1525,9 @@ export interface operations {
                         meta: {
                             last_page: number;
                             page: number;
+                            per_page: number;
                             request_id: string;
+                            total: number;
                         };
                         /** @constant */
                         success: true;
