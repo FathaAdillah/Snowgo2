@@ -34,6 +34,9 @@ test('public delivery regions match the paginated contract without exposing inte
   const result = await client.GET('/regions', { params: { query: { parent: 'ID', kind: 'PROVINCE', per_page: 1 } } })
   assert.equal(result.response.status, 200)
   validateResponse('/regions', 200, result.data)
+  if (process.env.CONTRACT_REGION_CODE) {
+    assert.equal(result.data.data[0]?.code, process.env.CONTRACT_REGION_CODE, 'expected CI province fixture')
+  }
   for (const region of result.data.data) {
     assert.equal(region.parent_code, 'ID')
     assert.deepEqual(Object.keys(region).sort(), ['code', 'kind', 'name', 'parent_code'])
