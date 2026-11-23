@@ -41,6 +41,9 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::Warehouse) {
+            $fields = [...$fields, 'code', 'name', 'district_id', 'is_default'];
+        }
         if ($subject === Subject::Variant) {
             $fields = [...$fields, 'rts_enabled', 'rts_price_amount'];
         }

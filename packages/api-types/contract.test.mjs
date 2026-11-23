@@ -83,11 +83,21 @@ test('public catalog and missing product use their published schemas', async () 
     assert.equal(result.response.status, 200)
     validateResponse('/products/{slug}', 200, result.data)
     assert.equal(result.data.data.variants[0].offers[0].unit_amount, 25000)
+    assert.equal(result.data.data.variants[0].offers[0].available, true)
     const list = await client.GET('/products', { params: { query: { method: 'RTS', q: 'fixture' } } })
     validateResponse('/products', 200, list.data)
     assert.equal(list.data.data[0]?.slug, slug)
+    assert.equal(list.data.data[0]?.offers[0].available, true)
   }
   const missing = await client.GET('/products/{slug}', { params: { path: { slug: 'ci-missing-5b025cdf' } } })
   assert.equal(missing.response.status, 404)
   validateResponse('/products/{slug}', 404, missing.error)
+})
+
+test('inventory reads are staff-only and use the documented error envelope', async () => {
+  for (const path of ['/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments']) {
+    const result = await client.GET(path)
+    assert.ok([401, 403].includes(result.response.status))
+    validateResponse(path, result.response.status, result.error)
+  }
 })
