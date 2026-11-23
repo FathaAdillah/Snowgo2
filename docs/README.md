@@ -9,7 +9,7 @@
 | Referensi | [Analisis CrowdFunding](REFERENCE-ARCHITECTURE-ANALYSIS.md) · [Gap analysis](REQUIREMENT-GAP-ANALYSIS.md) |
 | Kebutuhan | [01 BRD](01-BRD.md) · [02 PRD](02-PRD.md) |
 | Solusi | [03 Arsitektur](03-TECH-STACK-ARCHITECTURE.md) · [04 Schema](04-DATABASE-SCHEMA.md) · [05 API contract](05-API-CONTRACT.md) · [Kamus tipe API](API-DATA-TYPES.md) |
-| Operasi bisnis | [06 Business flows](06-BUSINESS-FLOWS.md) · [07 Admin dan RBAC](07-ADMIN-MENU-MATRIX.md) |
+| Operasi bisnis | [06 Business flows](06-BUSINESS-FLOWS.md) · [07 Admin dan RBAC](07-ADMIN-MENU-MATRIX.md) · [Pola tabel admin](ADMIN-TABLES.md) |
 | Quality dan operasi | [08 Security](08-SECURITY.md) · [09 Testing](09-TESTING-STRATEGY.md) · [10 Deployment](10-DEPLOYMENT.md) |
 | Backlog dan review | [11 Task tracker](11-TASK-PROGRESS-TRACKER.md) · [Traceability](REQUIREMENTS-TRACEABILITY.md) · [Final consistency review](FINAL-CONSISTENCY-REVIEW.md) |
 
