@@ -805,7 +805,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Enroll the displayed manual authenticator key */
+            /** @description Provision authenticator for the invited account */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -813,6 +813,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
+                            expires_at: string;
+                            otpauth_uri: string;
                             secret: string;
                         };
                         message: string;

@@ -50,6 +50,7 @@ beforeEach(function () {
 });
 
 it('invites a superadmin without a default password and consumes enrollment and recovery exactly once', function () {
+    $this->freezeTime();
     $email = 'root@example.test';
     $this->artisan('staff:invite', ['email' => $email, '--role' => StaffAccess::SUPER])->assertSuccessful();
     $credentials = ['email' => $email, 'password' => UserFactory::PASSWORD];
@@ -57,9 +58,19 @@ it('invites a superadmin without a default password and consumes enrollment and 
     app(Relay::class)->publish();
     $token = Mail::sent(StaffInvitation::class)->sole()->token;
     $enroll = ($this->auth)('mfa-enrollments', ['token' => $token, 'password' => UserFactory::PASSWORD])->assertOk();
-    $secret = $enroll->json('data.secret');
+    $enroll->assertHeaderContains('Cache-Control', 'no-store');
+    $uri = parse_url($enroll->json('data.otpauth_uri'));
+    expect([$uri['scheme'], $uri['host'], rawurldecode($uri['path'])])->toBe(['otpauth', 'totp', '/Snowego Admin:'.$email]);
+    parse_str($uri['query'], $options);
+    expect([$options['issuer'], $options['digits'], $options['period'], $options['algorithm']])->toBe(['Snowego Admin', '6', '30', 'SHA1']);
+    $secret = $options['secret'];
+    expect($secret)->toBe($enroll->json('data.secret'));
     $code = ($this->otp)($secret);
+    $step = intdiv(now()->timestamp, 30);
+    $valid = array_map(fn ($offset) => app(Google2FA::class)->oathTotp($secret, $step + $offset), [-1, 0, 1]);
+    $wrong = collect(['000000', '000001', '000002', '000003'])->first(fn ($candidate) => ! in_array($candidate, $valid, true));
     ($this->auth)('mfa-enrollment-verifications', ['token' => $token, 'code' => 'xxxxxx'])->assertUnprocessable();
+    ($this->auth)('mfa-enrollment-verifications', ['token' => $token, 'code' => $wrong])->assertUnprocessable()->assertJsonPath('code', 'INVALID_CHALLENGE')->assertJsonMissingPath('data.recovery_codes');
     $codes = ($this->auth)('mfa-enrollment-verifications', compact('token', 'code'))->assertOk()->json('data.recovery_codes');
     expect($codes)->toHaveCount(8);
     expect(DB::table('users')->sole()->two_factor_secret)->not->toContain($secret);

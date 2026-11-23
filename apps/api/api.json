@@ -3914,7 +3914,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Enroll the displayed manual authenticator key",
+                        "description": "Provision authenticator for the invited account",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3930,11 +3930,19 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "otpauth_uri": {
+                                                    "type": "string"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string"
+                                                },
                                                 "secret": {
                                                     "type": "string"
                                                 }
                                             },
                                             "required": [
+                                                "otpauth_uri",
+                                                "expires_at",
                                                 "secret"
                                             ]
                                         },
