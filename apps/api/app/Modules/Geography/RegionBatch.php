@@ -20,7 +20,7 @@ final class RegionBatch
     public static function csv($stream): self
     {
         $batch = new self;
-        if (self::record($stream) !== ['kind', 'code', 'name', 'parent_code', 'active']) {
+        if (self::record($stream, header: true) !== ['kind', 'code', 'name', 'parent_code', 'active']) {
             throw ValidationException::withMessages(['file_id' => 'Expected header: kind,code,name,parent_code,active']);
         }
         while (($row = self::record($stream)) !== null) {
@@ -40,11 +40,14 @@ final class RegionBatch
      * @param  resource  $stream
      * @return array<int,string|null>|null
      */
-    private static function record($stream): ?array
+    private static function record($stream, bool $header = false): ?array
     {
         $line = fgets($stream, 2049);
         if ($line === false && feof($stream)) {
             return null;
+        }
+        if ($header && is_string($line) && str_starts_with($line, "\xEF\xBB\xBF")) {
+            $line = substr($line, 3);
         }
         $field = '(?:[^",\r\n]*+|"(?:[^"\r\n]++|"")*+")';
         if ($line === false || strlen($line) >= 2048 || ! preg_match('/\A'.$field.'(?:,'.$field.'){4}(?:\r?\n)?\z/', $line)) {

@@ -163,3 +163,10 @@ it('rejects broken CSV quoting without merging rows and preserves quoted names',
     expect(RegionBatch::csv($disk->readStream('good.csv'))->import(null))->toBe(1);
     $this->assertDatabaseHas('regions', ['name' => 'Indonesia, "ID"']);
 });
+
+it('handles an Excel UTF-8 BOM before a quoted CSV header', function () {
+    $disk = Storage::fake('csv');
+    $disk->put('excel.csv', "\xEF\xBB\xBF\"kind\",code,name,parent_code,active\r\nCOUNTRY,ID,Indonesia,,1\r\n");
+    expect(RegionBatch::csv($disk->readStream('excel.csv'))->import(null))->toBe(1);
+    $this->assertDatabaseHas('regions', ['code' => 'ID']);
+});
