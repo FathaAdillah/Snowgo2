@@ -148,7 +148,7 @@ it('applies the registered permission bypass only after MFA and protects the las
     $other = ($this->staff)('admin');
     Permission::findOrCreate('future.feature.create', 'web');
     expect($root->getAllPermissions())->toBeEmpty();
-    expect(($this->login)($root)->json('data.permissions'))->toContain('future.feature.create', StaffAccess::LOGS, StaffAccess::DB);
+    expect(($this->login)($root)->json('data.permissions'))->toContain('future.feature.create')->not->toContain(StaffAccess::LOGS, StaffAccess::DB);
     ($this->send)('GET', '/api/v1/admin/staff')->assertOk();
     ($this->send)('PATCH', "/api/v1/admin/staff/{$other->id}", ['active' => false])->assertForbidden()->assertJsonPath('code', 'STEP_UP_REQUIRED');
     $this->travel(31)->seconds();
@@ -161,6 +161,25 @@ it('applies the registered permission bypass only after MFA and protects the las
     $this->travel(10)->minutes();
     ($this->send)('DELETE', "/api/v1/admin/staff/{$other->id}/sessions")->assertForbidden();
 });
+
+it('advertises operator actions only to a local MFA-authenticated superadmin', function (string $env, string $role) {
+    $user = ($this->staff)($role);
+    if ($role !== StaffAccess::SUPER) {
+        $user->givePermissionTo(StaffAccess::LOGS, StaffAccess::DB);
+    }
+    ($this->login)($user);
+    $previousEnv = app()->environment();
+    app()->detectEnvironment(fn () => $env);
+    try {
+        $permissions = ($this->send)('GET', '/api/v1/admin/auth/me')->assertOk()->json('data.permissions');
+        expect($permissions)->toContain('admin.profile.view');
+        foreach ([StaffAccess::LOGS, StaffAccess::DB] as $ability) {
+            expect(in_array($ability, $permissions, true))->toBe($env === 'local' && $role === StaffAccess::SUPER);
+        }
+    } finally {
+        app()->detectEnvironment(fn () => $previousEnv);
+    }
+})->with([['local', StaffAccess::SUPER], ['production', StaffAccess::SUPER], ['local', 'admin']]);
 
 it('guards each operator console even with explicit operator grants or basic credentials', function ($ability) {
     Route::get('/operator-check', fn () => response()->noContent())->middleware(['web', LocalOperatorAccess::class.':'.$ability]);
