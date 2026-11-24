@@ -69,13 +69,13 @@ test('inventory navigation matches page permissions and only offers implemented 
   for (const [grant, visible] of [
     ['inventory.warehouse.view', 'warehouses'], ['inventory.warehouse.create', 'warehouses'], ['inventory.stock.view', 'stock'],
     ['inventory.movement.view', 'movements'], ['inventory.receipt.create', 'operations'],
-    ['inventory.adjustment.create', 'operations'], ['inventory.adjustment.view', 'operations'], ['inventory.reservation.view', null]
+    ['inventory.adjustment.create', 'operations'], ['inventory.adjustment.view', 'operations'], ['inventory.reservation.view', 'reservations'], ['inventory.transfer.manage', null]
   ]) {
     const allowed = entries.filter(item => hasPageAccess(item.permission, p => p === grant))
     assert.deepEqual(allowed.map(item => item.to), visible ? [`/inventory/${visible}`] : [])
     if (visible) assert.deepEqual((await render(`pages/inventory/${visible}`, [grant])).meta.permission, allowed[0].permission)
   }
-  assert.equal(entries.filter(entry => hasPageAccess(entry.permission, () => true)).length, 4)
+  assert.equal(entries.filter(entry => hasPageAccess(entry.permission, () => true)).length, 5)
 })
 
 test('warehouse screen separates create-only, view, update and archive', async () => {
@@ -94,6 +94,17 @@ test('warehouse screen separates create-only, view, update and archive', async (
   list.buttons['Arsipkan gudang BDG'].onClick()
   assert.deepEqual(list.state.action.value.body, { active: false })
   assert.equal(list.state.action.value.url, '/api/v1/admin/warehouses/9')
+})
+
+test('reservation table shows partial dispatch without offering stock commands', async () => {
+  const row = { id: 17, order_number: 'RTS-42', sku: 'ALB', status: 'COMMITTED', qty: 7, shipped_qty: 3, released_qty: 1, expires_at: '2026-11-24T12:00:00Z' }
+  const list = await render('pages/inventory/reservations', ['inventory.reservation.view'], { rows: [row], total: 21 })
+  assert.match(list.html, /RTS-42/)
+  assert.match(list.html, /Dialokasikan/)
+  assert.deepEqual(list.buttons, {})
+  assert.equal(list.requests[0].url, '/api/v1/admin/stock-reservations')
+  list.pager['onUpdate:page'](2)
+  assert.equal(list.requests[0].query.value.page, 2)
 })
 
 test('warehouse forms send create payloads and only modified fields on edit', async () => {

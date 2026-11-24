@@ -2,6 +2,7 @@
 
 namespace App\Modules\Inventory;
 
+use App\Modules\Orders\StockOwner;
 use App\Support\Http\ApiResponse;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
@@ -25,9 +26,17 @@ final class InventoryData
 
     public const LEVEL = 'array{id:int,warehouse_id:int,sku:string,on_hand:int,reserved:int,committed:int,available:int,reorder_point:int}';
 
-    public const MOVEMENT = 'array{id:int,level_id:int,type:string,source_key:string,on_hand_delta:int,reserved_delta:int,committed_delta:int,reason_code:string,occurred_at:string}';
+    public const MOVEMENT = 'array{id:int,level_id:int,type:string,source_key:string,on_hand_delta:int,reserved_delta:int,committed_delta:int,reason_code:string|null,occurred_at:string}';
+
+    public const RESERVATION = 'array{id:int,order_number:string,sku:string,qty:int,status:string,expires_at:string,shipped_qty:int,released_qty:int}';
 
     public const ADJUSTMENT = 'array{id:int,level_id:int,delta:int,reason_code:string,created_at:string}';
+
+    public static function reservations(): Builder
+    {
+        return DB::table('stock_reservations as r')->joinSub(StockOwner::lines(), 'line', 'line.id', '=', 'r.order_item_id')
+            ->select('r.id', 'line.number as order_number', 'line.sku_snapshot as sku', 'r.qty', 'r.status', 'r.expires_at', 'r.shipped_qty', 'r.released_qty');
+    }
 
     public static function warehouses(): Builder
     {

@@ -1,6 +1,6 @@
 import type { paths } from '@snowego/api-types'
 
-type ListPath = '/admin/warehouses' | '/admin/stock-levels' | '/admin/stock-movements' | '/admin/stock-adjustments'
+type ListPath = '/admin/warehouses' | '/admin/stock-levels' | '/admin/stock-movements' | '/admin/stock-adjustments' | '/admin/stock-reservations'
 export type InventoryList<P extends ListPath> = paths[P]['get']['responses'][200]['content']['application/json']
 export type Warehouse = InventoryList<'/admin/warehouses'>['data'][number]
 export type WarehouseChoice = { value: Warehouse['id'], label: string }
@@ -9,7 +9,8 @@ export type InventoryAction = { url: string, method: 'PATCH' | 'POST', body: Rec
 export const inventoryApi = '/api/v1/admin'
 export const inventoryFetch = { cache: 'no-store' as const, lazy: true, deep: false, headers: { Accept: 'application/json' } }
 export const movementLabels: Record<string, string> = {
-  INITIAL: 'Saldo pembuka', PURCHASE: 'Penerimaan', ADJUSTMENT_IN: 'Koreksi masuk', ADJUSTMENT_OUT: 'Koreksi keluar'
+  INITIAL: 'Saldo pembuka', PURCHASE: 'Penerimaan', ADJUSTMENT_IN: 'Koreksi masuk', ADJUSTMENT_OUT: 'Koreksi keluar',
+  RESERVATION: 'Reservasi', RESERVATION_RELEASE: 'Pelepasan reservasi', COMMIT: 'Alokasi lunas', COMMIT_RELEASE: 'Pelepasan alokasi', SALE: 'Pengiriman'
 }
 const dateFormatter = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' })
 export function inventoryTime(value: string) {
