@@ -31,7 +31,7 @@ final class GroupPricing
         foreach ($cart->items as $i) {
             $v = $variants->get($i->variant_id);
             $po = $offers->get($i->campaign_variant_id);
-            if (! $v || $v->sku !== $i->sku || ! $this->eligible($i, $v, $po)) {
+            if (! $v || ! $this->eligible($i, $v, $po)) {
                 throw new ApiProblem(409, $submit ? 'QUOTE_CHANGED' : 'OFFER_UNAVAILABLE', 'An offer is no longer eligible.');
             }
             if ($i->qty > ($po->remaining ?? ($available[$v->id] ?? 0))) {
@@ -39,7 +39,7 @@ final class GroupPricing
             }
             $key = $po ? "po:$po->campaign_id" : 'rts';
             $g = $groups[$key] ?? ['method' => $po ? 'PREORDER' : 'READY_TO_SHIP', 'campaign_id' => $po->campaign_id ?? null,
-                'campaign_slug' => $i->campaign_slug, 'campaign_terms' => $po ? array_intersect_key((array) $po->campaign,
+                'campaign_slug' => $po->campaign->slug ?? null, 'campaign_terms' => $po ? array_intersect_key((array) $po->campaign,
                     array_flip(['terms', 'slug', 'payment_scheme', 'ready_eta_from', 'ready_eta_to', 'ship_eta_from', 'ship_eta_to', 'origin', 'transport_mode'])) : null,
                 'subtotal_amount' => 0, 'discount_amount' => 0, 'tax_amount' => 0, 'shipping_amount' => 0, 'total_amount' => 0,
                 'due_now_amount' => 0, 'initial_tax' => 0, 'weight' => 0, 'term' => 'FULL', 'lines' => []];
@@ -72,7 +72,7 @@ final class GroupPricing
         if ($item->campaign_variant_id === null) {
             return $variant->rts_enabled;
         }
-        if (! $offer || $offer->campaign->slug !== $item->campaign_slug || $item->qty < $offer->min_qty || $item->qty > $offer->max_qty) {
+        if (! $offer || $offer->variant_id !== $variant->id || $item->qty < $offer->min_qty || $item->qty > $offer->max_qty) {
             return false;
         }
 

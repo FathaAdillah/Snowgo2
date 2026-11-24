@@ -141,6 +141,26 @@ it('does not exceed the per-account preorder maximum across two converted carts'
     $this->assertDatabaseCount('preorder_allocations', 1);
 });
 
+it('requires a fresh quote after an offer rename without forcing the buyer to rebuild the cart', function (string $field) {
+    ($this->login)($this->buyer);
+    $cart = app(CustomerCart::class);
+    $cart->set($this->buyer->id, $this->po);
+    [$old] = ($this->finalQuote)($this->body);
+    if ($field === 'sku') {
+        app(StockLedger::class)->adjust(['level_id' => DB::table('inventory_levels')->value('id'), 'delta' => -12, 'reason_code' => 'INITIAL'], $this->buyer->id, 'clear');
+        DB::table('product_variants')->where('sku', 'A1')->update(['sku' => 'NEW']);
+    } else {
+        DB::table('preorder_campaigns')->where('slug', 'po')->update(['slug' => 'renamed']);
+    }
+    $item = $cart->read($this->buyer->id)['items'][0];
+    expect($item['availability'])->toBe('AVAILABLE')->and($item[$field])->toBe($field === 'sku' ? 'NEW' : 'renamed');
+    ($this->confirm)($old)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
+    [$fresh, $preview] = ($this->finalQuote)($this->body);
+    expect($preview['groups'][0]['campaign_slug'])->toBe($item['campaign_slug']);
+    ($this->confirm)($fresh, 'after-rename')->assertCreated();
+    $this->assertDatabaseHas('order_items', ['sku_snapshot' => $item['sku']]);
+})->with(['sku', 'campaign_slug']);
+
 it('requires a fresh preview after changes, expiration or stale cart edits', function (string $change, string $expected) {
     ($this->login)($this->buyer);
     app(CustomerCart::class)->set($this->buyer->id, $this->rts);
