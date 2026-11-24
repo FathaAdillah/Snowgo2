@@ -195,6 +195,14 @@ test('receipt and correction confirm signed quantities against their own endpoin
   const withPicker = await render('components/InventoryStockForm', ['inventory.receipt.create', 'inventory.warehouse.view'], {}, { mode: 'receipt' })
   assert.equal(withPicker.requests[0].url, '/api/v1/admin/warehouses')
   assert.equal(withPicker.requests[0].query.value.active, '1')
+  const form = withPicker.state
+  form.selectedWarehouse.value = { value: 52, label: 'SBY — Surabaya' }
+  form.reason.value = 'COUNT'
+  form.sku.value = 'SKU-1'
+  form.quantity.value = 8
+  form.submit()
+  assert.equal(form.action.value.body.warehouse_id, 52)
+  assert.match(form.action.value.label, /SBY — Surabaya \(#52\)/)
   const correction = (await render('components/InventoryStockForm', ['inventory.adjustment.create'], {}, { mode: 'adjustment', initialLevel: 7 })).state
   correction.reason.value = 'COUNT'
   correction.quantity.value = 0

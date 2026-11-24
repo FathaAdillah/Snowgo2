@@ -3,6 +3,7 @@ import type { paths } from '@snowego/api-types'
 type ListPath = '/admin/warehouses' | '/admin/stock-levels' | '/admin/stock-movements' | '/admin/stock-adjustments'
 export type InventoryList<P extends ListPath> = paths[P]['get']['responses'][200]['content']['application/json']
 export type Warehouse = InventoryList<'/admin/warehouses'>['data'][number]
+export type WarehouseChoice = { value: Warehouse['id'], label: string }
 export type InventoryAction = { url: string, method: 'PATCH' | 'POST', body: Record<string, unknown>, label: string }
 
 export const inventoryApi = '/api/v1/admin'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { InventoryList } from '~/composables/useInventory'
+import type { InventoryList, WarehouseChoice } from '~/composables/useInventory'
 
-const model = defineModel<number>()
+const model = defineModel<WarehouseChoice>()
 const search = ref('')
 const { params } = useInventoryPaging(() => ({ q: search.value.trim() || undefined, active: '1' }))
 const { data, status, refresh } = useFetch<InventoryList<'/admin/warehouses'>>(`${inventoryApi}/warehouses`, { ...inventoryFetch, query: params })
@@ -13,7 +13,7 @@ const choices = computed(() => (data.value?.data ?? []).map(w => ({ value: w.id,
     v-model="model"
     v-model:search-term="search"
     :items="choices"
-    value-key="value"
+    by="value"
     :ignore-filter="true"
     :loading="status === 'pending'"
     placeholder="Cari kode atau nama gudang aktif"
