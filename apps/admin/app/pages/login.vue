@@ -45,7 +45,7 @@ async function submitCredentials(event: FormSubmitEvent<typeof state>) {
 
 async function openAdmin(account: StaffMe) {
   const links = adminNavigation.flatMap(entry => entry.type === 'link' ? [entry] : entry.children)
-  const first = links.find(link => link.to && link.permission && account.permissions.includes(link.permission))
+  const first = links.find(link => link.to && hasPageAccess(link.permission, grant => account.permissions.includes(grant)))
   await navigateTo(first?.to ?? (account.permissions.includes('admin.profile.view') ? '/settings' : '/'))
 }
 
