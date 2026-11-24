@@ -141,6 +141,22 @@ it('does not exceed the per-account preorder maximum across two converted carts'
     $this->assertDatabaseCount('preorder_allocations', 1);
 });
 
+it('refuses an archived assigned tax class instead of silently issuing a tax-free invoice', function () {
+    ($this->login)($this->buyer);
+    app(CustomerCart::class)->set($this->buyer->id, $this->rts);
+    [$old] = ($this->finalQuote)($this->body);
+    DB::table('tax_classes')->update(['active' => false]);
+    ($this->confirm)($old)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
+    ($this->preview)($this->body)->assertConflict()->assertJsonPath('code', 'OFFER_UNAVAILABLE');
+    $this->assertDatabaseCount('invoices', 0);
+
+    DB::table('products')->update(['tax_class_id' => null]);
+    [$fresh, $preview] = ($this->finalQuote)($this->body);
+    expect($preview['groups'][0]['tax_amount'])->toBe(0);
+    ($this->confirm)($fresh, 'unassigned')->assertCreated();
+    $this->assertDatabaseHas('order_items', ['tax_class_id' => null, 'tax_bps' => 0]);
+});
+
 it('requires a fresh quote after an offer rename without forcing the buyer to rebuild the cart', function (string $field) {
     ($this->login)($this->buyer);
     $cart = app(CustomerCart::class);

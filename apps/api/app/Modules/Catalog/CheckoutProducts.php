@@ -16,6 +16,7 @@ final class CheckoutProducts
             ->orderBy('id')->sharedLock()->get(['id', 'name', 'tax_class_id'])->keyBy('id');
         $tax = DB::table('tax_classes')->whereIn('id', $products->pluck('tax_class_id'))->where('active', true)
             ->orderBy('id')->sharedLock()->pluck('rate_bps', 'id');
+        $products = $products->filter(fn ($product) => $product->tax_class_id === null || $tax->has($product->tax_class_id));
         $variants = $eligible->whereIn('product_id', $products->keys())->orderBy('id')->sharedLock()
             ->get(['id', 'sku', 'product_id', 'name', 'weight_g', 'rts_enabled', 'rts_price_amount'])->keyBy('id');
         foreach ($variants as $v) {

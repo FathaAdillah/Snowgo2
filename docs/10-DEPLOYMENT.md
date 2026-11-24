@@ -214,3 +214,5 @@ Setelah pull, jalankan `docker compose exec api php artisan migrate --force` dan
 3. Kirim input preview akhir beserta `quote_hash` ke `POST /api/v1/checkout` dengan `Idempotency-Key`. Bila koneksi putus, ulangi dengan key/payload yang sama. Jika quote berubah atau kedaluwarsa, tampilkan preview baru dan gunakan key baru setelah pembeli mengonfirmasi. `GET /api/v1/checkouts/{id}` mengambil nomor pesanan dan invoice awal milik pelanggan.
 
 Tenggat pembayaran awal 24 jam (asumsi MVP), terpisah dari masa berlaku quote. Jangan aktifkan penjualan live sebelum lifecycle pesanan, kuota PO, pembayaran dan rekonsiliasi tersedia. Jika ada histori transaksi, gunakan backup atau perbaikan maju, bukan rollback yang menghapus snapshot.
+
+Jika kelas pajak produk diarsipkan, checkout ditolak sampai staf menetapkan kelas aktif atau melepas penugasannya. Produk tanpa kelas pajak tetap memakai tarif default 0; invoice lama tidak dihitung ulang.
