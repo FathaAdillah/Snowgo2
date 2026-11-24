@@ -159,6 +159,25 @@ test('operations permission gates protect history requests and transaction butto
   }
 })
 
+test('unscoped sidebar navigation remounts the ledger and correction form without the previous level', async () => {
+  for (const page of ['movements', 'operations']) {
+    const path = `pages/inventory/${page}`
+    const grants = ['inventory.movement.view', 'inventory.adjustment.create']
+    const scoped = await render(path, grants, { route: { level: '9' } })
+    const base = `/inventory/${page}`
+    assert.notEqual(scoped.meta.key({ fullPath: `${base}?level=9` }), scoped.meta.key({ fullPath: base }))
+    const unscoped = await render(path, grants)
+    if (page === 'movements') {
+      assert.equal(scoped.requests[0].query.value.level_id, 9)
+      assert.equal(unscoped.requests[0].query.value.level_id, undefined)
+    } else {
+      assert.equal(scoped.state.mode.value, 'adjustment')
+      assert.equal(unscoped.state.mode.value, undefined)
+      assert.equal(unscoped.state.initialLevel, undefined)
+    }
+  }
+})
+
 test('receipt and correction confirm signed quantities against their own endpoints', async () => {
   const receipt = await render('components/InventoryStockForm', ['inventory.receipt.create'], {}, { mode: 'receipt' })
   assert.deepEqual(receipt.requests, [])

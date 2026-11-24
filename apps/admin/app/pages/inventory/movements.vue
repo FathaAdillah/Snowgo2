@@ -3,7 +3,7 @@ import type { TableColumn } from '@nuxt/ui'
 import type { paths } from '@snowego/api-types'
 import { movementLabels, type InventoryList } from '~/composables/useInventory'
 
-definePageMeta({ permission: 'inventory.movement.view' })
+definePageMeta({ permission: 'inventory.movement.view', key: route => route.fullPath })
 useHead({ title: 'Mutasi Stok · Snowego Admin' })
 type Ledger = InventoryList<'/admin/stock-movements'>
 type Query = NonNullable<paths['/admin/stock-movements']['get']['parameters']['query']>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { operationAccess } from '~/composables/useAdminNavigation'
 
-definePageMeta({ permission: operationAccess })
+definePageMeta({ permission: operationAccess, key: route => route.fullPath })
 useHead({ title: 'Penerimaan & Koreksi · Snowego Admin' })
 const { can } = useAdminAuth()
 const route = useRoute()
