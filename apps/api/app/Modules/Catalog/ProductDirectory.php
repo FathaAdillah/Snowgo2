@@ -34,6 +34,11 @@ final class ProductDirectory
         return DB::table('product_variants')->where('active', true)->whereNull('deleted_at');
     }
 
+    public static function publishedVariants(): Builder
+    {
+        return self::variants()->whereIn('product_id', self::published()->select('products.id'));
+    }
+
     /**
      * @param  Collection<int,\stdClass>  $products
      * @return list<array<string,mixed>>

@@ -1279,6 +1279,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cart.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cart.items.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cart/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["cart.items.destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["cart.items.update"];
+        trace?: never;
+    };
     "/categories": {
         parameters: {
             query?: never;
@@ -9654,6 +9702,453 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "cart.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Own cart; empty virtual cart has version 0 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            estimated_total_amount: number;
+                            items: {
+                                /** @enum {string} */
+                                availability: "AVAILABLE" | "PRICE_CHANGED" | "UNAVAILABLE";
+                                campaign_slug?: string;
+                                display_unit_amount: number;
+                                id: string;
+                                qty: number;
+                                sku: string;
+                                /** @enum {string} */
+                                term: "FULL" | "DEPOSIT";
+                            }[];
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description No query fields accepted */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "cart.items.store": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    campaign_slug?: string;
+                    cart_version: number;
+                    qty: number;
+                    sku: string;
+                    /** @enum {string} */
+                    term: "FULL" | "DEPOSIT";
+                };
+            };
+        };
+        responses: {
+            /** @description Item quantity set */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            estimated_total_amount: number;
+                            items: {
+                                /** @enum {string} */
+                                availability: "AVAILABLE" | "PRICE_CHANGED" | "UNAVAILABLE";
+                                campaign_slug?: string;
+                                display_unit_amount: number;
+                                id: string;
+                                qty: number;
+                                sku: string;
+                                /** @enum {string} */
+                                term: "FULL" | "DEPOSIT";
+                            }[];
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description VERSION_CONFLICT or OFFER_UNAVAILABLE */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VERSION_CONFLICT" | "OFFER_UNAVAILABLE";
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF token mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "cart.items.destroy": {
+        parameters: {
+            query: {
+                cart_version: number;
+            };
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Item removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            estimated_total_amount: number;
+                            items: {
+                                /** @enum {string} */
+                                availability: "AVAILABLE" | "PRICE_CHANGED" | "UNAVAILABLE";
+                                campaign_slug?: string;
+                                display_unit_amount: number;
+                                id: string;
+                                qty: number;
+                                sku: string;
+                                /** @enum {string} */
+                                term: "FULL" | "DEPOSIT";
+                            }[];
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Item not in your active cart */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description VERSION_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        code: "VERSION_CONFLICT";
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF token mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Query must contain only cart_version; no body fields */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "cart.items.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    cart_version: number;
+                    qty: number;
+                    /** @enum {string} */
+                    term?: "FULL" | "DEPOSIT";
+                };
+            };
+        };
+        responses: {
+            /** @description Item updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            estimated_total_amount: number;
+                            items: {
+                                /** @enum {string} */
+                                availability: "AVAILABLE" | "PRICE_CHANGED" | "UNAVAILABLE";
+                                campaign_slug?: string;
+                                display_unit_amount: number;
+                                id: string;
+                                qty: number;
+                                sku: string;
+                                /** @enum {string} */
+                                term: "FULL" | "DEPOSIT";
+                            }[];
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Item not in your active cart */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description VERSION_CONFLICT or OFFER_UNAVAILABLE */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VERSION_CONFLICT" | "OFFER_UNAVAILABLE";
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF token mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
         };
     };
     "public.categories": {

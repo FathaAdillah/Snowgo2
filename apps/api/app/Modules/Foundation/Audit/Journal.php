@@ -41,6 +41,9 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::Cart) {
+            $fields[] = 'version';
+        }
         if ($subject === Subject::StockReservation) {
             $fields[] = 'expires_at';
         }
