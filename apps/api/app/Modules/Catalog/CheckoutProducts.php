@@ -3,7 +3,6 @@
 namespace App\Modules\Catalog;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 final class CheckoutProducts
 {
@@ -14,7 +13,7 @@ final class CheckoutProducts
         $eligible = ProductDirectory::variants()->whereIn('id', $ids);
         $products = ProductDirectory::published()->whereIn('id', (clone $eligible)->select('product_id'))
             ->orderBy('id')->sharedLock()->get(['id', 'name', 'tax_class_id'])->keyBy('id');
-        $tax = DB::table('tax_classes')->whereIn('id', $products->pluck('tax_class_id'))->where('active', true)
+        $tax = ProductDirectory::activeTaxClasses()->whereIn('id', $products->pluck('tax_class_id'))
             ->orderBy('id')->sharedLock()->pluck('rate_bps', 'id');
         $products = $products->filter(fn ($product) => $product->tax_class_id === null || $tax->has($product->tax_class_id));
         $variants = $eligible->whereIn('product_id', $products->keys())->orderBy('id')->sharedLock()

@@ -142,21 +142,27 @@ it('does not exceed the per-account preorder maximum across two converted carts'
     $this->assertDatabaseCount('preorder_allocations', 1);
 });
 
-it('refuses an archived assigned tax class instead of silently issuing a tax-free invoice', function () {
+it('stops offering an item with an archived assigned tax class instead of silently issuing a tax-free invoice', function (string $method) {
     ($this->login)($this->buyer);
-    app(CustomerCart::class)->set($this->buyer->id, $this->rts);
+    $input = $method === 'RTS' ? $this->rts : $this->po;
+    app(CustomerCart::class)->set($this->buyer->id, $input);
     [$old] = ($this->finalQuote)($this->body);
     DB::table('tax_classes')->update(['active' => false]);
+    $this->getJson('/api/v1/cart')->assertOk()->assertJsonPath('data.items.0.availability', 'UNAVAILABLE')->assertJsonPath('data.estimated_total_amount', 0);
+    $this->postJson('/api/v1/cart/items', ['cart_version' => 1] + $input)->assertConflict()->assertJsonPath('code', 'OFFER_UNAVAILABLE');
+    $this->getJson('/api/v1/products/album')->assertOk()->assertJsonCount(0, 'data.offers')->assertJsonCount(0, 'data.variants.0.offers');
+    $this->getJson('/api/v1/products?method=RTS')->assertOk()->assertJsonCount(0, 'data');
     ($this->confirm)($old)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
     ($this->preview)($this->body)->assertConflict()->assertJsonPath('code', 'OFFER_UNAVAILABLE');
     $this->assertDatabaseCount('invoices', 0);
 
     DB::table('products')->update(['tax_class_id' => null]);
+    $this->getJson('/api/v1/cart')->assertOk()->assertJsonPath('data.items.0.availability', 'AVAILABLE');
     [$fresh, $preview] = ($this->finalQuote)($this->body);
     expect($preview['groups'][0]['tax_amount'])->toBe(0);
     ($this->confirm)($fresh, 'unassigned')->assertCreated();
     $this->assertDatabaseHas('order_items', ['tax_class_id' => null, 'tax_bps' => 0]);
-});
+})->with(['RTS', 'PO']);
 
 it('requires a fresh quote after an offer rename without forcing the buyer to rebuild the cart', function (string $field) {
     ($this->login)($this->buyer);

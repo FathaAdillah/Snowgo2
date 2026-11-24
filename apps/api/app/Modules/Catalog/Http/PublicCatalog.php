@@ -44,7 +44,7 @@ final class PublicCatalog
             $q->whereIn('products.brand_id', DB::table('brands')->where(['slug' => $filters['brand'], 'active' => true])->select('id'));
         }
         if (isset($filters['method'])) {
-            $filters['method'] === 'RTS' ? $q->whereIn('products.id', ProductDirectory::variants()->where('rts_enabled', true)->select('product_id')) : $q->whereRaw('false');
+            $filters['method'] === 'RTS' ? $q->whereIn('products.id', ProductDirectory::offerableVariants()->where('rts_enabled', true)->select('product_id')) : $q->whereRaw('false');
         }
         ($filters['sort'] ?? null) === 'name' ? $q->orderBy('name') : $q->orderByDesc('published_at');
         $page = $q->orderByDesc('id')->paginate((int) ($filters['per_page'] ?? 20), ['id', 'slug', 'name', 'brand_id']);
