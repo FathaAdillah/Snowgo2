@@ -19,6 +19,8 @@ Rencana berikut menjadi acceptance development. Gunakan data sintetis, ID fixtur
 
 ## Test cases dan acceptance
 
+TC-CHK-001 menyiapkan 100 keranjang dan quote sebelum melepas worker melalui barrier. Suite standar memakai 10 worker agar muat di Compose default. Untuk 100 proses konfirmasi serentak, gunakan PostgreSQL **uji** dengan setidaknya 110 koneksi tersedia dan jalankan `CHECKOUT_STRESS_100=1` pada kontainer API test. Mode ini menguji transaksi PostgreSQL, bukan throughput HTTP.
+
 | ID | Jenis | Skenario | Lulus bila |
 |---|---|---|---|
 | TC-AUTH-001 | Feature/API/security | Daftar, verifikasi, reset dan sesi customer; revoke satu device, periksa owner | Gagal sebelum verified; sesi revoked 401; respons reset seragam |

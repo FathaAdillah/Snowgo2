@@ -9,6 +9,13 @@ cartConflict.code satisfies 'VERSION_CONFLICT' | 'OFFER_UNAVAILABLE'
 
 const api = createApiClient()
 const params = { header: { 'Idempotency-Key': 'upload', 'X-XSRF-TOKEN': 'csrf' } }
+const checkoutBody = { cart_version: 2, address_id: '01J00000000000000000000000', quote_hash: '0'.repeat(64) }
+api.POST('/checkout', { params, body: checkoutBody })
+// @ts-expect-error Checkout cannot submit without idempotency and CSRF headers.
+api.POST('/checkout', { body: checkoutBody })
+declare const preview: paths['/checkout/previews']['post']['responses'][200]['content']['application/json']
+preview.data.groups[0]!.due_now_amount satisfies number
+preview.data.quote_hash satisfies string | undefined
 const body = { owner_type: 'return', owner_ref: 'R-1', collection: 'return_evidence', file: new File([], 'evidence.mp4') }
 
 api.POST('/files', { params, body, bodySerializer: multipartBody })

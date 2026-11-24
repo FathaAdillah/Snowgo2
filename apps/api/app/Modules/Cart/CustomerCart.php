@@ -14,6 +14,29 @@ final class CustomerCart
 {
     public function __construct(private readonly OfferProvider $provider) {}
 
+    public function lockOwner(int $owner): void
+    {
+        DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?,0))', ["cart:owner:$owner"]);
+    }
+
+    public function checkoutCart(int $owner, int $version): object
+    {
+        $cart = DB::table('carts')->where(['user_id' => $owner, 'status' => 'ACTIVE'])->lockForUpdate()->first();
+        if (($cart->version ?? 0) !== $version) {
+            throw new ApiProblem(409, 'VERSION_CONFLICT', 'Reload the cart before checkout.');
+        }
+        if (! $cart || ($cart->items = DB::table('cart_items')->where('cart_id', $cart->id)->orderBy('id')->get())->isEmpty()) {
+            throw new ApiProblem(409, 'OFFER_UNAVAILABLE', 'The cart is empty.');
+        }
+
+        return $cart;
+    }
+
+    public function convert(int $id): void
+    {
+        DB::table('carts')->where('id', $id)->update(['status' => 'CONVERTED', 'updated_at' => now()]);
+    }
+
     /** @return array<string,mixed> */
     public function read(int $owner): array
     {
@@ -63,7 +86,7 @@ final class CustomerCart
     {
         return DB::transaction(function () use ($owner, $data, $itemId, $delete) {
             // Serialize the first write too: there is no persisted cart to lock at virtual version zero.
-            DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?,0))', ["cart:owner:$owner"]);
+            $this->lockOwner($owner);
             $carts = DB::table('carts')->where('user_id', $owner);
             $cart = (clone $carts)->where('status', 'ACTIVE')->lockForUpdate()->first();
             $item = $itemId === null ? null : (DB::table('cart_items')->where('cart_id', $cart?->id)->where('public_id', $itemId)->first() ?? abort(404));
