@@ -15,6 +15,6 @@ final class StockAvailability
     public static function readyToShip(): Builder
     {
         return DB::table('inventory_levels as l')->join('warehouses as w', 'w.id', '=', 'l.warehouse_id')
-            ->where(['w.active' => true, 'w.is_default' => true])->where('l.available', '>', 0)->select('l.variant_id');
+            ->where(['w.active' => true, 'w.is_default' => true])->where('l.available', '>', 0)->select('l.variant_id', 'l.available');
     }
 }

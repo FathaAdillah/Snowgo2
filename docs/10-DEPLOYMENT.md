@@ -198,3 +198,9 @@ Superadmin langsung mendapat menu **Inventori → Reservasi**. Untuk role lama, 
 `StockReservations` adalah port internal: pemanggil mengunci order, memvalidasi sumber (checkout, bukti valid pertama, capture verified, pembatalan atau dispatch), lalu memanggil port dalam transaksi bisnis yang sama. Fitur ini belum membuka checkout atau memproses pembayaran. Tabel Orders baru hanya berisi identitas pemilik stok; state, nominal dan snapshot lengkap ditambahkan pada task Orders. Capture terlambat ditolak; jalur rekonsiliasi milik Payments (TASK-023).
 
 Scheduler menjalankan `inventory:expire-holds` setiap menit. Klaim yang ditinggalkan dapat diambil lagi setelah 60 detik. Untuk mengejar backlog, perintah aman diulang. Setelah ada histori reservasi, jangan rollback skema ledger: pulihkan dari backup atau perbaiki maju tanpa menghapus histori.
+
+## Mengaktifkan keranjang pelanggan (TASK-013)
+
+Setelah pull, jalankan `docker compose exec api php artisan migrate --force`. Tidak perlu seeder izin atau build frontend: keempat endpoint hanya mengizinkan pelanggan terverifikasi mengakses keranjangnya sendiri. Tidak ada menu admin baru.
+
+`GET /api/v1/cart` tidak membuat baris di database. Gunakan `version` dari respons terakhir untuk setiap mutasi; pada `409 VERSION_CONFLICT`, muat ulang keranjang sebelum pelanggan mengedit lagi. Penawaran RTS memakai stok gudang default. Keranjang bisa membaca penawaran PO terbuka, tetapi pembuatan dan pengelolaan kampanye baru tersedia di TASK-017. Tidak ada stok atau kuota yang ditahan oleh keranjang.

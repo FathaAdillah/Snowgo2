@@ -20,7 +20,7 @@ Referensi [daftar endpoint dan auth](05-API-CONTRACT.md), [schema](04-DATABASE-S
 | Tipe | Field dan aturan |
 |---|---|
 | AddressInput | recipient:text120, phone:phone, district_code:code, line1:text255, line2?:text255, postal_code:text12, is_default?:bool. District aktif dalam hierarki ID; satu default per akun. |
-| CartItemInput | sku:code, campaign_slug?:code, qty:qty, term:term, cart_version:int. Unique varian per offer; varian mesti terbit, RTS FULL, PO sesuai min/max dan skema. |
+| CartItemInput | sku:code, campaign_slug?:code, qty:qty, term:term, cart_version:int. Unique varian per offer; varian mesti terbit, RTS FULL, PO sesuai min/max dan skema. Qty absolut (bukan penambahan). |
 | ProductInput | name:text200, slug:text200, description:text10000, status:DRAFT/PUBLISHED/ARCHIVED, brand_id?:int, tax_class_id?:int, authenticity:OFFICIAL/UNOFFICIAL/UNKNOWN, seo_title?:text160, seo_description?:text320, category_ids:int[], collection_ids?:int[], tag_ids?:int[]. Untuk publish wajib kategori aktif dan minimal satu varian aktif. |
 | VariantInput | product_id:int, sku:code, name:text160, unit_id:int, rts_enabled:bool, rts_price_amount?:money, weight_g:int, length_mm?:int, width_mm?:int, height_mm?:int, active:bool, attribute_value_ids:int[]. Berat > 0. RTS price wajib bila enabled. Canonical option unique. |
 | CategoryInput / MasterInput | Category: name:text120, slug:text160, parent_id?:int, description?:text255, active:bool. Brand/collection/tag: name, slug, active, description? hanya collection. Attribute/unit/courier: name, code, active. Cegah siklus kategori dan kode ganda. |
@@ -76,3 +76,5 @@ Field list di bawah memakai snake_case. Field status, amount, date, media dan re
 | Audit, Setting, Integration | Audit {id,actor_id?,action,subject_type,subject_ref?,before?,after?,request_id,occurred_at}; Setting {key,value}; Integration {key,domain,provider,enabled,config,has_secret} sanitized |
 | Dashboard, TransactionSummary | Dashboard {orders_count,by_method,paid_amount,refund_amount,net_amount,pending_payments,shipment_failures,open_returns,open_refunds,low_stock_count}; Summary {reference,order_numbers,kind,status,amount,occurred_at} |
 | Promotion, Coupon | Promotion {id,name,kind,fixed_amount?,percent_bps?,min_spend_amount,max_discount_amount?,starts_at,ends_at,active}; Coupon {id,code,promotion_id,quota,held_qty,used_qty,per_user_limit,active} |
+
+**Estimasi keranjang.** `AVAILABLE` berarti jumlah dan termin masih tersedia. `PRICE_CHANGED` berarti harga satuan terkini berbeda dari harga saat baris ditambahkan; membaca keranjang atau mengedit jumlah/termin tidak menghapus peringatan. `UNAVAILABLE` berarti baris tidak bisa dibeli sesuai intent dan boleh dihapus. `display_unit_amount` memakai harga terkini bila penawaran masih terlihat, atau harga tersimpan bila tidak. Estimasi menjumlahkan harga penuh (bukan uang muka) × qty untuk baris yang bisa dibeli, sebelum pajak, diskon dan ongkir.
