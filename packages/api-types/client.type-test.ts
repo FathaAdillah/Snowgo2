@@ -11,6 +11,9 @@ const api = createApiClient()
 const params = { header: { 'Idempotency-Key': 'upload', 'X-XSRF-TOKEN': 'csrf' } }
 const checkoutBody = { cart_version: 2, address_id: '01J00000000000000000000000', quote_hash: '0'.repeat(64) }
 api.POST('/checkout', { params, body: checkoutBody })
+type PreviewBody = paths['/checkout/previews']['post']['requestBody']['content']['application/json']
+type SubmitBody = paths['/checkout']['post']['requestBody']['content']['application/json']
+false satisfies ('coupon' extends keyof PreviewBody | keyof SubmitBody ? true : false)
 // @ts-expect-error Checkout cannot submit without idempotency and CSRF headers.
 api.POST('/checkout', { body: checkoutBody })
 declare const preview: paths['/checkout/previews']['post']['responses'][200]['content']['application/json']

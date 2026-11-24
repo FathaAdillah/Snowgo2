@@ -13,12 +13,11 @@ use Dedoc\Scramble\Attributes\IgnoreResponse;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 final class CheckoutController
 {
     public const INPUT = ['cart_version' => 'required|integer|between:0,2147483647', 'address_id' => 'required|string|ulid',
-        'shipping_quote_id' => 'sometimes|required|string|ulid', 'coupon' => 'sometimes|required|string|max:80'];
+        'shipping_quote_id' => 'sometimes|required|string|ulid'];
 
     private const PREVIEW = "array{success:bool,message:string,data:array{cart_version:int,quote_hash?:string,expires_at:string,shipping_quotes:list<array{id:string,service_code:string,carrier_label:string,amount:int,estimated_days_from:int,estimated_days_to:int,expires_at:string}>,groups:list<array{method:'READY_TO_SHIP'|'PREORDER',campaign_slug?:string,subtotal_amount:int,discount_amount:int,tax_amount:int,shipping_amount:int,total_amount:int,due_now_amount:int}>},meta:array{request_id:string}}";
 
@@ -34,7 +33,7 @@ final class CheckoutController
     public function preview(Request $request, CheckoutPricing $pricing): JsonResponse
     {
         $data = $request->validate(self::INPUT);
-        $this->fields($request, $data);
+        ApiInput::fields($request, $data);
 
         return ApiResponse::success($pricing->preview($request->user()->id, $data))->header('Cache-Control', 'private, no-store');
     }
@@ -52,7 +51,7 @@ final class CheckoutController
     public function submit(Request $request, ConfirmCheckout $checkout, IdempotentMutation $keys): JsonResponse
     {
         $data = $request->validate(self::INPUT + ['quote_hash' => 'required|string|regex:/\A[a-f0-9]{64}\z/D', 'notes' => 'sometimes|string|max:1000']);
-        $this->fields($request, $data);
+        ApiInput::fields($request, $data);
         $owner = $request->user()->id;
 
         return $keys->run($request, fn () => 'user:'.$owner, function () use ($owner, $data, $checkout) {
@@ -72,14 +71,5 @@ final class CheckoutController
         ApiInput::fields($request, []);
 
         return ApiResponse::success($checkout->result($request->user()->id, $id))->header('Cache-Control', 'private, no-store');
-    }
-
-    /** @param array<string,mixed> $data */
-    private function fields(Request $request, array $data): void
-    {
-        ApiInput::fields($request, $data);
-        if (isset($data['coupon'])) {
-            throw ValidationException::withMessages(['coupon' => 'Coupons are not enabled.']);
-        }
     }
 }

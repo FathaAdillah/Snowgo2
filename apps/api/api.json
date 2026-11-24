@@ -6742,10 +6742,6 @@
                                     },
                                     "shipping_quote_id": {
                                         "type": "string"
-                                    },
-                                    "coupon": {
-                                        "type": "string",
-                                        "maxLength": 80
                                     }
                                 },
                                 "required": [
@@ -7141,10 +7137,6 @@
                                     },
                                     "shipping_quote_id": {
                                         "type": "string"
-                                    },
-                                    "coupon": {
-                                        "type": "string",
-                                        "maxLength": 80
                                     },
                                     "quote_hash": {
                                         "type": "string",

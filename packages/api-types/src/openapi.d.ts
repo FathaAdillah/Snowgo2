@@ -10256,7 +10256,6 @@ export interface operations {
                 "application/json": {
                     address_id: string;
                     cart_version: number;
-                    coupon?: string;
                     notes?: string;
                     quote_hash: string;
                     shipping_quote_id?: string;
@@ -10405,7 +10404,6 @@ export interface operations {
                 "application/json": {
                     address_id: string;
                     cart_version: number;
-                    coupon?: string;
                     shipping_quote_id?: string;
                 };
             };

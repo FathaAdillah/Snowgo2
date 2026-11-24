@@ -74,6 +74,7 @@ it('rejects guests, unverified buyers, empty carts, foreign addresses, inactive 
     ($this->preview)(['cart_version' => 0] + $this->body)->assertConflict()->assertJsonPath('code', 'OFFER_UNAVAILABLE');
     app(CustomerCart::class)->set($this->buyer->id, $this->rts);
     ($this->preview)(['coupon' => 'PROMO'] + $this->body)->assertUnprocessable();
+    ($this->confirm)(['coupon' => 'PROMO', 'quote_hash' => str_repeat('0', 64)] + $this->body)->assertUnprocessable()->assertJsonPath('code', 'VALIDATION_FAILED');
     ($this->preview)(['address_id' => checkoutAddress(User::factory()->create()->id, $this->district)] + $this->body)->assertNotFound();
     DB::table('regions')->where('id', $this->district)->update(['active' => false]);
     ($this->preview)($this->body)->assertUnprocessable();
