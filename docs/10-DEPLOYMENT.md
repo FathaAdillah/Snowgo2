@@ -180,4 +180,21 @@ Lewat API admin, buat alasan aktif di domain `inventory`, siapkan satu kecamatan
 
 Kirim `POST /api/v1/admin/stock-receipts` (`INITIAL` untuk saldo pembuka, `PURCHASE` untuk penerimaan berikutnya), dengan `Idempotency-Key` baru per transaksi fisik, bukan per retry. Saldo berubah lewat ledger; jangan isi `on_hand` langsung. `GET /api/v1/admin/stock-levels?low_stock=true` memilih level dengan `available <= reorder_point` (default 0); filter `warehouse` memakai kode gudang. Adjustment langsung `APPLIED` tanpa draft. Reservasi/dispatch, transfer dan layar admin tidak diaktifkan oleh migrasi ini.
 
-Setelah backend TASK-011 aktif, perbarui frontend admin untuk menampilkan **Inventori → Gudang, Saldo Stok, Mutasi, Penerimaan & Koreksi**. Pada mode admin preview lokal, jalankan `docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin`, lalu muat ulang dashboard. Tidak perlu migrasi atau seeder tambahan untuk layar ini. Staf hanya melihat halaman dan aksi sesuai izin; **Reservasi** belum tersedia.
+Setelah backend TASK-011 aktif, perbarui frontend admin untuk menampilkan **Inventori → Gudang, Saldo Stok, Mutasi, Penerimaan & Koreksi**. Pada mode admin preview lokal, jalankan `docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin`, lalu muat ulang dashboard. Tidak perlu migrasi atau seeder tambahan untuk keempat layar ini.
+
+## Mengaktifkan reservasi stok (TASK-012)
+
+Setelah pull, jalankan:
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose restart scheduler
+docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin
+```
+
+Superadmin langsung mendapat menu **Inventori → Reservasi**. Untuk role lama, berikan `inventory.reservation.view` lewat **Role & Izin**; seeder tidak mengubah grant yang sudah ada. Halaman ini baca-saja dan akan kosong sampai checkout menghasilkan reservasi.
+
+`StockReservations` adalah port internal: pemanggil mengunci order, memvalidasi sumber (checkout, bukti valid pertama, capture verified, pembatalan atau dispatch), lalu memanggil port dalam transaksi bisnis yang sama. Fitur ini belum membuka checkout atau memproses pembayaran. Tabel Orders baru hanya berisi identitas pemilik stok; state, nominal dan snapshot lengkap ditambahkan pada task Orders. Capture terlambat ditolak; jalur rekonsiliasi milik Payments (TASK-023).
+
+Scheduler menjalankan `inventory:expire-holds` setiap menit. Klaim yang ditinggalkan dapat diambil lagi setelah 60 detik. Untuk mengejar backlog, perintah aman diulang. Setelah ada histori reservasi, jangan rollback skema ledger: pulihkan dari backup atau perbaiki maju tanpa menghapus histori.

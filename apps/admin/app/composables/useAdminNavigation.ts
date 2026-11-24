@@ -89,7 +89,7 @@ export const adminNavigation: NavEntry[] = [
       { label: 'Gudang', icon: 'i-lucide-building-2', to: '/inventory/warehouses', permission: warehouseAccess },
       { label: 'Saldo Stok', icon: 'i-lucide-package-search', to: '/inventory/stock', permission: 'inventory.stock.view' },
       { label: 'Mutasi', icon: 'i-lucide-arrow-left-right', to: '/inventory/movements', permission: 'inventory.movement.view' },
-      { label: 'Reservasi', icon: 'i-lucide-lock' },
+      { label: 'Reservasi', icon: 'i-lucide-lock', to: '/inventory/reservations', permission: 'inventory.reservation.view' },
       { label: 'Penerimaan & Koreksi', icon: 'i-lucide-clipboard-pen', to: '/inventory/operations', permission: operationAccess }
     ]
   },

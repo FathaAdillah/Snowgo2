@@ -13,6 +13,7 @@ enum Subject: string
     case ReturnCase = 'return';
     case Shipment = 'shipment';
     case Inventory = 'inventory';
+    case StockReservation = 'stock_reservation';
     case Warehouse = 'warehouse';
     case Product = 'product';
     case Variant = 'variant';

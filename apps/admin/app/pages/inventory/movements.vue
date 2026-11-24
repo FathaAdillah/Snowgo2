@@ -31,7 +31,8 @@ function next() {
 const columns: TableColumn<Ledger['data'][number]>[] = [
   { accessorKey: 'id', header: 'Mutasi' }, { accessorKey: 'occurred_at', header: 'Waktu', cell: ({ row }) => inventoryTime(row.original.occurred_at) },
   { accessorKey: 'level_id', header: 'ID saldo' }, { accessorKey: 'type', header: 'Jenis', cell: ({ row }) => movementLabels[row.original.type] ?? row.original.type },
-  { accessorKey: 'on_hand_delta', header: 'Perubahan fisik' }, { accessorKey: 'reason_code', header: 'Alasan' }
+  { accessorKey: 'on_hand_delta', header: 'Perubahan fisik' }, { accessorKey: 'reserved_delta', header: 'Perubahan reservasi' },
+  { accessorKey: 'committed_delta', header: 'Perubahan alokasi' }, { accessorKey: 'reason_code', header: 'Alasan' }
 ]
 </script>
 
@@ -41,7 +42,7 @@ const columns: TableColumn<Ledger['data'][number]>[] = [
       <h1 class="text-2xl font-bold text-highlighted">
         Mutasi Stok
       </h1><p class="text-sm text-muted">
-        Riwayat penerimaan dan koreksi, dari yang terbaru. Mutasi yang sudah tercatat tidak dapat diedit.
+        Riwayat stok fisik, reservasi, dan alokasi, dari yang terbaru. Mutasi yang sudah tercatat tidak dapat diedit.
       </p>
     </header>
     <InventoryListTable

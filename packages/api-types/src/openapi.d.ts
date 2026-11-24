@@ -869,6 +869,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/stock-reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory.reservations.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stock-reservations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory.reservations.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/tags": {
         parameters: {
             query?: never;
@@ -6850,7 +6882,7 @@ export interface operations {
                 level_id?: number;
                 per_page?: number;
                 to?: string;
-                type?: "INITIAL" | "PURCHASE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT";
+                type?: "INITIAL" | "PURCHASE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "RESERVATION" | "RESERVATION_RELEASE" | "COMMIT" | "COMMIT_RELEASE" | "SALE";
             };
             header?: never;
             path?: never;
@@ -6871,7 +6903,7 @@ export interface operations {
                             level_id: number;
                             occurred_at: string;
                             on_hand_delta: number;
-                            reason_code: string;
+                            reason_code: string | null;
                             reserved_delta: number;
                             source_key: string;
                             type: string;
@@ -6915,7 +6947,7 @@ export interface operations {
                             level_id: number;
                             occurred_at: string;
                             on_hand_delta: number;
-                            reason_code: string;
+                            reason_code: string | null;
                             reserved_delta: number;
                             source_key: string;
                             type: string;
@@ -7070,6 +7102,114 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "inventory.reservations.index": {
+        parameters: {
+            query?: {
+                expires_before?: string;
+                order?: string;
+                page?: number;
+                per_page?: number;
+                status?: "ACTIVE" | "COMMITTED" | "RELEASED" | "EXPIRED" | "CONSUMED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description RTS stock reservations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            expires_at: string;
+                            id: number;
+                            order_number: string;
+                            qty: number;
+                            released_qty: number;
+                            shipped_qty: number;
+                            sku: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "inventory.reservations.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description RTS stock reservation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            expires_at: string;
+                            id: number;
+                            order_number: string;
+                            qty: number;
+                            released_qty: number;
+                            shipped_qty: number;
+                            sku: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
         };
     };
     "catalog.tags.index": {

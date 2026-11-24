@@ -95,7 +95,7 @@ test('public catalog and missing product use their published schemas', async () 
 })
 
 test('inventory reads are staff-only and use the documented error envelope', async () => {
-  for (const path of ['/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments']) {
+  for (const path of ['/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
     const result = await client.GET(path)
     assert.ok([401, 403].includes(result.response.status))
     validateResponse(path, result.response.status, result.error)

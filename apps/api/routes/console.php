@@ -3,6 +3,8 @@
 use App\Modules\Foundation\Files\ScanQueue;
 use App\Modules\Foundation\Outbox\Relay;
 use App\Modules\Identity\Staff\StaffInvitations;
+use App\Modules\Inventory\StockExpiry;
+use App\Modules\Inventory\StockReservations;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Inspiring;
@@ -35,6 +37,10 @@ Artisan::command('outbox:reconcile', function (Relay $relay) {
 
 Schedule::command('outbox:relay')->everyMinute();
 Schedule::command('outbox:reconcile')->everyMinute();
+Artisan::command('inventory:expire-holds', function (StockExpiry $expiry, StockReservations $stock) {
+    $this->info('Expired RTS orders: '.$expiry->run($stock));
+})->purpose('Release expired ACTIVE RTS stock holds once per order');
+Schedule::command('inventory:expire-holds')->everyMinute();
 Artisan::command('files:dispatch-scans', function (ScanQueue $queue, Dispatcher $bus) {
     $this->info('File scans queued: '.$queue->dispatchDue($bus));
 });
