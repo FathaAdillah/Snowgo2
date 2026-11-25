@@ -4,6 +4,7 @@ use App\Modules\Identity\Http\Middleware\EnsureIdentity;
 use App\Modules\Identity\Http\Middleware\StaffOrigin;
 use App\Modules\Payments\Http\BankController;
 use App\Modules\Payments\Http\PaymentController;
+use App\Modules\Payments\Http\ReconciliationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:web', EnsureIdentity::class.':customer'])->name('payments.customer.')->group(function () {
@@ -26,5 +27,12 @@ Route::prefix('admin')->middleware([StaffOrigin::class, 'auth:web', EnsureIdenti
         Route::get('payments/{number}', [PaymentController::class, 'show'])->name('show');
         Route::post('payments/{number}/review-claims', [PaymentController::class, 'claim'])->middleware('can:payments.payment.review')->name('claim');
         Route::post('payments/{number}/decisions', [PaymentController::class, 'decide'])->middleware('can:payments.payment.verify')->name('decision');
+    });
+    Route::middleware('can:payments.reconciliation.view')->group(function () {
+        Route::get('payment-reconciliations', [ReconciliationController::class, 'index'])->name('reconciliations');
+        Route::get('payment-reconciliations/{id}', [ReconciliationController::class, 'show'])->whereNumber('id')->name('reconciliation');
+        Route::post('payments/{number}/reconciliations', [ReconciliationController::class, 'open'])->middleware('can:payments.payment.recover')->name('reconciliation.open');
+        Route::post('payment-reconciliations/{id}/reviews', [ReconciliationController::class, 'review'])->whereNumber('id')->middleware('can:payments.reconciliation.review')->name('reconciliation.review');
+        Route::post('payment-reconciliations/{id}/decisions', [ReconciliationController::class, 'decide'])->whereNumber('id')->middleware('can:payments.payment.recover')->name('reconciliation.decide');
     });
 });

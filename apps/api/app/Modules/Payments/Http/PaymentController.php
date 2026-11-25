@@ -4,6 +4,7 @@ namespace App\Modules\Payments\Http;
 
 use App\Modules\Payments\PaymentData;
 use App\Modules\Payments\PaymentFlow;
+use App\Modules\Payments\Settlement;
 use App\Support\Http\ApiInput;
 use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\Response;
@@ -94,10 +95,14 @@ final class PaymentController
     #[Response(200, 'Finance decision', type: PaymentData::ONE)]
     public function decide(Request $request, string $number): JsonResponse
     {
-        $data = $request->validate(['decision' => 'required|string|in:REJECT', 'reason_code' => 'required|string|max:48']);
+        $data = $request->validate(['decision' => 'required|string|in:APPROVE,REJECT', 'reason_code' => 'required_if:decision,REJECT|string|max:48', 'bank_tx_ref' => 'required_if:decision,APPROVE|string|max:160', 'received_amount' => 'required_if:decision,APPROVE|integer|min:1']);
 
         return PaymentData::mutate($request, $data, ['payments.payment.view', 'payments.payment.verify'], function () use ($request, $number, $data) {
-            PaymentFlow::finish($number, $request->user()->id, $data['reason_code']);
+            if ($data['decision'] === 'APPROVE') {
+                Settlement::capture($number, $request->user()->id, $data['bank_tx_ref'], (int) $data['received_amount']);
+            } else {
+                PaymentFlow::finish($number, $request->user()->id, $data['reason_code']);
+            }
 
             return PaymentData::detail($number, $request);
         });

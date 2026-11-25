@@ -21768,17 +21768,25 @@
                                     "decision": {
                                         "type": "string",
                                         "enum": [
+                                            "APPROVE",
                                             "REJECT"
                                         ]
                                     },
                                     "reason_code": {
                                         "type": "string",
                                         "maxLength": 48
+                                    },
+                                    "bank_tx_ref": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "received_amount": {
+                                        "type": "integer",
+                                        "minimum": 1
                                     }
                                 },
                                 "required": [
-                                    "decision",
-                                    "reason_code"
+                                    "decision"
                                 ]
                             }
                         }
@@ -28056,6 +28064,784 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/admin/payment-reconciliations": {
+            "get": {
+                "operationId": "payments.staff.reconciliations",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "OPEN",
+                                "APPROVED",
+                                "REJECTED",
+                                "APPLIED",
+                                "RETURNED"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "payment_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "bank_tx_ref": {
+                                                        "type": "string"
+                                                    },
+                                                    "amount": {
+                                                        "type": "integer"
+                                                    },
+                                                    "reason_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "refund_transfer_ref": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "opened_by_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reviewed_by_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "review_note": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_note": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "payment_number",
+                                                    "status",
+                                                    "bank_tx_ref",
+                                                    "amount",
+                                                    "reason_code",
+                                                    "refund_transfer_ref",
+                                                    "opened_by_me",
+                                                    "reviewed_by_me",
+                                                    "review_note",
+                                                    "decision_note"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "last_page",
+                                                "per_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/payment-reconciliations/{id}": {
+            "get": {
+                "operationId": "payments.staff.reconciliation",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "payment_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "bank_tx_ref": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "refund_transfer_ref": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "opened_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "review_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "payment_number",
+                                                "status",
+                                                "bank_tx_ref",
+                                                "amount",
+                                                "reason_code",
+                                                "refund_transfer_ref",
+                                                "opened_by_me",
+                                                "reviewed_by_me",
+                                                "review_note",
+                                                "decision_note"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/payments/{number}/reconciliations": {
+            "post": {
+                "operationId": "payments.staff.reconciliation.open",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "bank_tx_ref": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "received_amount": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    }
+                                },
+                                "required": [
+                                    "bank_tx_ref",
+                                    "received_amount",
+                                    "reason_code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "payment_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "bank_tx_ref": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "refund_transfer_ref": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "opened_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "review_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "payment_number",
+                                                "status",
+                                                "bank_tx_ref",
+                                                "amount",
+                                                "reason_code",
+                                                "refund_transfer_ref",
+                                                "opened_by_me",
+                                                "reviewed_by_me",
+                                                "review_note",
+                                                "decision_note"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/payment-reconciliations/{id}/reviews": {
+            "post": {
+                "operationId": "payments.staff.reconciliation.review",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "APPROVE",
+                                            "REJECT"
+                                        ]
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "decision",
+                                    "note"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "payment_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "bank_tx_ref": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "refund_transfer_ref": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "opened_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "review_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "payment_number",
+                                                "status",
+                                                "bank_tx_ref",
+                                                "amount",
+                                                "reason_code",
+                                                "refund_transfer_ref",
+                                                "opened_by_me",
+                                                "reviewed_by_me",
+                                                "review_note",
+                                                "decision_note"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/payment-reconciliations/{id}/decisions": {
+            "post": {
+                "operationId": "payments.staff.reconciliation.decide",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "APPLY",
+                                            "RETURN"
+                                        ]
+                                    },
+                                    "proof_file_id": {
+                                        "type": "string"
+                                    },
+                                    "refund_transfer_ref": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "decision",
+                                    "note"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "payment_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "bank_tx_ref": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "refund_transfer_ref": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "opened_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "review_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_note": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "payment_number",
+                                                "status",
+                                                "bank_tx_ref",
+                                                "amount",
+                                                "reason_code",
+                                                "refund_transfer_ref",
+                                                "opened_by_me",
+                                                "reviewed_by_me",
+                                                "review_note",
+                                                "decision_note"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }

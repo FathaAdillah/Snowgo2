@@ -27,6 +27,7 @@ final class OrderDirectory
                 FROM order_items i WHERE i.order_id=o.id) AS items,
             (SELECT json_agg(json_build_object('dimension',h.dimension,'to_status',h.to_status,'occurred_at',h.occurred_at) ORDER BY h.id)
                 FROM status_histories h WHERE h.subject_type='order' AND h.subject_id=o.id) AS history,
+            (SELECT json_agg(x.number ORDER BY x.number) FROM (SELECT DISTINCT p.number FROM payments p JOIN payment_allocations a ON a.payment_id=p.id JOIN invoices i ON i.id=a.invoice_id WHERE i.order_id=o.id) x) AS payment_numbers,
             (SELECT json_agg(v.number ORDER BY v.id) FROM invoices v WHERE v.order_id=o.id) AS invoice_numbers,
             (SELECT json_build_object('quote_id',q.public_id,'carrier_label',q.carrier_label_snapshot,'service_code',q.service_code_snapshot,
                 'amount',q.amount,'estimated_days_from',q.estimated_days_from,'estimated_days_to',q.estimated_days_to)
@@ -53,7 +54,7 @@ final class OrderDirectory
         if (! array_key_exists('items', $data)) {
             return $data;
         }
-        foreach (['items', 'history', 'invoice_numbers'] as $field) {
+        foreach (['items', 'history', 'invoice_numbers', 'payment_numbers'] as $field) {
             $data[$field] = json_decode($data[$field] ?? '[]', false, flags: JSON_THROW_ON_ERROR);
         }
         $data['address'] = json_decode($data['address'] ?? 'null', false, flags: JSON_THROW_ON_ERROR);
