@@ -83,6 +83,12 @@ function saved() {
         <h3 class="font-semibold">
           {{ reviewLabels[mode] }}
         </h3>
+        <p
+          v-if="mode === 'NEED_INFORMATION'"
+          class="text-sm text-muted"
+        >
+          Tindakan ini hanya mengubah status. Kirim pertanyaan kepada pelanggan lewat “Balas pelanggan”.
+        </p>
         <UFormField
           v-if="may('assign')"
           label="ID staf penanggung jawab (opsional)"
