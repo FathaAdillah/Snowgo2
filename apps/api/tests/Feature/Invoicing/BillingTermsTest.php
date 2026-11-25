@@ -82,3 +82,25 @@ it('never invoices a declined or expired fee, even if expiry cleanup has not run
     ($this->write)("orders/$this->order/charge-consents/$id/decisions", ['decision' => 'ACCEPT'])->assertConflict();
     expect(DB::table('invoices')->where('purpose', 'ADDITIONAL_CHARGE')->exists())->toBeFalse();
 });
+
+it('keeps an unshipped unit eligible for fees when a later package leaves first', function () {
+    DB::table('order_items')->update(['received_qty' => 2]);
+    DB::table('shipping_rates')->update(['base_amount' => 0, 'amount_per_kg' => 0]);
+    ($this->write)("admin/orders/$this->order/invoices", $this->balance)->assertOk();
+    DB::table('invoices')->where('purpose', 'BALANCE')->update(['status' => 'PAID']);
+    $package = ['order_number' => $this->order, 'warehouse_id' => DB::table('warehouses')->sole()->id, 'service_code' => 'REG', 'items' => [['order_item_id' => $this->item->public_id, 'qty' => 1]]];
+    ($this->write)('admin/shipments', $package)->assertOk();
+    $second = ($this->write)('admin/shipments', $package)->assertOk()->json('data.number');
+    $url = "admin/orders/$this->order/charge-consents";
+    $fee = ['type' => 'IMPORT_TAX', 'description' => 'Duty', 'order_item_id' => $this->item->public_id, 'qty' => 1, 'unit_amount' => 10, 'expires_at' => now()->addDay()->toISOString()];
+    $pending = ($this->write)($url, $fee)->assertOk()->assertJsonPath('data.lines.0.start', 0)->json('data.id');
+    foreach (['PACK_START', 'PACK_FINISH', 'READY_FOR_DISPATCH'] as $stage) {
+        ($this->write)("admin/orders/$this->order/packing-events", ['shipment_number' => $second, 'action' => $stage])->assertOk();
+    }
+    ($this->write)("admin/shipments/$second/dispatches", ['service_code' => 'REG', 'tracking_number' => 'SECOND'])->assertOk();
+    ($this->login)($this->buyer);
+    ($this->write)("orders/$this->order/charge-consents/$pending/decisions", ['decision' => 'ACCEPT'])->assertOk();
+    ($this->asStaff)();
+    ($this->write)($url, $fee)->assertConflict();
+    ($this->write)($url, ['type' => 'SERVICE_FEE'] + $fee)->assertOk()->assertJsonPath('data.lines.0.start', 0);
+});
