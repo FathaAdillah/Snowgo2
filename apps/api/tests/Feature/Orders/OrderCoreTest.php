@@ -8,6 +8,7 @@ use App\Modules\Orders\OrderLifecycle;
 use App\Support\Http\ApiProblem;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\DB;
 use Tests\Feature\Checkout\PreparesCheckout;
@@ -44,9 +45,12 @@ it('serves immutable snapshots and timeline only to the verified owner', functio
     DB::table('addresses')->update(['line1' => 'New place']);
     DB::table('products')->update(['name' => 'Renamed']);
     DB::table('regions')->where('id', $this->district)->update(['name' => 'New district']);
-    $this->getJson('/api/v1/orders?status=PENDING_PAYMENT&method=READY_TO_SHIP')->assertOk()->assertJsonPath('data.0.number', $number)->assertJsonMissingPath('data.0.address');
+    $stored = DB::table('orders')->where('number', $number)->first();
+    $this->getJson('/api/v1/orders?status=PENDING_PAYMENT&method=READY_TO_SHIP')->assertOk()->assertJsonPath('data.0.number', $number)->assertJsonMissingPath('data.0.address')
+        ->assertJsonPath('data.0.created_at', Carbon::parse($stored->created_at)->toISOString())->assertJsonPath('data.0.payment_due_at', Carbon::parse($stored->payment_due_at)->toISOString());
     $this->getJson('/api/v1/orders?method=PREORDER')->assertOk()->assertJsonCount(0, 'data');
     $this->getJson($url.'?include=totals')->assertOk()->assertJsonPath('data.address.line1', 'Old address')->assertJsonPath('data.address.regions.district.name', 'DISTRICT')
+        ->assertJsonPath('data.created_at', Carbon::parse($stored->created_at)->toISOString())->assertJsonPath('data.payment_due_at', Carbon::parse($stored->payment_due_at)->toISOString())
         ->assertJsonPath('data.items.0.name', 'Album')->assertJsonPath('data.items.0.sku', 'A1')->assertJsonMissingPath('data.user_id')
         ->assertJsonPath('data.tax_amount', 201)->assertJsonPath('data.history.0.to_status', 'PENDING_PAYMENT')->assertJsonCount(1, 'data.invoice_numbers');
     ($this->login)(User::factory()->create());

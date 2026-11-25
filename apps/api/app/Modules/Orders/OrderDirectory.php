@@ -3,6 +3,7 @@
 namespace App\Modules\Orders;
 
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class OrderDirectory
@@ -39,9 +40,15 @@ final class OrderDirectory
     }
 
     /** @return array<string,mixed> */
-    public static function detailData(object $row): array
+    public static function responseData(object $row): array
     {
         $data = (array) $row;
+        foreach (['created_at', 'payment_due_at'] as $field) {
+            $data[$field] = Carbon::parse($data[$field])->toISOString();
+        }
+        if (! array_key_exists('items', $data)) {
+            return $data;
+        }
         foreach (['items', 'history', 'invoice_numbers'] as $field) {
             $data[$field] = json_decode($data[$field] ?? '[]', false, flags: JSON_THROW_ON_ERROR);
         }

@@ -14,6 +14,7 @@ use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -115,7 +116,7 @@ final class SupportController
             $page = $rows->take($limit);
 
             return CustomerResponse::ok($page->map(fn ($row) => ['kind' => $row->kind, 'reference' => $row->reference,
-                'status' => $row->status, 'occurred_at' => $row->occurred_at])->all(),
+                'status' => $row->status, 'occurred_at' => Carbon::parse($row->occurred_at)->toISOString()])->all(),
                 meta: ['next_cursor' => $rows->count() > $limit ? base64_encode((string) $page->last()->id) : null]);
         });
     }

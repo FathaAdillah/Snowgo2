@@ -34,11 +34,11 @@ final class OrderResponse
         $query = $detail ? OrderDirectory::details($owner, $address, $totals) : OrderDirectory::summaries($owner);
         $row = $query->where('o.number', $number)->first() ?? abort(404);
 
-        return ApiResponse::success($detail ? OrderDirectory::detailData($row) : $row)->header('Cache-Control', 'private, no-store');
+        return ApiResponse::success(OrderDirectory::responseData($row))->header('Cache-Control', 'private, no-store');
     }
 
     /** @param array<string,mixed> $filters */
-    public static function page(Builder $query, array $filters, bool $details = false): JsonResponse
+    public static function page(Builder $query, array $filters): JsonResponse
     {
         foreach (['method' => 'o.selling_method', 'status' => 'o.status'] as $key => $column) {
             if (isset($filters[$key])) {
@@ -46,7 +46,7 @@ final class OrderResponse
             }
         }
         $page = $query->orderByDesc('o.created_at')->orderByDesc('o.id')->paginate((int) ($filters['per_page'] ?? 20), page: (int) ($filters['page'] ?? 1));
-        $data = $details ? array_map(OrderDirectory::detailData(...), $page->items()) : $page->items();
+        $data = array_map(OrderDirectory::responseData(...), $page->items());
 
         return ApiResponse::success($data, meta: ['page' => $page->currentPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'last_page' => $page->lastPage()])->header('Cache-Control', 'private, no-store');
     }

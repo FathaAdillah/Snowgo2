@@ -33,7 +33,7 @@ final class StaffOrderController
             $rows->where('o.created_at', '<', $to->startOfDay()->addDay()->toIso8601String());
         }
 
-        return OrderResponse::page($rows, $data, true);
+        return OrderResponse::page($rows, $data);
     }
 
     #[Response(200, 'Order detail; address requires PII access', type: OrderResponse::FULL)]
