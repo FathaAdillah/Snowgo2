@@ -41,7 +41,7 @@ final class PaymentData
             $data[$field] = $p->$field ? Carbon::parse($p->$field)->toISOString() : null;
         }
 
-        return $instruction && $p->user_id === $actor ? $data + json_decode(Crypt::decryptString($p->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR) : $data;
+        return $instruction && $p->user_id === $actor && $p->status === 'UNPAID' && now()->lt($p->expires_at) ? $data + json_decode(Crypt::decryptString($p->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR) : $data;
     }
 
     public static function detail(string $number, Request $request): JsonResponse
