@@ -143,6 +143,9 @@ test('request orders keep both case surfaces private and document every thread m
       ['POST', `${base}/{number}/${staff ? 'reviews' : 'cancellations'}`]]
     if (!staff) routes.push(['POST', base])
     for (const [method, path] of routes) {
+      if (!staff && method === 'POST') {
+        assert.equal(spec.paths[path].post.responses[429].headers['Retry-After'].schema.type, 'string')
+      }
       const result = await client[method](path, { params: { path: { number: 'REQ-MISSING' } }, ...(method === 'POST' && { body: {} }) })
       assert.ok([401, 403, 419].includes(result.response.status))
       validateResponse(path, result.response.status, result.error, method.toLowerCase())

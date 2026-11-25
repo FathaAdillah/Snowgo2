@@ -4,6 +4,7 @@ namespace App\Support\Http;
 
 use Dedoc\Scramble\Contracts\DocumentTransformer;
 use Dedoc\Scramble\OpenApiContext;
+use Dedoc\Scramble\Support\Generator\Header;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Response;
@@ -35,6 +36,9 @@ final class ApiContract implements DocumentTransformer
                     $response = $response instanceof Reference && $response->referenceType === 'responses' ? $response->resolve() : $response;
                     if (! $response instanceof Response || ! isset($response->content['application/json'])) {
                         continue;
+                    }
+                    if ((int) $response->code === 429) {
+                        $response->addHeader('Retry-After', new Header(description: 'Seconds to wait before retrying.', schema: Schema::fromType(new StringType)));
                     }
                     $schema = $response->getContent('application/json');
                     if (! $schema instanceof Schema || ! $schema->type instanceof ObjectType) {

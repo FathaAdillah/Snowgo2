@@ -2884,6 +2884,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 },
@@ -3011,6 +3019,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -8478,6 +8494,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -9168,6 +9192,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -9538,6 +9570,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -10771,6 +10811,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -10930,6 +10978,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -11060,6 +11116,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -11199,6 +11263,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -11465,6 +11537,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -11728,6 +11808,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -13093,6 +13181,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -13458,6 +13554,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -13582,6 +13686,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -13742,6 +13854,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -14109,6 +14229,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -14235,6 +14363,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -14357,6 +14493,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 },
@@ -14418,6 +14562,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -14611,6 +14763,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -23054,6 +23214,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -23169,6 +23337,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -23275,6 +23451,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -23405,6 +23589,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -23591,6 +23783,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -28519,6 +28719,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -28632,6 +28840,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -28735,6 +28951,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -28842,6 +29066,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -28980,6 +29212,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }

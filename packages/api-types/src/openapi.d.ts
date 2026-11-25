@@ -3093,6 +3093,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3231,6 +3233,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3280,6 +3284,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3331,6 +3337,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3400,6 +3408,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3466,6 +3476,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3516,6 +3528,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3564,6 +3578,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3615,6 +3631,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3663,6 +3681,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -5045,6 +5065,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -5110,6 +5132,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -5188,6 +5212,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -11663,6 +11689,8 @@ export interface operations {
             /** @description Throttled */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -11733,6 +11761,8 @@ export interface operations {
             /** @description Throttled */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -11809,6 +11839,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -11895,6 +11927,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -11925,6 +11959,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -12012,6 +12048,8 @@ export interface operations {
             /** @description Throttled */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -12164,6 +12202,8 @@ export interface operations {
             /** @description Throttled */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -12237,6 +12277,8 @@ export interface operations {
             /** @description Throttled */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -12311,6 +12353,8 @@ export interface operations {
             /** @description Throttled */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -13072,6 +13116,8 @@ export interface operations {
             /** @description Checkout rate limit */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -13221,6 +13267,8 @@ export interface operations {
             /** @description Checkout rate limit */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -13444,6 +13492,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -13509,6 +13559,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -13587,6 +13639,8 @@ export interface operations {
             /** @description Too many requests */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -14831,6 +14885,8 @@ export interface operations {
             /** @description Submission rate limit */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -15081,6 +15137,8 @@ export interface operations {
             /** @description Cancellation rate limit */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -15232,6 +15290,8 @@ export interface operations {
             /** @description Message rate limit */
             429: {
                 headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
                     [name: string]: unknown;
                 };
                 content: {
