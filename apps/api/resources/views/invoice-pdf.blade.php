@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><meta charset="utf-8"><title>Invoice {{ $invoice['number'] }}</title>
-<style>body{font:12px DejaVu Sans,sans-serif;color:#242439}h1{font-size:22px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{padding:6px;border-bottom:1px solid #ddd;text-align:left}.n{text-align:right}</style>
+<style>body{font:12px "DejaVu Sans","Nanum Gothic",sans-serif;color:#242439}h1{font-size:22px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{padding:6px;border-bottom:1px solid #ddd;text-align:left}.n{text-align:right}</style>
 <body>
 <h1>Snowego · Invoice {{ $invoice['number'] }}</h1>
 <p>Pesanan {{ $invoice['order_number'] }} · {{ $invoice['purpose'] }}</p>

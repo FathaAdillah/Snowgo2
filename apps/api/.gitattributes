@@ -5,6 +5,8 @@
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
+resources/fonts/*.ufm -diff linguist-generated=true
+resources/fonts/*.ttf binary
 
 /.github export-ignore
 CHANGELOG.md export-ignore

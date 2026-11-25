@@ -32,8 +32,10 @@ final class RenderInvoicePdf implements ShouldQueue
             return;
         }
         $data = InvoiceDirectory::data(InvoiceDirectory::rows(null)->where('i.id', $this->invoice)->firstOrFail());
-        $bytes = Pdf::setOption(['isRemoteEnabled' => false, 'isPhpEnabled' => false, 'isJavascriptEnabled' => false])
-            ->loadView('invoice-pdf', ['invoice' => $data])->setPaper('a4')->output();
+        $pdf = Pdf::setOption(['isRemoteEnabled' => false, 'isPhpEnabled' => false, 'isJavascriptEnabled' => false,
+            'fontDir' => resource_path('fonts'), 'isFontSubsettingEnabled' => true]);
+        $pdf->getDomPDF()->getFontMetrics()->loadFontFamilies();
+        $bytes = $pdf->loadView('invoice-pdf', ['invoice' => $data])->setPaper('a4')->output();
         $hash = hash('sha256', $bytes);
         // Owned by the invoice document even before file registration, outside the upload janitor's prefixes.
         $key = "generated/invoice_pdf/$object.pdf";

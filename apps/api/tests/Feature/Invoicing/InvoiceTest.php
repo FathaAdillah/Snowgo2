@@ -26,6 +26,7 @@ uses(DatabaseTruncation::class, PreparesCheckout::class);
 
 beforeEach(function () {
     $this->prepareCheckout();
+    DB::table('products')->where('slug', 'album')->update(['name' => 'Album 한정판']);
     ($this->login)($this->buyer);
     app(CustomerCart::class)->set($this->buyer->id, $this->rts);
     [$quote] = ($this->finalQuote)($this->body);
@@ -50,7 +51,7 @@ beforeEach(function () {
 
 it('keeps invoice reads and private downloads scoped to the verified owner', function () {
     $this->getJson('/api/v1/invoices?order='.$this->order)->assertOk()->assertJsonPath('meta.total', 1);
-    $this->getJson($this->url)->assertOk()->assertJsonPath('data.items.0.description', 'Album')->assertJsonPath('data.pdf_ready', false);
+    $this->getJson($this->url)->assertOk()->assertJsonPath('data.items.0.description', 'Album 한정판')->assertJsonPath('data.pdf_ready', false);
     $this->getJson($this->url.'/pdf')->assertConflict()->assertJsonPath('code', 'FILE_NOT_READY');
     ($this->login)(User::factory()->create());
     $this->getJson('/api/v1/invoices')->assertOk()->assertJsonPath('meta.total', 0);
@@ -225,7 +226,7 @@ it('retries a failed PDF and signs only one private, downloadable copy', functio
         ($this->login)($this->buyer);
         $this->getJson("/api/v1/files/$publicId/download")->assertNotFound();
         $url = $this->getJson($this->url.'/pdf')->assertOk()->json('data.url');
-        expect(Http::get($url)->body())->toStartWith('%PDF-');
+        expect(Http::get($url)->body())->toStartWith('%PDF-')->toContain('NanumGothic');
         expect(Http::get(strtok($url, '?'))->status())->toBe(403);
         $this->assertDatabaseHas('stored_files', ['owner_type' => 'invoice', 'owner_id' => $this->invoice->id, 'status' => 'READY', 'visibility' => 'PRIVATE']);
     } finally {

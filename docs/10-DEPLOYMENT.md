@@ -306,4 +306,6 @@ Buka **Commerce → Invoice**. Seeder mendaftarkan izin dan tidak menimpa role l
 
 Invoice lama ikut antre tanpa mengirim ulang email. Penerbitan baru mencatat `InvoiceIssued` dalam transaksi; outbox memicu notifikasi tanpa lampiran dan antrean dokumen. Scheduler `invoices:dispatch-pdfs` mengirim job ke queue `low`. Pastikan bucket privat, signing endpoint, scheduler dan Horizon aktif. Tautan unduh berlaku lima menit. Jika PDF `FAILED`, pulihkan storage/worker lalu pilih **Ulangi pembuatan PDF**; jangan terbitkan invoice lagi. Lease kedaluwarsa kembali ke antrean otomatis.
 
+PDF terbit berada di prefix privat `generated/invoice_pdf/`, bukan prefix upload sementara. Jangan pasang aturan expiry untuk prefix ini. Untuk nama barang beraksara Korea, image membawa [Nanum Gothic Regular](https://github.com/google/fonts/tree/16680f8688ffcd467d2eb2146a9ce0343404581d/ofl/nanumgothic) berlisensi SIL OFL dan metrik Dompdf; worker tidak memerlukan unduhan font.
+
 Sesudah ada invoice, jangan rollback skema. Pembayaran tetap di TASK-022/023; sumber saldo, biaya tambahan dengan persetujuan, dan koreksi shortage di TASK-024. Staf tidak dapat mengetik nominal tagihan baru.
