@@ -72,8 +72,8 @@ final class ReturnResolution
         $number = sprintf('SHP-%s-%06d', now()->format('Ymd'), DB::scalar("SELECT nextval('shipment_number_seq')"));
         $id = DB::table('shipments')->insertGetId((array) $source + ['number' => $number, 'shipping_amount' => 0, 'replacement_return_id' => $r->id]);
         foreach (DB::table('return_items as l')->join('shipment_items as s', 's.id', '=', 'l.shipment_item_id')->where('return_id', $r->id)->where('accepted_qty', '>', 0)
-            ->get(['s.order_item_id', 's.coverage_start', 'l.accepted_qty']) as $line) {
-            DB::table('shipment_items')->insert(['shipment_id' => $id, 'order_item_id' => $line->order_item_id, 'coverage_start' => $line->coverage_start, 'qty' => $line->accepted_qty, 'public_id' => (string) Str::ulid()]);
+            ->select('s.order_item_id', 'l.accepted_qty')->selectRaw('lower(l.unit_coverage) as coverage_start, return_first_units(l.unit_coverage,l.accepted_qty) as replacement_coverage')->get() as $line) {
+            DB::table('shipment_items')->insert(['shipment_id' => $id, 'order_item_id' => $line->order_item_id, 'coverage_start' => $line->coverage_start, 'replacement_coverage' => $line->replacement_coverage, 'qty' => $line->accepted_qty, 'public_id' => (string) Str::ulid()]);
         }
         app(Journal::class)->transition(Subject::Shipment, $id, 'status', null, 'PENDING', 'replacement:'.$r->id, $actor);
         app(Outbox::class)->record('ShipmentCreated', 'shipment', $id, ['number' => $number, 'return_number' => $r->number]);

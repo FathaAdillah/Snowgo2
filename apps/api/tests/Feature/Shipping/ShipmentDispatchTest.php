@@ -284,6 +284,7 @@ it('limits claims to delivered shipment units, restocks once and waits for a del
     DB::table('returns')->where('id', $secondReturn->id)->update(['status' => 'ACCEPTED']);
     DB::table('return_items')->where('return_id', $secondReturn->id)->update(['accepted_qty' => 1, 'disposition' => 'NO_RECEIPT']);
     $secondPackage = ($this->write)("$secondCase/resolutions", $decision)->assertOk()->json('data.replacement_number');
+    $this->assertDatabaseHas('shipment_items', ['shipment_id' => DB::table('shipments')->where('number', $secondPackage)->value('id'), 'coverage_start' => 1, 'replacement_coverage' => '{[1,2)}']);
     ($this->pack)($secondPackage, $o->number);
     DB::table('order_transition_holds')->insert(['order_id' => $o->id, 'kind' => 'PROOF_REVIEW', 'source_ref' => 'another-payment']);
     $dispatch($replacement, 'REPL')->assertConflict();
