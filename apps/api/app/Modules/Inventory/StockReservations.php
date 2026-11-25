@@ -70,6 +70,11 @@ final class StockReservations
         $this->activeCommand($orderId, 'COMMIT', $captureId);
     }
 
+    public function underProofReview(int $orderId): bool
+    {
+        return DB::table('stock_expiry_work')->where('order_id', $orderId)->whereNotNull('proof_id')->exists();
+    }
+
     public function release(int $orderId): void
     {
         $this->activeCommand($orderId, 'CANCEL');

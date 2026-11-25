@@ -216,3 +216,14 @@ Setelah pull, jalankan `docker compose exec api php artisan migrate --force` dan
 Tenggat pembayaran awal 24 jam (asumsi MVP), terpisah dari masa berlaku quote. Jangan aktifkan penjualan live sebelum lifecycle pesanan, kuota PO, pembayaran dan rekonsiliasi tersedia. Jika ada histori transaksi, gunakan backup atau perbaikan maju, bukan rollback yang menghapus snapshot.
 
 Jika kelas pajak produk diarsipkan, checkout ditolak sampai staf menetapkan kelas aktif atau melepas penugasannya. Produk tanpa kelas pajak tetap memakai tarif default 0; invoice lama tidak dihitung ulang.
+
+## Mengaktifkan API pesanan (TASK-015)
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+```
+
+Tidak perlu build frontend: belum ada halaman pesanan baru. Seeder tidak menambah hak ke role lama. Di **Role & Izin**, berikan `orders.order.view` untuk membaca; untuk membatalkan atau menyelesaikan, tambahkan `orders.order.manage` dan masing-masing `orders.order.cancel` atau `orders.order.complete`. Superadmin tetap wajib login. Untuk pembatalan pelanggan, buat minimal satu kode alasan aktif dengan domain `orders` melalui API referensi.
+
+Belum ada pemrosesan pembayaran, refund, dispatch, atau konfirmasi delivery dari kurir. Jangan menandai pesanan lunas/terkirim lewat SQL: producer pembayaran, tracking, dispute dan scheduler auto-completion menyusul. Setelah ada transaksi nyata, perbaiki maju atau pulihkan backup; rollback migrasi menghapus bukti aksi dan data penghalang transisi.

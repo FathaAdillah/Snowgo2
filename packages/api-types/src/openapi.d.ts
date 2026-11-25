@@ -501,6 +501,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orders.staff.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orders.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{number}/actions/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orders.staff.action"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/permissions": {
         parameters: {
             query?: never;
@@ -1449,6 +1497,70 @@ export interface paths {
         get: operations["foundation.health"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orders.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orders.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{number}/cancellations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orders.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{number}/completions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orders.complete"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4372,11 +4484,11 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            /** @constant */
-                            kind: "SUPPORT_ACCESS";
+                            /** @enum {string} */
+                            kind: "ORDER" | "ORDER_STATUS" | "SUPPORT_ACCESS";
                             occurred_at: string;
                             reference: string;
-                            status: null;
+                            status: string | null;
                         }[];
                         message: string;
                         meta: {
@@ -4760,6 +4872,430 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    "orders.staff.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                method?: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                page?: number;
+                per_page?: number;
+                status?: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Order details without addresses */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            address: {
+                                line1: string;
+                                line2: string | null;
+                                phone: string;
+                                postal_code: string;
+                                recipient: string;
+                                regions: {
+                                    city: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    country: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    district: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    province: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                };
+                            } | null;
+                            charge_consents: {
+                                amount: number;
+                                expires_at: string;
+                                id: string;
+                                invoice_number?: string;
+                                lines: {
+                                    amount: number;
+                                    description: string;
+                                    type: string;
+                                }[];
+                                revision: number;
+                                status: string;
+                            }[];
+                            created_at: string;
+                            currency: string;
+                            discount_amount?: number;
+                            fulfillment_status: string;
+                            history: {
+                                dimension: string;
+                                occurred_at: string;
+                                to_status: string;
+                            }[];
+                            invoice_numbers: string[];
+                            items: {
+                                cancelled_qty: number;
+                                id: string | null;
+                                name: string | null;
+                                qty: number;
+                                shipped_qty: number;
+                                sku: string | null;
+                                unit_amount: number | null;
+                                variant: string | null;
+                            }[];
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_numbers: string[];
+                            payment_status: string;
+                            shipment_numbers: string[];
+                            shipping_amount?: number;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            subtotal_amount?: number;
+                            tax_amount?: number;
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "orders.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Order detail; address requires PII access */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            address: {
+                                line1: string;
+                                line2: string | null;
+                                phone: string;
+                                postal_code: string;
+                                recipient: string;
+                                regions: {
+                                    city: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    country: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    district: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    province: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                };
+                            } | null;
+                            charge_consents: {
+                                amount: number;
+                                expires_at: string;
+                                id: string;
+                                invoice_number?: string;
+                                lines: {
+                                    amount: number;
+                                    description: string;
+                                    type: string;
+                                }[];
+                                revision: number;
+                                status: string;
+                            }[];
+                            created_at: string;
+                            currency: string;
+                            discount_amount?: number;
+                            fulfillment_status: string;
+                            history: {
+                                dimension: string;
+                                occurred_at: string;
+                                to_status: string;
+                            }[];
+                            invoice_numbers: string[];
+                            items: {
+                                cancelled_qty: number;
+                                id: string | null;
+                                name: string | null;
+                                qty: number;
+                                shipped_qty: number;
+                                sku: string | null;
+                                unit_amount: number | null;
+                                variant: string | null;
+                            }[];
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_numbers: string[];
+                            payment_status: string;
+                            shipment_numbers: string[];
+                            shipping_amount?: number;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            subtotal_amount?: number;
+                            tax_amount?: number;
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "orders.staff.action": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                action: "CANCEL" | "COMPLETE";
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    note?: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorized order action; address omitted from replay */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            address: {
+                                line1: string;
+                                line2: string | null;
+                                phone: string;
+                                postal_code: string;
+                                recipient: string;
+                                regions: {
+                                    city: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    country: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    district: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    province: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                };
+                            } | null;
+                            charge_consents: {
+                                amount: number;
+                                expires_at: string;
+                                id: string;
+                                invoice_number?: string;
+                                lines: {
+                                    amount: number;
+                                    description: string;
+                                    type: string;
+                                }[];
+                                revision: number;
+                                status: string;
+                            }[];
+                            created_at: string;
+                            currency: string;
+                            discount_amount?: number;
+                            fulfillment_status: string;
+                            history: {
+                                dimension: string;
+                                occurred_at: string;
+                                to_status: string;
+                            }[];
+                            invoice_numbers: string[];
+                            items: {
+                                cancelled_qty: number;
+                                id: string | null;
+                                name: string | null;
+                                qty: number;
+                                shipped_qty: number;
+                                sku: string | null;
+                                unit_amount: number | null;
+                                variant: string | null;
+                            }[];
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_numbers: string[];
+                            payment_status: string;
+                            shipment_numbers: string[];
+                            shipping_amount?: number;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            subtotal_amount?: number;
+                            tax_amount?: number;
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Order or action not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description INVALID_STATE_TRANSITION or REQUEST_IN_PROGRESS */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or IDEMPOTENCY_KEY_REUSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
                 };
             };
         };
@@ -10925,6 +11461,491 @@ export interface operations {
                         };
                         /** @constant */
                         success: true;
+                    };
+                };
+            };
+        };
+    };
+    "orders.index": {
+        parameters: {
+            query?: {
+                method?: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                page?: number;
+                per_page?: number;
+                status?: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Own orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created_at: string;
+                            currency: string;
+                            fulfillment_status: string;
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_status: string;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "orders.show": {
+        parameters: {
+            query?: {
+                include?: "totals";
+            };
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Own order snapshots and timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            address: {
+                                line1: string;
+                                line2: string | null;
+                                phone: string;
+                                postal_code: string;
+                                recipient: string;
+                                regions: {
+                                    city: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    country: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    district: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                    province: {
+                                        code: string;
+                                        name: string;
+                                    };
+                                };
+                            } | null;
+                            charge_consents: {
+                                amount: number;
+                                expires_at: string;
+                                id: string;
+                                invoice_number?: string;
+                                lines: {
+                                    amount: number;
+                                    description: string;
+                                    type: string;
+                                }[];
+                                revision: number;
+                                status: string;
+                            }[];
+                            created_at: string;
+                            currency: string;
+                            discount_amount?: number;
+                            fulfillment_status: string;
+                            history: {
+                                dimension: string;
+                                occurred_at: string;
+                                to_status: string;
+                            }[];
+                            invoice_numbers: string[];
+                            items: {
+                                cancelled_qty: number;
+                                id: string | null;
+                                name: string | null;
+                                qty: number;
+                                shipped_qty: number;
+                                sku: string | null;
+                                unit_amount: number | null;
+                                variant: string | null;
+                            }[];
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_numbers: string[];
+                            payment_status: string;
+                            shipment_numbers: string[];
+                            shipping_amount?: number;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            subtotal_amount?: number;
+                            tax_amount?: number;
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "orders.cancel": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    note?: string;
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Unpaid order cancelled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created_at: string;
+                            currency: string;
+                            fulfillment_status: string;
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_status: string;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description INVALID_STATE_TRANSITION or REQUEST_IN_PROGRESS */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or IDEMPOTENCY_KEY_REUSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "orders.complete": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delivered order completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created_at: string;
+                            currency: string;
+                            fulfillment_status: string;
+                            /** @enum {string} */
+                            method: "READY_TO_SHIP" | "PREORDER" | "REQUEST_ORDER";
+                            number: string;
+                            payment_due_at: string;
+                            payment_status: string;
+                            /** @enum {string} */
+                            status: "PENDING_PAYMENT" | "CONFIRMED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
+                            /** @enum {string} */
+                            term: "FULL" | "DEPOSIT";
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description INVALID_STATE_TRANSITION or REQUEST_IN_PROGRESS */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or IDEMPOTENCY_KEY_REUSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
                     };
                 };
             };

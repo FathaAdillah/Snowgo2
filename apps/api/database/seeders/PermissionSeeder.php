@@ -22,7 +22,7 @@ class PermissionSeeder extends Seeder
             if (! $role->getAttribute('bypasses_permissions')) {
                 throw new LogicException('Reserved role name already in use. Review its members before migrating; no privileges were changed.');
             }
-            $this->call([DashboardPermissionsSeeder::class, ProfilePermissionsSeeder::class, FilePermissionsSeeder::class, StaffPermissionsSeeder::class, RolePermissionsSeeder::class, GeographyPermissionsSeeder::class, CustomerPermissionsSeeder::class, CatalogPermissionsSeeder::class, InventoryPermissionsSeeder::class, ReservationPermissionsSeeder::class, OperatorToolsPermissionsSeeder::class, StaffRoleSeeder::class]);
+            $this->call([DashboardPermissionsSeeder::class, ProfilePermissionsSeeder::class, FilePermissionsSeeder::class, StaffPermissionsSeeder::class, RolePermissionsSeeder::class, GeographyPermissionsSeeder::class, CustomerPermissionsSeeder::class, CatalogPermissionsSeeder::class, InventoryPermissionsSeeder::class, ReservationPermissionsSeeder::class, OrderPermissionsSeeder::class, OperatorToolsPermissionsSeeder::class, StaffRoleSeeder::class]);
         });
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

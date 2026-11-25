@@ -29,6 +29,23 @@ final class CheckoutAllocations
         return $variants;
     }
 
+    /** The caller holds the order lock; acquire quota locks in the same order as checkout.
+     * @param list<int> $items */
+    public function release(array $items): void
+    {
+        $rows = DB::table('preorder_allocations')->whereIn('order_item_id', $items)->orderBy('campaign_variant_id')->orderBy('id')->lockForUpdate()->get();
+        if ($rows->count() !== count($items) || $rows->contains(fn ($a) => $a->status !== 'RESERVED')) {
+            throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Only reserved preorder units can be released.');
+        }
+        foreach ($rows as $row) {
+            if (! DB::table('preorder_campaign_variants')->where('id', $row->campaign_variant_id)->where('reserved_qty', '>=', $row->qty)->decrement('reserved_qty', $row->qty)) {
+                throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Preorder quota no longer matches the allocation.');
+            }
+            DB::table('preorder_allocations')->where('id', $row->id)->update(['status' => 'RELEASED']);
+            app(Outbox::class)->record('PreorderAllocationReleased', 'preorder_allocation', $row->id, ['quantity' => $row->qty]);
+        }
+    }
+
     public function reserve(int $offer, int $item, int $qty, string $due): void
     {
         $open = DB::table('preorder_campaigns as c')->join('preorder_campaign_variants as cv', 'cv.campaign_id', '=', 'c.id')
