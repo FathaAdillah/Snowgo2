@@ -35,7 +35,7 @@ function edit(q?: Quote) {
   lines.value = props.record.items.map((item) => {
     const line = q?.items.find(i => i.request_item_id === item.id)
     return { selected: !q || !!line, request_item_id: item.id, label: line?.label ?? item.name, qty: line?.qty ?? item.qty,
-      options: line?.options ?? item.options ?? '', unit_amount: line?.unit_amount ?? 0, weight_g: line?.weight_g ?? undefined,
+      options: (line ? line.options : item.options) ?? '', unit_amount: line?.unit_amount ?? 0, weight_g: line?.weight_g ?? undefined,
       foreign_currency: line?.foreign_currency ?? '', foreign_amount: line?.foreign_amount ?? '', exchange_rate: line?.exchange_rate ?? '' }
   })
 }

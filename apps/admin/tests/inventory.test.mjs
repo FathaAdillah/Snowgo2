@@ -38,6 +38,21 @@ test('quotation controls follow per-action grants and cannot edit a frozen versi
   assert.doesNotMatch(sent.html, /Edit draf|Kirim penawaran/)
 })
 
+test('saving a reopened draft preserves cleared options instead of restoring the requested ones', async () => {
+  const item = { id: 'item-1', name: 'Box', options: 'Green', qty: 1 }
+  const draft = { number: 'QUO-1', version: 1, revision: 2, status: 'DRAFT', term: 'FULL', terms: 'Original', total_amount: 100, valid_until: '2027-01-01T00:00:00Z',
+    items: [{ request_item_id: item.id, label: item.name, options: null, qty: 1, unit_amount: 100 }] }
+  const editor = await render('components/RequestQuotations', ['request_orders.quotation.manage', 'request_orders.quotation.update'], {},
+    { record: { number: 'REQ-1', status: 'UNDER_REVIEW', items: [item], quotations: [draft] } })
+  editor.buttons['Edit draf'].onClick()
+  editor.state.terms.value = 'Changed'
+  editor.state.save()
+  const { body } = editor.state.action.value
+  assert.equal(body.terms, 'Changed')
+  assert.equal(body.revision, draft.revision)
+  assert.equal(Object.hasOwn(body.items[0], 'options'), false)
+})
+
 async function render(path, grants, fixture = {}, props = {}) {
   const requests = []
   const buttons = {}
