@@ -37,7 +37,8 @@ final class CampaignWindow
         $reason = isset($input['reason_code']) ? DB::table('reason_codes')->where(['code' => $input['reason_code'], 'domain' => 'orders', 'active' => true])
             ->sharedLock()->value('id') ?? throw ValidationException::withMessages(['reason_code' => 'Select an active order reason.']) : null;
         if ($target === 'CANCELLED') {
-            $orders = DB::table('orders')->where('campaign_id', $c->id)->whereNotIn('status', ['EXPIRED', 'CANCELLED'])->orderBy('id')->pluck('number');
+            // Claim all parents before releasing shared SKU quota; expiry locks parent then quota.
+            $orders = DB::table('orders')->where('campaign_id', $c->id)->whereNotIn('status', ['EXPIRED', 'CANCELLED'])->orderBy('id')->lockForUpdate()->pluck('number');
             foreach ($orders as $order) {
                 app(OrderLifecycle::class)->apply($order, null, $actor, 'CANCEL', $input);
             }

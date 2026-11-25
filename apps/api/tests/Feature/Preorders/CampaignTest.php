@@ -141,6 +141,27 @@ it('retains staff notes with their exact transition, including replay with no or
     $this->getJson('/api/v1/preorders/po')->assertOk()->assertDontSee('Internal supplier note');
 });
 
+it('locks later campaign orders before releasing the first shared quota', function () {
+    DB::table('preorder_campaign_variants')->update(['quota' => 2]);
+    ($this->place)();
+    $buyer = User::factory()->create();
+    ($this->login)($buyer);
+    app(CustomerCart::class)->set($buyer->id, $this->po);
+    [$intent] = ($this->finalQuote)(['address_id' => $this->checkoutAddress($buyer->id, $this->district)] + $this->body);
+    $last = ($this->confirm)($intent)->assertCreated()->json('data.order_numbers.0');
+    ($this->asStaff)('order_staff');
+    $probe = null;
+    config(['database.connections.expiry_probe' => config('database.connections.pgsql')]);
+    DB::listen(function ($query) use ($last, &$probe) {
+        if ($probe === null && str_starts_with($query->sql, 'update "preorder_campaign_variants"')) {
+            $probe = DB::connection('expiry_probe')->table('orders')->where('number', $last)->lock('FOR UPDATE SKIP LOCKED')->first() === null;
+        }
+    });
+    $this->postJson("$this->admin/PO-1/actions/CANCEL", [], ['Idempotency-Key' => 'all'])->assertOk();
+    expect($probe)->toBeTrue();
+    $this->assertDatabaseHas('preorder_campaign_variants', ['reserved_qty' => 0]);
+});
+
 it('confirms only paid initial deposits, only once, without releasing historical quota or touching physical stock', function () {
     $number = ($this->place)();
     $order = DB::table('orders')->where('number', $number)->value('id');
