@@ -55,7 +55,7 @@ export const adminNavigation: NavEntry[] = [
       { label: 'Rekonsiliasi', icon: 'i-lucide-clipboard-check', to: '/finance/reconciliations', permission: 'payments.reconciliation.view' },
       { label: 'Refund', icon: 'i-lucide-hand-coins' },
       { label: 'Rekening Tujuan', icon: 'i-lucide-landmark', to: '/finance/banks', permission: 'payments.bank.view' },
-      { label: 'Laporan Transaksi', icon: 'i-lucide-chart-column' }
+      { label: 'Laporan Transaksi', icon: 'i-lucide-chart-column', to: '/finance/transactions', permission: 'reporting.transaction.view' }
     ]
   },
   {

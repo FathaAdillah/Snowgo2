@@ -32293,6 +32293,365 @@
                 }
             }
         },
+        "/admin/dashboard": {
+            "get": {
+                "operationId": "reporting.dashboard",
+                "tags": [
+                    "Report"
+                ],
+                "parameters": [
+                    {
+                        "name": "method",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ready_stock",
+                                "preorder",
+                                "request_order"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "orders_count": {
+                                                    "type": "integer"
+                                                },
+                                                "by_method": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "method": {
+                                                                "type": "string"
+                                                            },
+                                                            "orders_count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "paid_amount": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "method",
+                                                            "orders_count",
+                                                            "paid_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "paid_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "refund_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "net_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "pending_payments": {
+                                                    "type": "integer"
+                                                },
+                                                "shipment_failures": {
+                                                    "type": "integer"
+                                                },
+                                                "open_returns": {
+                                                    "type": "integer"
+                                                },
+                                                "open_refunds": {
+                                                    "type": "integer"
+                                                },
+                                                "low_stock_count": {
+                                                    "type": "integer"
+                                                },
+                                                "trend": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "orders": {
+                                                                "type": "integer"
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "orders",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "orders_count",
+                                                "by_method",
+                                                "paid_amount",
+                                                "refund_amount",
+                                                "net_amount",
+                                                "pending_payments",
+                                                "shipment_failures",
+                                                "open_returns",
+                                                "open_refunds",
+                                                "low_stock_count",
+                                                "trend"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/transaction-reports": {
+            "get": {
+                "operationId": "reporting.transactions",
+                "tags": [
+                    "Report"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "method",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ready_stock",
+                                "preorder",
+                                "request_order"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "reference": {
+                                                        "type": "string"
+                                                    },
+                                                    "order_numbers": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "occurred_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "order_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "invoice_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "payment_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "refund_number": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "method": {
+                                                        "type": "string"
+                                                    },
+                                                    "posted_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "amount": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "reference",
+                                                    "order_numbers",
+                                                    "status",
+                                                    "occurred_at",
+                                                    "kind",
+                                                    "order_number",
+                                                    "invoice_number",
+                                                    "payment_number",
+                                                    "refund_number",
+                                                    "method",
+                                                    "posted_at",
+                                                    "amount"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/stock-reservations": {
             "get": {
                 "operationId": "inventory.reservations.index",

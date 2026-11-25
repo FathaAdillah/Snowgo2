@@ -342,3 +342,7 @@ Jalankan migrasi dan PermissionSeeder. Berikan izin melalui Role & Izin pada rol
 ### Mengaktifkan retur per paket (TASK-028)
 
 Jalankan migrasi dan PermissionSeeder. Berikan izin review dan resolve ke CS, serta inspect ke warehouse. Retur dalam jendela 48 jam memerlukan dua foto privat (barang dan label) yang telah lulus scan untuk approval. Hanya barang RTS yang diterima fisik dan lolos inspeksi yang dapat direstock. Paket pengganti dipacking, dikirim, dan dilacak di halaman pengiriman. Selesaikan kasus setelah paket pengganti delivered, refund selesai atau perbaikan dikonfirmasi.
+
+### Mengaktifkan laporan (TASK-029)
+
+Jalankan PermissionSeeder dan rebuild admin. Dashboard memerlukan reporting.dashboard.view. Berikan reporting.transaction.view untuk membuka Finance → Laporan Transaksi. Periode transaksi berdasarkan tanggal capture atau transfer refund di Asia/Jakarta (maksimum 92 hari). Antrean dan stok menipis memakai kondisi saat ini. Laporan tidak menyertakan rekening, bukti atau alamat pelanggan.

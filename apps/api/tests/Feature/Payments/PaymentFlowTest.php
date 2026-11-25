@@ -222,5 +222,14 @@ it('holds refund caps, separates approval from transfer and replays a confirmed 
     ($this->write)("$case/transfers", $transfer)->assertConflict();
     $this->assertDatabaseCount('refund_transactions', 1);
     $this->assertDatabaseHas('orders', ['status' => 'CANCELLED', 'payment_status' => 'REFUNDED']);
-    $this->assertDatabaseHas('stock_reservations',['status' => 'RELEASED']);
+    $this->assertDatabaseHas('stock_reservations', ['status' => 'RELEASED']);
+    $date = now('Asia/Jakarta')->toDateString();
+    $report = "/api/v1/admin/transaction-reports?from=$date&to=$date";
+    $this->getJson('/api/v1/admin/dashboard')->assertOk()->assertJsonPath('data.net_amount', 0)->assertJsonPath('data.paid_amount', $amount)->assertJsonPath('data.refund_amount', $amount);
+    $this->getJson($report)->assertOk()->assertJsonPath('meta.total', 2)->assertJsonMissingPath('data.0.bank_tx_ref');
+    $this->getJson($report.'&method=preorder')->assertOk()->assertJsonPath('meta.total', 0);
+    $this->getJson('/api/v1/admin/dashboard?from=2026-01-01&to=2026-06-30')->assertUnprocessable();
+    $executor->syncRoles(['warehouse']);
+    $this->getJson('/api/v1/admin/dashboard')->assertOk();
+    $this->getJson($report)->assertForbidden();
 });

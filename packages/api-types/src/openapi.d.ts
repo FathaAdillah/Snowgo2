@@ -549,6 +549,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporting.dashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/files": {
         parameters: {
             query?: never;
@@ -2003,6 +2019,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["geography.tax-classes.update"];
+        trace?: never;
+    };
+    "/admin/transaction-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporting.transactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/units": {
@@ -6509,6 +6541,60 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporting.dashboard": {
+        parameters: {
+            query?: {
+                from?: string;
+                method?: "ready_stock" | "preorder" | "request_order";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            by_method: {
+                                method: string;
+                                orders_count: number;
+                                paid_amount: number;
+                            }[];
+                            low_stock_count: number;
+                            net_amount: number;
+                            open_refunds: number;
+                            open_returns: number;
+                            orders_count: number;
+                            paid_amount: number;
+                            pending_payments: number;
+                            refund_amount: number;
+                            shipment_failures: number;
+                            trend: {
+                                amount: number;
+                                date: string;
+                                orders: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -15869,6 +15955,59 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporting.transactions": {
+        parameters: {
+            query: {
+                from: string;
+                method?: "ready_stock" | "preorder" | "request_order";
+                page?: number;
+                per_page?: number;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            invoice_number: string;
+                            kind: string;
+                            method: string;
+                            occurred_at: string;
+                            order_number: string;
+                            order_numbers: string[];
+                            payment_number: string;
+                            posted_at: string;
+                            reference: string;
+                            refund_number: string | null;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
