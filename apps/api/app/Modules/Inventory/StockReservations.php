@@ -2,6 +2,7 @@
 
 namespace App\Modules\Inventory;
 
+use App\Modules\Administration\OperationalSettings;
 use App\Modules\Catalog\ProductDirectory;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
@@ -121,7 +122,7 @@ final class StockReservations
             if ($current->proof_id !== null) {
                 return;
             }
-            $deadline = DB::scalar("SELECT clock_timestamp()+interval '24 hours'");
+            $deadline = DB::scalar('SELECT clock_timestamp()+make_interval(hours=>?)', [OperationalSettings::value('payment.verification_hold_hours')]);
             $work->update(['proof_id' => $proofId, 'due_at' => $deadline, 'lease_token' => null, 'lease_until' => null]);
             foreach ($this->holds($orderId) as $hold) {
                 if ($hold->status !== 'ACTIVE') {

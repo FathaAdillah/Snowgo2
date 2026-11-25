@@ -233,3 +233,21 @@ it('holds refund caps, separates approval from transfer and replays a confirmed 
     $this->getJson('/api/v1/admin/dashboard')->assertOk();
     $this->getJson($report)->assertForbidden();
 });
+
+it('isolates store settings and audit access, and refuses stale configuration updates', function () {
+    $staff = ($this->finance)();
+    $base = '/api/v1/admin/settings';
+    $url = $base.'/returns.window_hours';
+    $this->getJson($base)->assertForbidden();
+    $staff->syncRoles(['admin']);
+    $r = $this->getJson($url)->assertOk()->json('data');
+    $write = fn (int $value) => $this->putJson($url, ['value' => $value, 'revision' => $r['revision']], ['Idempotency-Key' => (string) Str::uuid()]);
+    $write(999)->assertUnprocessable();
+    $write(96)->assertOk()->assertJsonPath('data.value', 96);
+    $write(72)->assertConflict();
+    $this->getJson('/api/v1/admin/audit-logs?action=SettingChanged&per_page=1')->assertOk()->assertJsonPath('data.0.actor_id', $staff->id)->assertJsonMissingPath('data.0.ip');
+    $this->getJson('/api/v1/admin/audit-logs?cursor=invalid')->assertUnprocessable();
+    $staff->syncRoles(['warehouse']);
+    $this->getJson('/api/v1/admin/audit-logs')->assertForbidden();
+    $this->getJson($url)->assertForbidden();
+});

@@ -24,6 +24,7 @@ final class ReturnResolution
             'REPLACEMENT','SHIP_MISSING_ITEM' => self::replacement($r, $actor),
             'REPAIR' => $r->resolution === 'REPAIR' && ($d['work_completed'] ?? false),
             'REJECTED' => true,
+            default => throw ReturnClaims::invalid(),
         };
         if ($done) {
             ReturnClaims::change($r, 'RESOLVED', $actor, 'ReturnResolved', ['resolution' => $kind, 'resolved_at' => now(), 'outcome_note' => $d['note']]);

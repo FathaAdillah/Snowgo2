@@ -100,6 +100,22 @@ export interface paths {
         patch: operations["catalog.attributes.update"];
         trace?: never;
     };
+    "/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin.audit.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/auth/login": {
         parameters: {
             query?: never;
@@ -1619,6 +1635,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["admin.roles.update"];
+        trace?: never;
+    };
+    "/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin.settings.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin.settings.show"];
+        put: operations["admin.settings.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/shipments": {
@@ -4128,6 +4176,53 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "admin.audit.index": {
+        parameters: {
+            query?: {
+                action?: string;
+                actor_id?: number;
+                cursor?: string;
+                from?: string;
+                per_page?: number;
+                subject_type?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            action: string;
+                            actor_id: number | null;
+                            id: number;
+                            occurred_at: string;
+                            request_id: string;
+                            subject_ref: number | null;
+                            subject_type: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            next_cursor: string | null;
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -11307,6 +11402,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11318,6 +11418,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         }[];
                         message: string;
@@ -11384,6 +11486,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11395,6 +11502,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -11432,6 +11541,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11443,6 +11557,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -11490,6 +11606,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11501,6 +11622,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -11550,6 +11673,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11561,6 +11689,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -11615,6 +11745,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11626,6 +11761,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -11680,6 +11817,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -11691,6 +11833,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -13832,6 +13976,136 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: null;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "admin.settings.index": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            maximum: number;
+                            minimum: number;
+                            revision: number;
+                            value: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "admin.settings.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            maximum: number;
+                            minimum: number;
+                            revision: number;
+                            value: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "admin.settings.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    revision?: number;
+                    value: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            maximum: number;
+                            minimum: number;
+                            revision: number;
+                            value: number;
+                        };
                         message: string;
                         meta: {
                             request_id: string;
@@ -20665,6 +20939,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -20676,6 +20955,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         }[];
                         message: string;
@@ -20741,6 +21022,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -20752,6 +21038,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;
@@ -20788,6 +21076,11 @@ export interface operations {
                             approved_amount: number | null;
                             cancel_order: boolean;
                             completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
                             items: {
                                 approved_amount: number | null;
                                 order_item_id: string;
@@ -20799,6 +21092,8 @@ export interface operations {
                             order_number: string;
                             reason_code: string;
                             requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
                             status: string;
                         };
                         message: string;

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 final class RefundController
 {
-    private const ROW = 'array{number:string,order_number:string,status:string,kind:string,reason_code:string,requested_amount:int,approved_amount:int|null,cancel_order:bool,items:list<array{order_item_id:string,qty:int,requested_amount:int,approved_amount:int|null}>,completed_at:string|null}';
+    private const ROW = 'array{number:string,order_number:string,status:string,kind:string,reason_code:string,requested_amount:int,approved_amount:int|null,cancel_order:bool,requested_by_me:bool,reviewed_by_me:bool,executor_is_me:bool,evidence:list<array{id:string,status:string}>,items:list<array{order_item_id:string,qty:int,requested_amount:int,approved_amount:int|null}>,completed_at:string|null}';
 
     private const ONE = 'array{success:bool,message:string,data:'.self::ROW.',meta:array{request_id:string}}';
 
@@ -26,6 +26,8 @@ final class RefundController
         return DB::table('refunds as c')->join('orders as o', 'o.id', '=', 'c.order_id')->join('reason_codes as rc', 'rc.id', '=', 'c.reason_id')
             ->when(! $request->routeIs('refunds.staff.*'), fn ($q) => $q->where('o.user_id', $request->user()->id))
             ->select('c.number', 'o.number as order_number', 'c.status', 'c.kind', 'rc.code as reason_code', 'c.requested_amount', 'c.approved_amount', 'c.cancel_order', 'c.completed_at')
+            ->selectRaw('c.requested_by=? as requested_by_me, coalesce(c.reviewed_by=?,false) as reviewed_by_me, coalesce(c.executor_id=?,false) as executor_is_me', array_fill(0, 3, $request->user()->id))
+            ->selectRaw("(SELECT json_agg(json_build_object('id',f.public_id,'status',f.status) ORDER BY f.id) FROM stored_files f WHERE f.owner_type='refund' AND f.collection='refund_evidence' AND f.owner_id=c.id AND f.status!='DELETED') AS evidence")
             ->selectRaw("(SELECT json_agg(json_build_object('order_item_id',i.public_id,'qty',r.qty,'requested_amount',r.requested_amount,'approved_amount',r.approved_amount) ORDER BY r.id)
                 FROM refund_items r JOIN order_items i ON i.id=r.order_item_id WHERE r.refund_id=c.id) AS items");
     }
@@ -33,6 +35,7 @@ final class RefundController
     /** @return array<string,mixed> */
     private function present(object $r): array
     {
+        $r->evidence = json_decode($r->evidence ?? '[]', true, flags: JSON_THROW_ON_ERROR);
         $r->items = json_decode($r->items ?? '[]', true, flags: JSON_THROW_ON_ERROR);
         $r->completed_at = $r->completed_at ? Carbon::parse($r->completed_at)->toISOString() : null;
 
@@ -122,10 +125,10 @@ final class RefundController
     {
         $d = $request->validate(['reason_code' => 'required|string|max:48', 'note' => 'required|string|max:1000', 'bank_checked' => 'sometimes|boolean']);
 
-        return CaseResponses::write($request,$d,function () use ($request,$d,$number) {
-            RefundExecution::cancel(Refunds::locked($number),$request->user()->id,$d);
+        return CaseResponses::write($request, $d, function () use ($request, $d, $number) {
+            RefundExecution::cancel(Refunds::locked($number), $request->user()->id, $d);
 
-            return $this->detail($request,$number);
+            return $this->detail($request, $number);
         }, 200);
     }
 }

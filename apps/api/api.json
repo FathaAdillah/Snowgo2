@@ -19571,6 +19571,520 @@
                 "security": []
             }
         },
+        "/admin/audit-logs": {
+            "get": {
+                "operationId": "admin.audit.index",
+                "tags": [
+                    "Operational"
+                ],
+                "parameters": [
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 512
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "actor_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 160
+                        }
+                    },
+                    {
+                        "name": "subject_type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 40
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "action": {
+                                                        "type": "string"
+                                                    },
+                                                    "actor_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "subject_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "subject_ref": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "request_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "occurred_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "action",
+                                                    "actor_id",
+                                                    "subject_type",
+                                                    "subject_ref",
+                                                    "request_id",
+                                                    "occurred_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "next_cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "next_cursor"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/settings": {
+            "get": {
+                "operationId": "admin.settings.index",
+                "tags": [
+                    "Operational"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "integer"
+                                                    },
+                                                    "minimum": {
+                                                        "type": "integer"
+                                                    },
+                                                    "maximum": {
+                                                        "type": "integer"
+                                                    },
+                                                    "revision": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "key",
+                                                    "value",
+                                                    "minimum",
+                                                    "maximum",
+                                                    "revision"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "total",
+                                                "last_page"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/settings/{key}": {
+            "get": {
+                "operationId": "admin.settings.show",
+                "tags": [
+                    "Operational"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "value": {
+                                                    "type": "integer"
+                                                },
+                                                "minimum": {
+                                                    "type": "integer"
+                                                },
+                                                "maximum": {
+                                                    "type": "integer"
+                                                },
+                                                "revision": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "value",
+                                                "minimum",
+                                                "maximum",
+                                                "revision"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin.settings.update",
+                "tags": [
+                    "Operational"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "integer"
+                                    },
+                                    "revision": {
+                                        "type": "integer",
+                                        "minimum": 0
+                                    }
+                                },
+                                "required": [
+                                    "value"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "value": {
+                                                    "type": "integer"
+                                                },
+                                                "minimum": {
+                                                    "type": "integer"
+                                                },
+                                                "maximum": {
+                                                    "type": "integer"
+                                                },
+                                                "revision": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "value",
+                                                "minimum",
+                                                "maximum",
+                                                "revision"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/orders": {
             "get": {
                 "operationId": "orders.index",
@@ -29676,6 +30190,33 @@
                                                     "cancel_order": {
                                                         "type": "boolean"
                                                     },
+                                                    "requested_by_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reviewed_by_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "executor_is_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "evidence": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "status"
+                                                            ]
+                                                        }
+                                                    },
                                                     "items": {
                                                         "type": "array",
                                                         "items": {
@@ -29721,6 +30262,10 @@
                                                     "requested_amount",
                                                     "approved_amount",
                                                     "cancel_order",
+                                                    "requested_by_me",
+                                                    "reviewed_by_me",
+                                                    "executor_is_me",
+                                                    "evidence",
                                                     "items",
                                                     "completed_at"
                                                 ]
@@ -29928,6 +30473,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -29973,6 +30545,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -30063,6 +30639,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -30108,6 +30711,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -30193,6 +30800,33 @@
                                                     "cancel_order": {
                                                         "type": "boolean"
                                                     },
+                                                    "requested_by_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reviewed_by_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "executor_is_me": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "evidence": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "status"
+                                                            ]
+                                                        }
+                                                    },
                                                     "items": {
                                                         "type": "array",
                                                         "items": {
@@ -30238,6 +30872,10 @@
                                                     "requested_amount",
                                                     "approved_amount",
                                                     "cancel_order",
+                                                    "requested_by_me",
+                                                    "reviewed_by_me",
+                                                    "executor_is_me",
+                                                    "evidence",
                                                     "items",
                                                     "completed_at"
                                                 ]
@@ -30451,6 +31089,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -30496,6 +31161,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -30586,6 +31255,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -30631,6 +31327,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -30802,6 +31502,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -30847,6 +31574,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -30992,6 +31723,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -31037,6 +31795,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -31210,6 +31972,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -31255,6 +32044,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]
@@ -31397,6 +32190,33 @@
                                                 "cancel_order": {
                                                     "type": "boolean"
                                                 },
+                                                "requested_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "reviewed_by_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "executor_is_me": {
+                                                    "type": "boolean"
+                                                },
+                                                "evidence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -31442,6 +32262,10 @@
                                                 "requested_amount",
                                                 "approved_amount",
                                                 "cancel_order",
+                                                "requested_by_me",
+                                                "reviewed_by_me",
+                                                "executor_is_me",
+                                                "evidence",
                                                 "items",
                                                 "completed_at"
                                             ]

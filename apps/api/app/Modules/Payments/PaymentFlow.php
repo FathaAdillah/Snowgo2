@@ -2,6 +2,7 @@
 
 namespace App\Modules\Payments;
 
+use App\Modules\Administration\OperationalSettings;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Files\StoredFiles;
@@ -87,7 +88,7 @@ final class PaymentFlow
             return;
         }
         $submitted = now();
-        $newDue = $submitted->copy()->addDay()->toISOString();
+        $newDue = $submitted->copy()->addHours(OperationalSettings::value('payment.verification_hold_hours'))->toISOString();
         $deadline = $newDue;
         foreach ($orders as $order) {
             if (! in_array($order->status, ['CONFIRMED', 'PENDING_PAYMENT'], true)) {

@@ -346,3 +346,7 @@ Jalankan migrasi dan PermissionSeeder. Berikan izin review dan resolve ke CS, se
 ### Mengaktifkan laporan (TASK-029)
 
 Jalankan PermissionSeeder dan rebuild admin. Dashboard memerlukan reporting.dashboard.view. Berikan reporting.transaction.view untuk membuka Finance → Laporan Transaksi. Periode transaksi berdasarkan tanggal capture atau transfer refund di Asia/Jakarta (maksimum 92 hari). Antrean dan stok menipis memakai kondisi saat ini. Laporan tidak menyertakan rekening, bukti atau alamat pelanggan.
+
+### Mengaktifkan antrean operasional (TASK-030)
+
+Jalankan migrasi, PermissionSeeder, restart worker/scheduler dan rebuild admin. Untuk role yang sudah ada, berikan grant baca dan mutasi yang dibutuhkan melalui Role & Izin. Menu baru meliputi Pesanan, Return, Refund, Audit Log dan Pengaturan Toko. Pengaturan profil tetap di menu profil. Migrasi menginisialisasi jendela retur dan waktu penyelesaian dari konfigurasi lingkungan. Reservasi RTS baru berlaku 60 menit sesuai asumsi bisnis dan dapat dikonfigurasi antara 5 dan 180 menit. Deadline yang telah diterbitkan tetap berlaku. Konfirmasi transfer refund harus memakai bukti privat READY dan pelaksana yang berbeda dari penyetuju.

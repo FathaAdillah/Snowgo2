@@ -16,6 +16,7 @@ const inventory = await server.ssrLoadModule('/app/composables/useInventory.ts')
 const procurement = await server.ssrLoadModule('/app/composables/useProcurement.ts')
 const requestOrders = await server.ssrLoadModule('/app/composables/useRequestOrders.ts')
 const { adminNavigation, hasPageAccess } = await server.ssrLoadModule('/app/composables/useAdminNavigation.ts')
+const caseActions = await server.ssrLoadModule('/app/composables/useCaseAction.ts')
 const components = {}
 for (const name of ['InventoryListTable', 'InventoryWarehouseList', 'InventoryAdjustmentList', 'InventoryStockForm', 'InventoryWarehouseForm', 'InventoryWarehousePicker']) {
   components[name] = await load(`components/${name}.vue`)
@@ -57,8 +58,8 @@ async function render(path, grants, fixture = {}, props = {}) {
   const requests = []
   const buttons = {}
   let pager, retry, state, meta
-  Object.assign(globalThis, inventory, procurement, requestOrders, {
-    computed, reactive, ref, watch, useTemplateRef, useHead() {}, definePageMeta(value) { meta = value },
+  Object.assign(globalThis, inventory, procurement, requestOrders, caseActions, {
+    formatRupiah: String, computed, reactive, ref, watch, useTemplateRef, useHead() {}, definePageMeta(value) { meta = value },
     useRoute: () => ({ query: fixture.route ?? {}, params: fixture.params ?? {} }), useAdminAuth: () => ({ can: grant => grants.includes(grant) }),
     useFetch(url, options) {
       requests.push({ url, query: options.query })
@@ -71,7 +72,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   const component = await load(`${path}.vue`)
   const app = createSSRApp({ ...component, setup: (p, ctx) => (state = component.setup(p, ctx)) }, props)
   for (const [name, value] of Object.entries(components)) app.component(name, value)
-  for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction', 'ProcurementCreate']) {
+  for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction', 'ProcurementCreate', 'CaseEvidence', 'CaseCreate']) {
     app.component(name, (_, { attrs, slots }) => h('div', [attrs.label, slots.header?.(), slots.default?.()]))
   }
   app.component('UAlert', (_, { attrs }) => {
@@ -362,4 +363,26 @@ test('shipping readers see packages but cannot plan without action grants', asyn
   assert.match((await show(['shipping.shipment.view', 'shipping.shipment.manage', 'shipping.shipment.create'])).html, /Tinjau paket/)
   const links = adminNavigation.find(e => e.label === 'Pengiriman').children
   assert.deepEqual(links.filter(l => hasPageAccess(l.permission, p => p === 'shipping.rate.view')).map(l => l.to), ['/shipping/shipping-rates'])
+})
+
+test('refund approvals and transfers respect both the action grant and the acting staff member', async () => {
+  const show = (status, flags, ...grants) => render('pages/finance/refunds/[number]', grants.map(a => 'refunds.refund.' + a),
+    { rows: { number: 'RFD-1', requested_amount: 100, items: [], evidence: [], status, ...flags }, params: { number: 'RFD-1' } })
+  assert.doesNotMatch((await show('UNDER_REVIEW', {}, 'view')).html, /Setujui|Tolak refund|Batalkan refund/)
+  assert.doesNotMatch((await show('UNDER_REVIEW', { requested_by_me: true }, 'review')).html, /Setujui|Tolak refund/)
+  const reviewer = await show('UNDER_REVIEW', {}, 'review')
+  reviewer.state.note.value = 'Approved'
+  reviewer.buttons.Setujui.onClick()
+  assert.equal(reviewer.state.action.value.url, '/api/v1/admin/refunds/RFD-1/reviews')
+  assert.doesNotMatch((await show('APPROVED', { reviewed_by_me: true }, 'execute')).html, /Mulai proses transfer/)
+  assert.match((await show('PROCESSING', { executor_is_me: true }, 'execute')).html, /Konfirmasi transfer/)
+})
+
+test('warehouse can inspect a received return and cannot authorize its resolution', async () => {
+  const show = (status, ...grants) => render('pages/returns/[number]', grants.map(a => 'returns.return.' + a),
+    { rows: { number: 'RTN-1', items: [], evidence: [], status }, params: { number: 'RTN-1' } })
+  assert.doesNotMatch((await show('RECEIVED', 'view')).html, /Simpan inspeksi/)
+  assert.match((await show('RECEIVED', 'inspect')).html, /Simpan inspeksi/)
+  assert.doesNotMatch((await show('ACCEPTED', 'inspect')).html, /Catat hasil resolusi/)
+  assert.match((await show('ACCEPTED', 'review', 'resolve')).html, /Catat hasil resolusi/)
 })

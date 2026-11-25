@@ -38,12 +38,12 @@ export const adminNavigation: NavEntry[] = [
     label: 'Commerce',
     icon: 'i-lucide-shopping-bag',
     children: [
-      { label: 'Pesanan & RTS', icon: 'i-lucide-package' },
+      { label: 'Pesanan & RTS', icon: 'i-lucide-package', to: '/orders', permission: 'orders.order.view' },
       { label: 'Kampanye Preorder', icon: 'i-lucide-calendar-clock' },
       { label: 'Batch Pengadaan', icon: 'i-lucide-boxes', to: '/procurement', permission: 'procurement.batch.view' },
       { label: 'Request Order', icon: 'i-lucide-message-square-quote', to: '/request-orders', permission: 'request_orders.request.view' },
       { label: 'Invoice', icon: 'i-lucide-file-text', to: '/invoices', permission: 'invoicing.invoice.view' },
-      { label: 'Return', icon: 'i-lucide-undo-2' }
+      { label: 'Return', icon: 'i-lucide-undo-2', to: '/returns', permission: 'returns.return.view' }
     ]
   },
   {
@@ -53,7 +53,7 @@ export const adminNavigation: NavEntry[] = [
     children: [
       { label: 'Pembayaran', icon: 'i-lucide-credit-card', to: '/finance/payments', permission: 'payments.payment.view' },
       { label: 'Rekonsiliasi', icon: 'i-lucide-clipboard-check', to: '/finance/reconciliations', permission: 'payments.reconciliation.view' },
-      { label: 'Refund', icon: 'i-lucide-hand-coins' },
+      { label: 'Refund', icon: 'i-lucide-hand-coins', to: '/finance/refunds', permission: 'refunds.refund.view' },
       { label: 'Rekening Tujuan', icon: 'i-lucide-landmark', to: '/finance/banks', permission: 'payments.bank.view' },
       { label: 'Laporan Transaksi', icon: 'i-lucide-chart-column', to: '/finance/transactions', permission: 'reporting.transaction.view' }
     ]
@@ -127,7 +127,8 @@ export const adminNavigation: NavEntry[] = [
     children: [
       { label: 'Pengguna', icon: 'i-lucide-user-cog', to: '/staff', permission: 'admin.staff.view' },
       { label: 'Role & Izin', icon: 'i-lucide-key-round', to: '/roles', permission: 'admin.roles.view' },
-      { label: 'Audit Log', icon: 'i-lucide-scroll-text' },
+      { label: 'Audit Log', icon: 'i-lucide-scroll-text', to: '/audit', permission: 'admin.audit.view' },
+      { label: 'Pengaturan Toko', icon: 'i-lucide-settings', to: '/shop-settings', permission: 'admin.setting.view' },
       { label: 'Integrasi', icon: 'i-lucide-plug' }
     ]
   }

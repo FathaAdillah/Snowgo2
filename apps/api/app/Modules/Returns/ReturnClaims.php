@@ -2,6 +2,7 @@
 
 namespace App\Modules\Returns;
 
+use App\Modules\Administration\OperationalSettings;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
@@ -29,7 +30,7 @@ final class ReturnClaims
     {
         $o = DB::table('orders')->where('number', $d['order_number'])->when($owner !== null, fn ($q) => $q->where('user_id', $owner))->lockForUpdate()->first() ?? abort(404);
         $s = DB::table('shipments')->where(['order_id' => $o->id, 'number' => $d['shipment_number']])->lockForUpdate()->first() ?? abort(404);
-        if ($s->status !== 'DELIVERED' || ! $s->delivered_at || now()->gt(Carbon::parse($s->delivered_at)->addHours(config('aftersales.return_window_hours')))) {
+        if ($s->status !== 'DELIVERED' || ! $s->delivered_at || now()->gt(Carbon::parse($s->delivered_at)->addHours(OperationalSettings::value('returns.window_hours')))) {
             throw new ApiProblem(409, 'RETURN_WINDOW_CLOSED', 'Shipment is outside its return window.');
         }
         $number = 'RTN-'.Str::ulid();
@@ -67,6 +68,7 @@ final class ReturnClaims
             'REJECT' => ['UNDER_REVIEW', 'REJECTED'],
             'GIVE_INSTRUCTIONS' => ['APPROVED', 'AWAITING_SHIPMENT'],
             'WAIVE_SHIPMENT' => ['APPROVED', 'INSPECTING'],
+            default => throw self::invalid(),
         };
         if ($r->status !== $from) {
             throw self::invalid();
@@ -96,6 +98,6 @@ final class ReturnClaims
     {
         app(Journal::class)->transition(Subject::ReturnCase, $id, 'status', $from, $to, (string) Str::ulid(), $actor);
         app(Journal::class)->audit($event, Subject::ReturnCase, $id, $actor, $from ? ['status' => $from] : null, ['status' => $to]);
-        app(Outbox::class)->record($event,'return',$id,['status' => $to]);
+        app(Outbox::class)->record($event, 'return', $id, ['status' => $to]);
     }
 }
