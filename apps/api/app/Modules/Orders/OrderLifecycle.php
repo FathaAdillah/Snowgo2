@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 final class OrderLifecycle
 {
     /** @param array<string,string> $input */
-    public function apply(string $number, ?int $owner, int $actor, string $action, array $input): void
+    public function apply(string $number, ?int $owner, ?int $actor, string $action, array $input): void
     {
         DB::transaction(function () use ($number, $owner, $actor, $action, $input) {
             $order = OrderDirectory::scope($owner)->where('number', $number)->lockForUpdate()->first() ?? abort(404);

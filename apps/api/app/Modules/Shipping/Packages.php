@@ -32,7 +32,7 @@ final class Packages
         unset($s->id);
         $s->shipped_at = $s->shipped_at ? Carbon::parse($s->shipped_at)->toISOString() : null;
         $s->items = DB::table('shipment_items as l')->join('order_items as i', 'i.id', '=', 'l.order_item_id')->where('l.shipment_id', $id)->get(['l.public_id as id', 'i.public_id as order_item_id', 'l.qty', 'i.product_snapshot as name']);
-        $s->tracking = DB::table('tracking_events')->where('shipment_id', $id)->orderBy('id')->get(['normalized_status as status', 'occurred_at'])->map(fn ($e) => ['status' => $e->status, 'occurred_at' => Carbon::parse($e->occurred_at)->toISOString()]);
+        $s->tracking = DB::table('tracking_events')->where('shipment_id', $id)->where('applied', true)->orderBy('occurred_at')->orderBy('id')->get(['normalized_status as status', 'occurred_at'])->map(fn ($e) => ['status' => $e->status, 'occurred_at' => Carbon::parse($e->occurred_at)->toISOString()]);
 
         return (array) $s;
     }

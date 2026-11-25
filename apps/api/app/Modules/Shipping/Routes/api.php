@@ -23,6 +23,7 @@ Route::prefix('admin')->middleware([StaffOrigin::class, 'auth:web', EnsureIdenti
     Route::get('shipments', [ShipmentController::class, 'index'])->middleware(['can:shipping.shipment.view'])->name('shipment.index');
     Route::get('shipments/{number}', [ShipmentController::class, 'show'])->middleware(['can:shipping.shipment.view'])->name('shipment.show');
     Route::post('shipments', [ShipmentController::class, 'create'])->middleware(['can:shipping.shipment.view', 'can:shipping.shipment.manage', 'can:shipping.shipment.create'])->name('shipment.create');
+    Route::post('shipments/{number}/tracking-events', [ShipmentController::class, 'track'])->middleware(['can:shipping.shipment.view', 'can:shipping.tracking.manage'])->name('shipment.track');
     Route::post('shipments/{number}/dispatches', [ShipmentController::class, 'dispatch'])->middleware(['can:shipping.shipment.view', 'can:shipping.shipment.manage', 'can:shipping.shipment.dispatch'])->name('shipment.dispatch');
     Route::post('shipments/{number}/cancellations', [ShipmentController::class, 'cancel'])->middleware(['can:shipping.shipment.view', 'can:shipping.shipment.manage', 'can:shipping.shipment.cancel'])->name('shipment.cancel');
     Route::post('orders/{number}/packing-events', [ShipmentController::class, 'pack'])->middleware(['can:shipping.shipment.view', 'can:orders.packing.manage'])->name('shipment.pack');

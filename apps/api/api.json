@@ -31931,6 +31931,11 @@
                             "enum": [
                                 "PENDING",
                                 "PICKED_UP",
+                                "IN_TRANSIT",
+                                "OUT_FOR_DELIVERY",
+                                "FAILED",
+                                "RETURNED",
+                                "DELIVERED",
                                 "CANCELLED"
                             ]
                         }
@@ -32508,6 +32513,223 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/admin/shipments/{number}/tracking-events": {
+            "post": {
+                "operationId": "shipping.shipment.track",
+                "tags": [
+                    "Shipment"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "IN_TRANSIT",
+                                            "OUT_FOR_DELIVERY",
+                                            "DELIVERED",
+                                            "FAILED",
+                                            "RETURNED"
+                                        ]
+                                    },
+                                    "occurred_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "status",
+                                    "occurred_at"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "method": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "packing_status": {
+                                                    "type": "string"
+                                                },
+                                                "carrier_label": {
+                                                    "type": "string"
+                                                },
+                                                "service_code": {
+                                                    "type": "string"
+                                                },
+                                                "tracking_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "shipping_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "shipped_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "order_item_id",
+                                                            "name",
+                                                            "qty"
+                                                        ]
+                                                    }
+                                                },
+                                                "tracking": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "occurred_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "status",
+                                                            "occurred_at"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "method",
+                                                "status",
+                                                "packing_status",
+                                                "carrier_label",
+                                                "service_code",
+                                                "tracking_number",
+                                                "shipping_amount",
+                                                "shipped_at",
+                                                "items",
+                                                "tracking"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }

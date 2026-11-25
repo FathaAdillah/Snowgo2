@@ -1477,6 +1477,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/shipments/{number}/tracking-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shipping.shipment.track"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/shipping-quotes": {
         parameters: {
             query?: never;
@@ -12602,7 +12618,7 @@ export interface operations {
                 from?: string;
                 page?: number;
                 per_page?: number;
-                status?: "PENDING" | "PICKED_UP" | "CANCELLED";
+                status?: "PENDING" | "PICKED_UP" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "FAILED" | "RETURNED" | "DELIVERED" | "CANCELLED";
                 to?: string;
             };
             header?: never;
@@ -12856,6 +12872,72 @@ export interface operations {
                 "application/json": {
                     service_code: string;
                     tracking_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.track": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    note?: string | null;
+                    /** Format: date-time */
+                    occurred_at: string;
+                    /** @enum {string} */
+                    status: "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "FAILED" | "RETURNED";
                 };
             };
         };

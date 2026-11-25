@@ -99,7 +99,7 @@ final class ChargeConsents
         $fees = DB::table('order_charge_consents')->where(['order_id' => $item->order_id, 'scope' => $scope, 'status' => 'ACCEPTED'])
             ->selectRaw("(lines->0->>'start')::int AS coverage_start, (lines->0->>'qty')::int AS qty");
         $blocks = DB::table('shipment_items as l')->join('shipments as s', 's.id', '=', 'l.shipment_id')
-            ->where(['l.order_item_id' => $item->id, 's.status' => 'PICKED_UP'])->select('l.coverage_start', 'l.qty')
+            ->where('l.order_item_id', $item->id)->whereNotNull('s.shipped_at')->select('l.coverage_start', 'l.qty')
             ->unionAll($fees)->orderBy('coverage_start')->get();
         foreach ($blocks as $block) {
             if ($start + $qty <= $block->coverage_start) {

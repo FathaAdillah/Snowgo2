@@ -6,7 +6,10 @@ use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InitialInvoices;
 use App\Modules\Orders\CheckoutOrders;
+use App\Modules\Orders\CompleteDeliveredOrders;
+use App\Modules\Shipping\FakeTrackingProvider;
 use App\Modules\Shipping\Packages;
+use App\Modules\Shipping\PollTracking;
 use App\Support\Http\ApiProblem;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
@@ -151,4 +154,61 @@ it('guards archive separately from updates and rejects duplicate couriers', func
     $this->patchJson('/api/v1/admin/couriers/'.$id, ['active' => false], ['Idempotency-Key' => 'archive'])->assertForbidden();
     $this->getJson('/api/v1/admin/couriers')->assertOk();
     $this->getJson('/api/v1/admin/shipments')->assertForbidden();
+});
+
+it('recovers failed tracking, ignores provider replays and completes only after the last delivery window', function () {
+    ($this->login)($this->buyer);
+    app(CustomerCart::class)->set($this->buyer->id, $this->rts);
+    [$body] = ($this->finalQuote)($this->body);
+    ($this->confirm)($body)->assertCreated();
+    $o = DB::table('orders')->sole();
+    DB::transaction(function () use ($o) {
+        app(StockReservations::class)->commit($o->id, 1);
+        DB::table('orders')->where('id', $o->id)->update(['status' => 'CONFIRMED', 'payment_status' => 'PAID']);
+        DB::table('invoices')->update(['status' => 'PAID']);
+    });
+    ($this->staffSession)();
+    $p = ($this->plan)();
+    $p['items'][0]['qty'] = 2;
+    $n = ($this->write)('admin/shipments', $p)->assertOk()->json('data.number');
+    ($this->pack)($n, $o->number);
+    ($this->write)("admin/shipments/$n/dispatches", ['service_code' => 'REG', 'tracking_number' => 'ABC'])->assertOk();
+    $this->travel(5)->minutes();
+    $failedAt = now();
+    $track = "admin/shipments/$n/tracking-events";
+    ($this->write)($track, ['status' => 'FAILED', 'occurred_at' => $failedAt->toISOString(), 'note' => 'Penerima belum tersedia'])->assertOk()->assertJsonPath('data.status', 'FAILED');
+    $this->travel(1)->minutes();
+    $events = [
+        ['id' => 'old', 'status' => 'delivered', 'at' => $failedAt->copy()->subMinute()->toISOString()],
+        ['id' => 'x', 'status' => 'unknown-code', 'at' => now()->toISOString()],
+        ['id' => 'retry', 'status' => 'transit', 'at' => now()->toISOString()],
+        ['id' => 'retry', 'status' => 'transit', 'at' => now()->toISOString()],
+    ];
+    $poll = app(PollTracking::class);
+    $carrier = DB::table('shipments')->sole()->carrier_id;
+    $poll->run(new FakeTrackingProvider(['ABC' => ['events' => [], 'retry_after' => 10]]), $carrier);
+    $fake = new FakeTrackingProvider(['ABC' => ['events' => $events]]);
+    $poll->run($fake, $carrier);
+    expect(DB::table('shipments')->sole()->status)->toBe('FAILED');
+    $this->travel(11)->seconds();
+    $poll->run($fake, $carrier);
+    $poll->run($fake, $carrier);
+    expect(DB::table('shipments')->sole()->status)->toBe('IN_TRANSIT')
+        ->and(DB::table('tracking_events')->where('source', 'PROVIDER')->count())->toBe(3);
+    $delivered = ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()];
+    ($this->write)($track, $delivered, 'delivery')->assertOk();
+    ($this->write)($track, $delivered, 'delivery')->assertOk();
+    expect(DB::table('order_items')->sole()->delivered_qty)->toBe(2)
+        ->and(DB::table('orders')->sole()->fulfillment_status)->toBe('DELIVERED');
+    app(CompleteDeliveredOrders::class)->run();
+    expect(DB::table('orders')->sole()->status)->toBe('CONFIRMED');
+    $this->travel(73)->hours();
+    DB::table('order_transition_holds')->insert(['order_id' => $o->id, 'kind' => 'DISPUTE', 'source_ref' => 'test']);
+    app(CompleteDeliveredOrders::class)->run();
+    expect(DB::table('orders')->sole()->status)->toBe('CONFIRMED');
+    DB::table('order_transition_holds')->where('source_ref', 'test')->delete();
+    app(CompleteDeliveredOrders::class)->run();
+    app(CompleteDeliveredOrders::class)->run();
+    expect(DB::table('orders')->sole()->status)->toBe('COMPLETED')
+        ->and(DB::table('outbox_events')->where('event_type', 'OrderCompleted')->count())->toBe(1);
 });

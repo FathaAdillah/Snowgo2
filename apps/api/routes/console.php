@@ -7,6 +7,7 @@ use App\Modules\Inventory\StockExpiry;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InvoiceDocuments;
 use App\Modules\Orders\ChargeConsents;
+use App\Modules\Orders\CompleteDeliveredOrders;
 use App\Modules\Orders\OrderExpiry;
 use App\Modules\Payments\PaymentFlow;
 use App\Modules\Payments\Settlement;
@@ -98,3 +99,5 @@ Schedule::call(fn () => DB::table('email_verification_tokens')->where('expires_a
     ->name('prune-email-verification-tokens')->hourly();
 
 Schedule::call(fn () => ChargeConsents::expire())->name('orders:expire-charges')->everyMinute()->withoutOverlapping();
+
+Schedule::call(fn () => app(CompleteDeliveredOrders::class)->run())->name('orders:complete-delivered')->hourly()->withoutOverlapping();
