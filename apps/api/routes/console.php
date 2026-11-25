@@ -84,7 +84,8 @@ Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=',
 Schedule::command('auth:clear-resets')->hourly();
 Schedule::call(function () {
     DB::table('checkout_previews')->where('expires_at', '<', now()->subDay())->delete();
-    DB::table('shipping_quotes')->whereNull('used_at')->where('expires_at', '<', now()->subDay())->delete();
+    DB::table('shipping_quotes')->whereNull('used_at')->where('expires_at', '<', now()->subDay())
+        ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('order_charge_consents')->whereColumn('quote_id', 'shipping_quotes.id'))->delete();
 })->name('prune-checkout-quotes')->hourly();
 Schedule::call(fn () => DB::table('staff_email_changes')->where('expires_at', '<=', now())->delete())
     ->name('prune-staff-email-changes')->hourly();

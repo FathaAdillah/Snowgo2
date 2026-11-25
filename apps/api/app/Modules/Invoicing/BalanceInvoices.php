@@ -81,6 +81,16 @@ final class BalanceInvoices
         return $n * intdiv($sum, $qty) + min($n, $sum % $qty);
     }
 
+    public static function balanceForRange(object $item, int $start, int $end): int
+    {
+        $allocated = fn (int $sum): int => self::prefix($sum, $item->qty, $end) - self::prefix($sum, $item->qty, $start);
+
+        return ($end - $start) * $item->unit_amount
+            - $allocated($item->initial_line_amount ?? $item->initial_unit_amount * $item->qty)
+            - $allocated($item->discount_amount)
+            + $allocated($item->tax_amount - $item->initial_tax);
+    }
+
     /** @param array<string,mixed> $input */
     public static function correct(object $order, int $actor, array $input): string
     {

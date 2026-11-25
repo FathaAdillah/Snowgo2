@@ -51,6 +51,11 @@ final class InvoiceLifecycle
             }
         }
         if ($action === 'issue') {
+            if ($invoice->purpose === 'ADDITIONAL_CHARGE' && DB::scalar("WITH RECURSIVE revisions AS (
+                SELECT id,replaces_invoice_id FROM invoices WHERE id=? UNION ALL SELECT i.id,i.replaces_invoice_id FROM invoices i JOIN revisions r ON r.replaces_invoice_id=i.id
+            ) SELECT EXISTS(SELECT FROM revisions r JOIN order_charge_consents c ON c.invoice_id=r.id JOIN shipping_quotes q ON q.id=c.quote_id JOIN shipments s ON s.id=q.shipment_id WHERE s.status='CANCELLED')", [$invoice->id])) {
+                throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Cannot reissue a shipping charge for a cancelled package.');
+            }
             if ($invoice->purpose === 'BALANCE') {
                 if ($input['purpose'] !== 'BALANCE' || $invoice->status !== 'VOID' || DB::table('invoices')->where('replaces_invoice_id', $invoice->id)->exists()) {
                     throw BalanceInvoices::invalid();

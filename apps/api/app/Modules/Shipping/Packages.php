@@ -6,6 +6,7 @@ use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Inventory\StockReservations;
+use App\Modules\Invoicing\BalanceInvoices;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -85,13 +86,33 @@ final class Packages
             throw self::quantity();
         }
         $n = sprintf('SHP-%s-%06d', now()->format('Ymd'), DB::scalar("SELECT nextval('shipment_number_seq')"));
-        $s = DB::table('shipments')->insertGetId(['number' => $n, 'order_id' => $o->id, 'warehouse_id' => $warehouse->id, 'weight_g' => $d['measured_weight_g'] ?? $weight, 'rate_id' => $r->id, 'service_id' => $r->service_id, 'carrier_id' => $r->carrier_id, 'carrier_label' => $selected->carrier_label_snapshot ?? $r->carrier_label, 'service_code' => $d['service_code'], 'shipping_amount' => $selected->amount ?? ($r->base_amount + $kg * $r->amount_per_kg), 'eta_min_days' => $selected->estimated_days_from ?? $r->eta_min_days, 'eta_max_days' => $selected->estimated_days_to ?? $r->eta_max_days]);
+        $amount = $selected ? self::checkoutFreightShare($o->id, $selected->amount, $rows) : $r->base_amount + $kg * $r->amount_per_kg;
+        $s = DB::table('shipments')->insertGetId(['number' => $n, 'order_id' => $o->id, 'warehouse_id' => $warehouse->id, 'weight_g' => $d['measured_weight_g'] ?? $weight, 'rate_id' => $r->id, 'service_id' => $r->service_id, 'carrier_id' => $r->carrier_id, 'carrier_label' => $selected->carrier_label_snapshot ?? $r->carrier_label, 'service_code' => $d['service_code'], 'shipping_amount' => $amount, 'eta_min_days' => $selected->estimated_days_from ?? $r->eta_min_days, 'eta_max_days' => $selected->estimated_days_to ?? $r->eta_max_days]);
         foreach ($rows as $row) {
             DB::table('shipment_items')->insert(['shipment_id' => $s] + $row);
         }
         self::record($s, 'status', null, 'PENDING', 'ShipmentCreated', $actor);
 
         return $n;
+    }
+
+    /** @param list<array{order_item_id:int,public_id:string,coverage_start:int,qty:int}> $rows */
+    private static function checkoutFreightShare(int $order, int $amount, array $rows): int
+    {
+        $units = DB::table('order_items')->where('order_id', $order)->orderBy('id')->pluck('qty', 'id');
+        $count = (int) $units->sum();
+        $offset = $share = 0;
+        $byItem = array_column($rows, null, 'order_item_id');
+        foreach ($units as $id => $qty) {
+            if (isset($byItem[$id])) {
+                $line = $byItem[$id];
+                $start = $offset + $line['coverage_start'];
+                $share += intdiv($amount, $count) * $line['qty'] + min($line['qty'], max(0, $amount % $count - $start));
+            }
+            $offset += $qty;
+        }
+
+        return $share;
     }
 
     /** @return array{object,object} */
@@ -142,7 +163,10 @@ final class Packages
             return $number;
         }
         if ($action === 'cancel') {
-            if (DB::table('shipping_quotes')->where('shipment_id', $s->id)->whereNotNull('used_at')->exists()) {
+            if (DB::scalar("WITH RECURSIVE billed AS (
+                SELECT i.id,i.status FROM invoices i JOIN order_charge_consents c ON c.invoice_id=i.id JOIN shipping_quotes q ON q.id=c.quote_id WHERE q.shipment_id=?
+                UNION ALL SELECT i.id,i.status FROM invoices i JOIN billed b ON i.replaces_invoice_id=b.id
+            ) SELECT EXISTS(SELECT FROM billed WHERE status!='VOID')", [$s->id])) {
                 throw self::invalid();
             }
             $reason = DB::table('reason_codes')->where(['domain' => 'shipping', 'code' => $d['reason_code'], 'active' => true])->sharedLock()->value('id') ?? throw self::invalid();
@@ -178,12 +202,15 @@ final class Packages
             if (! $rts && $i->term === 'DEPOSIT') {
                 $cursor = $l->coverage_start;
                 foreach (DB::table('invoice_items as l')->join('invoices as v', 'v.id', '=', 'l.invoice_id')->where(['l.order_item_id' => $i->id, 'v.purpose' => 'BALANCE', 'v.status' => 'PAID'])->whereNotNull('l.coverage_start')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.covered_qty']) as $b) {
-                    if ($b->coverage_start > $cursor) {
-                        break;
+                    if ($b->coverage_start > $cursor && BalanceInvoices::balanceForRange($i, $cursor, min($end, $b->coverage_start)) > 0) {
+                        throw self::invalid();
                     }
                     $cursor = max($cursor, $b->coverage_start + $b->covered_qty);
+                    if ($cursor >= $end) {
+                        break;
+                    }
                 }
-                if ($cursor < $end) {
+                if ($cursor < $end && BalanceInvoices::balanceForRange($i, $cursor, $end) > 0) {
                     throw self::invalid();
                 }
             }
