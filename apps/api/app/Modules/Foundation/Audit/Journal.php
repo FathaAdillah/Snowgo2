@@ -24,10 +24,11 @@ final class Journal
         ]);
     }
 
-    public function transition(Subject $subject, int $id, string $dimension, ?string $from, string $to, string $eventKey, ?int $actorId = null, ?int $reasonId = null): void
+    public function transition(Subject $subject, int $id, string $dimension, ?string $from, string $to, string $eventKey, ?int $actorId = null, ?int $reasonId = null): int
     {
         $this->requireTransaction();
-        DB::table('status_histories')->insert([
+
+        return DB::table('status_histories')->insertGetId([
             'subject_type' => $subject->value, 'subject_id' => $id, 'dimension' => $dimension,
             'from_status' => $from, 'to_status' => $to, 'event_key' => $eventKey,
             'actor_id' => $actorId, 'reason_id' => $reasonId,

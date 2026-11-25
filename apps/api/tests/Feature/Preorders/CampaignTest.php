@@ -128,6 +128,19 @@ it('keeps quotas above active allocations and emits ETA changes only once', func
     $this->getJson('/api/v1/preorders/po')->assertNotFound();
 });
 
+it('retains staff notes with their exact transition, including replay with no orders', function () {
+    $staff = ($this->asStaff)('order_staff');
+    $url = "$this->admin/PO-1/actions/CLOSE";
+    $key = ['Idempotency-Key' => 'close'];
+    $input = ['note' => 'Internal supplier note'];
+    $this->postJson($url, $input, $key)->assertOk();
+    $this->postJson($url, $input, $key)->assertOk();
+    $history = DB::table('status_histories')->where(['subject_type' => 'preorder_campaign', 'to_status' => 'CLOSED', 'actor_id' => $staff->id])->sole();
+    $this->assertDatabaseCount('preorder_transition_notes', 1);
+    $this->assertDatabaseHas('preorder_transition_notes', ['history_id' => $history->id] + $input);
+    $this->getJson('/api/v1/preorders/po')->assertOk()->assertDontSee('Internal supplier note');
+});
+
 it('confirms only paid initial deposits, only once, without releasing historical quota or touching physical stock', function () {
     $number = ($this->place)();
     $order = DB::table('orders')->where('number', $number)->value('id');

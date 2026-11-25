@@ -42,7 +42,7 @@ final class CampaignWindow
                 app(OrderLifecycle::class)->apply($order, null, $actor, 'CANCEL', $input);
             }
         }
-        $this->transition($c, $target, $actor, $reason);
+        $this->transition($c, $target, $actor, $reason, $input['note'] ?? null);
     }
 
     public function advanceDue(): int
@@ -86,11 +86,14 @@ final class CampaignWindow
         DB::table('preorder_campaigns')->where('id', $campaign)->update(['first_received_at' => DB::raw('clock_timestamp()')]);
     }
 
-    private function transition(object $c, string $target, ?int $actor, ?int $reason = null): void
+    private function transition(object $c, string $target, ?int $actor, ?int $reason = null, ?string $note = null): void
     {
         DB::table('preorder_campaigns')->where('id', $c->id)->update(['status' => $target, 'updated_at' => now()]);
         $journal = app(Journal::class);
-        $journal->transition(Subject::Campaign, $c->id, 'status', $c->status, $target, 'campaign:'.$target, $actor, $reason);
+        $history = $journal->transition(Subject::Campaign, $c->id, 'status', $c->status, $target, 'campaign:'.$target, $actor, $reason);
+        if ($note !== null) {
+            DB::table('preorder_transition_notes')->insert(['history_id' => $history, 'note' => $note]);
+        }
         $journal->audit('PreorderStatusChanged', Subject::Campaign, $c->id, $actor, ['status' => $c->status], ['status' => $target]);
         app(Outbox::class)->record('PreorderStatusChanged', 'preorder_campaign', $c->id, ['number' => $c->number, 'status' => $target]);
     }
