@@ -222,7 +222,11 @@ Jika kelas pajak produk diarsipkan, checkout ditolak sampai staf menetapkan kela
 ```sh
 docker compose exec api php artisan migrate --force
 docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose restart scheduler
+docker compose exec api php artisan orders:reconcile-expired-stock
 ```
+
+Perintah rekonsiliasi aman diulang: hanya pesanan RTS lama yang belum dibayar dan seluruh reservasinya sudah `EXPIRED` yang ditutup; tidak mengubah saldo stok. Kedaluwarsa baru diproses atomik oleh scheduler.
 
 Tidak perlu build frontend: belum ada halaman pesanan baru. Seeder tidak menambah hak ke role lama. Di **Role & Izin**, berikan `orders.order.view` untuk membaca; untuk membatalkan atau menyelesaikan, tambahkan `orders.order.manage` dan masing-masing `orders.order.cancel` atau `orders.order.complete`. Superadmin tetap wajib login. Untuk pembatalan pelanggan, buat minimal satu kode alasan aktif dengan domain `orders` melalui API referensi.
 

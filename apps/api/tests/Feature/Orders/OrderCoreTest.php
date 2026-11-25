@@ -118,6 +118,34 @@ it('requires final delivery of non-cancelled units, resolved invoices and no dis
     expect(DB::table('outbox_events')->where('event_type', 'OrderCompleted')->count())->toBe(1);
 });
 
+it('expires the order, invoice and stock in the same leased operation', function () {
+    $number = ($this->place)();
+    DB::table('stock_expiry_work')->update(['due_at' => now()->subSecond()]);
+    $this->artisan('inventory:expire-holds')->expectsOutput('Expired RTS orders: 1')->assertSuccessful();
+    $this->artisan('inventory:expire-holds')->expectsOutput('Expired RTS orders: 0')->assertSuccessful();
+    $this->getJson('/api/v1/orders?status=EXPIRED')->assertOk()->assertJsonPath('data.0.number', $number);
+    $this->getJson("/api/v1/orders/$number")->assertOk()->assertJsonPath('data.history.1.to_status', 'EXPIRED');
+    $this->assertDatabaseHas('invoices', ['status' => 'VOID']);
+    $this->assertDatabaseHas('inventory_levels', ['reserved' => 0, 'available' => 12]);
+    expect(DB::table('outbox_events')->where('event_type', 'OrderExpired')->count())->toBe(1);
+});
+
+it('repairs already expired checkout holds without releasing stock twice or closing a paid invoice', function () {
+    ($this->place)();
+    $repair = fn (int $expected) => $this->artisan('orders:reconcile-expired-stock')->expectsOutput("Reconciled expired RTS orders: $expected")->assertSuccessful();
+    $repair(0);
+    DB::table('stock_reservations')->update(['status' => 'EXPIRED', 'released_qty' => DB::raw('qty')]);
+    DB::table('stock_expiry_work')->delete();
+    DB::table('invoices')->update(['status' => 'PAID']);
+    $repair(0);
+    DB::table('invoices')->update(['status' => 'ISSUED']);
+    $repair(1);
+    $repair(0);
+    $this->assertDatabaseHas('orders', ['status' => 'EXPIRED']);
+    $this->assertDatabaseHas('invoices', ['status' => 'VOID']);
+    $this->assertDatabaseMissing('outbox_events', ['event_type' => 'StockReleased']);
+});
+
 it('separates staff read, PII, cancel and complete permissions even on replay and scopes support activity', function () {
     $number = ($this->place)();
     $staff = ($this->asStaff)();

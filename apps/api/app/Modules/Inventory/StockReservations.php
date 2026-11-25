@@ -6,6 +6,7 @@ use App\Modules\Catalog\ProductDirectory;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
+use App\Modules\Orders\OrderExpiry;
 use App\Modules\Orders\StockOwner;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Collection;
@@ -114,7 +115,7 @@ final class StockReservations
     private function activeCommand(int $orderId, string $action, ?int $capture = null, ?string $lease = null): bool
     {
         return DB::transaction(function () use ($orderId, $action, $capture, $lease) {
-            StockOwner::lock($orderId);
+            $order = StockOwner::lock($orderId);
             $holds = $this->holds($orderId);
             $this->lockLevels($holds);
             $work = DB::table('stock_expiry_work')->where('order_id', $orderId)->lockForUpdate()->first();
@@ -124,6 +125,9 @@ final class StockReservations
             }
             if ($holds->isEmpty() || ($action === 'COMMIT' && ($capture < 1 || $expired))) {
                 throw $this->invalid();
+            }
+            if ($action === 'EXPIRE' && ! app(OrderExpiry::class)->recordLocked($order)) {
+                return false;
             }
             foreach ($holds as $hold) {
                 $key = match ($action) {

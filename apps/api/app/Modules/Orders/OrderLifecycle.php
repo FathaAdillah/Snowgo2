@@ -35,7 +35,9 @@ final class OrderLifecycle
                     || $lines->contains(fn ($line) => $line->shipped_qty > 0) || app(StockReservations::class)->underProofReview($id)) {
                     throw $this->invalid();
                 }
-                $invoices->voidUnpaid($id, $actor);
+                if (! $invoices->voidUnpaid($id, $actor)) {
+                    throw $this->invalid();
+                }
                 if ($order->selling_method === 'READY_TO_SHIP') {
                     app(StockReservations::class)->release($id);
                 } elseif ($order->selling_method === 'PREORDER') {
