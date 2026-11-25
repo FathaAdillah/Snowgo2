@@ -22,7 +22,7 @@ final class OrderDirectory
     public static function details(?int $owner, bool $address, bool $totals = false): Builder
     {
         $rows = self::summaries($owner)->selectRaw(<<<'SQL'
-            (SELECT json_agg(json_build_object('id',i.public_id,'sku',i.sku_snapshot,'name',i.product_snapshot,'variant',i.variant_snapshot,
+            (SELECT json_agg(json_build_object('id',i.public_id,'sku',i.sku_snapshot,'name',i.product_snapshot,'variant',coalesce(i.quotation_options,i.variant_snapshot),
                 'qty',i.qty,'unit_amount',i.unit_amount,'received_qty',i.received_qty,'shipped_qty',i.shipped_qty,'cancelled_qty',i.cancelled_qty) ORDER BY i.id)
                 FROM order_items i WHERE i.order_id=o.id) AS items,
             (SELECT json_agg(json_build_object('dimension',h.dimension,'to_status',h.to_status,'occurred_at',h.occurred_at) ORDER BY h.id)

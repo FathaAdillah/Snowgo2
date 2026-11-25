@@ -795,6 +795,8 @@ Penawaran berversi. Freeze pada SENT; versi baru menutup versi lama
 
 **Constraint dan indeks tambahan** · U(request_order_id,version); PU(request_order_id WHERE status='ACCEPTED'); PU(request_order_id WHERE status='SENT'); C(version>0).
 
+Satu draf kerja per request dapat diedit selagi versi SENT masih berlaku. Nomor versi dialokasikan di bawah lock request. `total_amount` adalah subtotal barang dalam IDR; estimasi ongkir bukan kewajiban pembayaran. `acceptance_hash` menyimpan fingerprint alamat dan catatan agar intent sama mengembalikan referensi konversi yang sama. Versi dan baris yang dikirim tidak dapat ditulis ulang.
+
 ### DB-REQ-005 — quotation_items
 
 Snapshot item penawaran. Kurs hanya informasional; settlement IDR

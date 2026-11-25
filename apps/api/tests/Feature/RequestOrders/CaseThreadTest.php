@@ -141,8 +141,14 @@ it('validates item input, assignment and review edges without partial writes', f
 it('preserves operational history and accepts an empty rollback and reapply', function () {
     $migration = require app_path('Modules/RequestOrders/Database/Migrations/2026_11_25_075730_create_request_case_threads.php');
     DB::transaction(function () use ($migration) {
+        $lines = require app_path('Modules/Orders/Database/Migrations/2026_11_25_085108_link_order_items_to_quotations.php');
+        $quotes = require app_path('Modules/RequestOrders/Database/Migrations/2026_11_25_085107_create_quotations.php');
+        $lines->down();
+        $quotes->down();
         $migration->down();
         $migration->up();
+        $quotes->up();
+        $lines->up();
     });
     $number = ($this->submitCase)();
     $url = "$this->api/$number/messages";
