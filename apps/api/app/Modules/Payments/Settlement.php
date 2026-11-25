@@ -62,7 +62,7 @@ final class Settlement
         DB::table('inventory_levels')->whereIn('id', DB::table('stock_reservations')->whereIn('order_item_id', $items)->select('level_id'))->orderBy('id')->lockForUpdate()->get('id');
         DB::table('bank_accounts')->where('id', $p->bank_account_id)->lockForUpdate()->firstOrFail();
         $ref = ['bank_account_id' => $p->bank_account_id, 'bank_tx_ref' => $reference];
-        if (DB::table('payments')->where($ref)->exists() || DB::table('payment_reconciliations')->where($ref)->when($recovery, fn ($q) => $q->where('id', '!=', $recovery->id))->exists()) {
+        if (DB::table('payments')->where($ref)->exists() || DB::table('payment_reconciliations')->where($ref)->where('status', '!=', 'REJECTED')->when($recovery, fn ($q) => $q->where('id', '!=', $recovery->id))->exists()) {
             throw self::conflict();
         }
         foreach ($rows as $r) {

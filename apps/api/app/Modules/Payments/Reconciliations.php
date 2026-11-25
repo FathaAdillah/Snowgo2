@@ -30,7 +30,7 @@ final class Reconciliations
         [$p,$orders] = PaymentFlow::lock($number, null);
         DB::table('bank_accounts')->where('id', $p->bank_account_id)->lockForUpdate()->firstOrFail();
         $ref = ['bank_account_id' => $p->bank_account_id, 'bank_tx_ref' => mb_strtoupper(trim($input['bank_tx_ref']))];
-        if (DB::table('payments')->where($ref)->exists() || DB::table('payment_reconciliations')->where($ref)->exists()) {
+        if (DB::table('payments')->where($ref)->exists() || DB::table('payment_reconciliations')->where($ref)->where('status', '!=', 'REJECTED')->exists()) {
             throw Settlement::conflict();
         }
         $id = DB::table('payment_reconciliations')->insertGetId($ref + ['payment_id' => $p->id, 'order_id' => $orders->firstOrFail()->id, 'handled_by' => $actor, 'amount' => $input['received_amount'], 'reason_id' => self::reason($input['reason_code'])]);
@@ -46,7 +46,7 @@ final class Reconciliations
         $action = $input['decision'];
         if (in_array($action, ['APPROVE', 'REJECT'], true)) {
             abort_if($actor === $r->handled_by, 403);
-            if (! in_array($r->status, ['OPEN', 'REJECTED'], true)) {
+            if ($r->status !== 'OPEN') {
                 throw PaymentFlow::invalid();
             }
             $status = $action === 'APPROVE' ? 'APPROVED' : 'REJECTED';

@@ -72,7 +72,7 @@ async function saved() {
       <p>{{ selected.payment_number }} · {{ invoiceMoney(selected.amount) }} · {{ selected.bank_tx_ref }} · {{ selected.reason_code }}</p>
       <p>{{ selected.review_note }} {{ selected.decision_note }} {{ selected.refund_transfer_ref }}</p>
       <div class="flex flex-wrap items-end gap-2">
-        <template v-if="(selected.status === 'OPEN' || selected.status === 'REJECTED') && !selected.opened_by_me && can('payments.reconciliation.review')">
+        <template v-if="selected.status === 'OPEN' && !selected.opened_by_me && can('payments.reconciliation.review')">
           <UFormField label="Catatan pemeriksa">
             <UInput v-model="note" />
           </UFormField>
