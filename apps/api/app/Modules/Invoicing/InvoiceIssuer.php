@@ -36,6 +36,10 @@ final class InvoiceIssuer
         $journal->audit('InvoiceIssued', Subject::Invoice, $id, $actor, null, ['status' => 'ISSUED', 'amount_idr' => $amounts['total_amount']]);
         app(Outbox::class)->record('InvoiceIssued', 'invoice', $id, ['number' => $number]);
 
+        if ($amounts['total_amount'] > 0 && DB::table('orders')->where(['id' => $order, 'payment_status' => 'PAID'])->update(['payment_status' => 'PARTIALLY_PAID'])) {
+            $journal->transition(Subject::Order, $order, 'payment_status', 'PAID', 'PARTIALLY_PAID', 'issue:'.$number, $actor);
+        }
+
         return $number;
     }
 }

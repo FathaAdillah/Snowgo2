@@ -92,10 +92,7 @@ final class ChargeConsents
             ['subtotal_amount' => $c->amount - $shipping, 'tax_amount' => 0, 'shipping_amount' => $shipping, 'total_amount' => $c->amount],
             [['order_item_id' => $item?->id, 'line_type' => $line['type'], 'description' => $line['description'], 'qty' => $line['qty'], 'unit_amount' => $line['unit_amount'], 'amount' => $line['amount']]]);
         self::change($c, 'ACCEPTED', 'ChargeAccepted', $actor, ['accepted_at' => now(), 'invoice_id' => DB::table('invoices')->where('number', $number)->value('id')]);
-        if ($order->payment_status === 'PAID') {
-            DB::table('orders')->where('id', $order->id)->update(['payment_status' => 'PARTIALLY_PAID']);
-            app(Journal::class)->transition(Subject::Order, $order->id, 'payment_status', 'PAID', 'PARTIALLY_PAID', 'charge:'.$ref, $actor);
-        }
+
     }
 
     public static function expire(): void
