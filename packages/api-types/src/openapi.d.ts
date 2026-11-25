@@ -4938,6 +4938,14 @@ export interface operations {
                                 revision: number;
                                 status: string;
                             }[];
+                            checkout_shipping?: {
+                                amount: number;
+                                carrier_label: string | null;
+                                estimated_days_from: number;
+                                estimated_days_to: number;
+                                quote_id: string;
+                                service_code: string | null;
+                            };
                             created_at: string;
                             currency: string;
                             discount_amount?: number;
@@ -5049,6 +5057,14 @@ export interface operations {
                                 revision: number;
                                 status: string;
                             }[];
+                            checkout_shipping?: {
+                                amount: number;
+                                carrier_label: string | null;
+                                estimated_days_from: number;
+                                estimated_days_to: number;
+                                quote_id: string;
+                                service_code: string | null;
+                            };
                             created_at: string;
                             currency: string;
                             discount_amount?: number;
@@ -5183,6 +5199,14 @@ export interface operations {
                                 revision: number;
                                 status: string;
                             }[];
+                            checkout_shipping?: {
+                                amount: number;
+                                carrier_label: string | null;
+                                estimated_days_from: number;
+                                estimated_days_to: number;
+                                quote_id: string;
+                                service_code: string | null;
+                            };
                             created_at: string;
                             currency: string;
                             discount_amount?: number;
@@ -11599,6 +11623,14 @@ export interface operations {
                                 revision: number;
                                 status: string;
                             }[];
+                            checkout_shipping?: {
+                                amount: number;
+                                carrier_label: string | null;
+                                estimated_days_from: number;
+                                estimated_days_to: number;
+                                quote_id: string;
+                                service_code: string | null;
+                            };
                             created_at: string;
                             currency: string;
                             discount_amount?: number;

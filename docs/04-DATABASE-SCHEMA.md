@@ -994,6 +994,8 @@ Snapshot opsi ongkir. Context hash untuk alamat, qty, berat, origin dan tarif; k
 | order_id | bigint FK → orders.id | Ya | — |
 | service_id | bigint FK → courier_services.id | Tidak | — |
 | rate_id | bigint FK → shipping_rates.id | Tidak | — |
+| carrier_label_snapshot | varchar(120) | Ya | Nama kurir saat checkout RTS dikonfirmasi |
+| service_code_snapshot | varchar(32) | Ya | Kode layanan saat checkout RTS dikonfirmasi |
 | context_hash | varchar(128) | Tidak | — |
 | amount | bigint IDR | Tidak | — |
 | estimated_days_from | integer | Tidak | — |
@@ -1001,7 +1003,7 @@ Snapshot opsi ongkir. Context hash untuk alamat, qty, berat, origin dan tarif; k
 | expires_at | timestamptz | Tidak | — |
 | used_at | timestamptz | Ya | — |
 
-**Constraint dan indeks tambahan** · I(user_id,expires_at); C(num_nonnulls(cart_id,order_id)=1).
+**Constraint dan indeks tambahan** · I(user_id,expires_at); C(num_nonnulls(cart_id,order_id)=1). Maksimal satu quote terpakai per cart (indeks unik parsial); setelah dipakai, quote cart tidak dapat diperbarui atau dihapus. Checkout lama tidak menebak nama kurir atau kode layanan dari master saat ini.
 
 ### DB-SHP-005 — shipments
 

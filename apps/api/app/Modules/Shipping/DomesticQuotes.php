@@ -58,9 +58,12 @@ final class DomesticQuotes
         return $options;
     }
 
-    public function consume(string $id): void
+    /** @param array{id:string,carrier_label:string,service_code:string} $option */
+    public function consume(int $cartId, array $option): void
     {
-        if (! DB::table('shipping_quotes')->where('public_id', $id)->whereNull('used_at')->whereRaw('expires_at > clock_timestamp()')->update(['used_at' => now()])) {
+        if (! DB::table('shipping_quotes')->where(['cart_id' => $cartId, 'public_id' => $option['id']])->whereNull('used_at')
+            ->whereRaw('expires_at > clock_timestamp()')->update(['used_at' => DB::raw('clock_timestamp()'),
+                'carrier_label_snapshot' => $option['carrier_label'], 'service_code_snapshot' => $option['service_code']])) {
             throw new ApiProblem(409, 'QUOTE_EXPIRED', 'The shipping quote expired.');
         }
     }

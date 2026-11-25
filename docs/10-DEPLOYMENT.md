@@ -231,3 +231,7 @@ Perintah rekonsiliasi aman diulang: hanya pesanan RTS lama yang belum dibayar da
 Tidak perlu build frontend: belum ada halaman pesanan baru. Seeder tidak menambah hak ke role lama. Di **Role & Izin**, berikan `orders.order.view` untuk membaca; untuk membatalkan atau menyelesaikan, tambahkan `orders.order.manage` dan masing-masing `orders.order.cancel` atau `orders.order.complete`. Superadmin tetap wajib login. Untuk pembatalan pelanggan, buat minimal satu kode alasan aktif dengan domain `orders` melalui API referensi.
 
 Belum ada pemrosesan pembayaran, refund, dispatch, atau konfirmasi delivery dari kurir. Jangan menandai pesanan lunas/terkirim lewat SQL: producer pembayaran, tracking, dispute dan scheduler auto-completion menyusul. Setelah ada transaksi nyata, perbaiki maju atau pulihkan backup; rollback migrasi menghapus bukti aksi dan data penghalang transisi.
+
+## Mengaktifkan checkout siap kirim (TASK-016)
+
+Setelah pull, jalankan `docker compose exec api php artisan migrate --force` sebelum melayani checkout dengan kode baru. Tidak ada izin, seeder, atau build frontend baru. Pada detail pesanan, `checkout_shipping` menunjukkan ongkir dan ETA saat pembelian; nama kurir dan kode layanan tersedia untuk checkout baru, bukan hasil rekonstruksi dari master untuk order lama. Belum ada pembayaran atau dispatch. Setelah transaksi nyata, jangan rollback migrasi ini: rollback menghapus nama kurir dan kode layanan historis.

@@ -69,6 +69,10 @@ test('customer account endpoints reject guests with the documented error envelop
     validateResponse(path, 401, result.error)
     assert.equal(result.error.code, 'UNAUTHENTICATED')
   }
+  const path = '/orders/{number}'
+  const result = await client.GET(path, { params: { path: { number: 'O-0000000000' } } })
+  assert.equal(result.response.status, 401)
+  validateResponse(path, 401, result.error)
 })
 
 test('public catalog and missing product use their published schemas', async () => {
