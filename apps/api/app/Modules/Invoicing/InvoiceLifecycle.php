@@ -25,6 +25,9 @@ final class InvoiceLifecycle
             $orders->where('id', DB::table('invoices')->select('order_id')->where('number', $number));
         }
         $order = $orders->lockForUpdate()->first() ?? abort(404);
+        if ($action === 'issue' && $input['purpose'] === 'BALANCE' && ! isset($input['replaces_invoice_number'])) {
+            return BalanceInvoices::issue($order, $actor, $input['due_at']);
+        }
         if ($action === 'issue' && ! isset($input['replaces_invoice_number'])) {
             throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'A previously approved invoice source is required.');
         }
@@ -44,6 +47,13 @@ final class InvoiceLifecycle
             }
         }
         if ($action === 'issue') {
+            if ($invoice->purpose === 'BALANCE') {
+                if ($input['purpose'] !== 'BALANCE' || $invoice->status !== 'VOID' || DB::table('invoices')->where('replaces_invoice_id', $invoice->id)->exists()) {
+                    throw BalanceInvoices::invalid();
+                }
+
+                return BalanceInvoices::issue($order, $actor, $input['due_at'], $invoice);
+            }
             if ($invoice->purpose !== $input['purpose'] || $invoice->status !== 'VOID' || DB::table('invoices')->where('replaces_invoice_id', $invoice->id)->exists()) {
                 throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Only an unreplaced void invoice of the same purpose can be issued again.');
             }
@@ -65,7 +75,7 @@ final class InvoiceLifecycle
             throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'The new deadline must be in the future and cannot extend an initial payment hold.');
         }
         $lines = DB::table('invoice_items')->where('invoice_id', $invoice->id)->orderBy('id')
-            ->get(['order_item_id', 'line_type', 'description', 'qty', 'unit_amount', 'amount', 'covered_qty'])->map(fn ($row) => (array) $row)->values()->all();
+            ->get(['order_item_id', 'line_type', 'description', 'qty', 'unit_amount', 'amount', 'covered_qty', 'coverage_start'])->map(fn ($row) => (array) $row)->values()->all();
 
         return app(InvoiceIssuer::class)->issue($order->id, $actor, 'revision:'.$invoice->number, $invoice->purpose, $due->toIso8601String(), [
             'currency' => $invoice->currency, 'subtotal_amount' => $invoice->subtotal_amount, 'shipping_amount' => $invoice->shipping_amount,

@@ -12019,6 +12019,637 @@
                 }
             }
         },
+        "/orders/{number}/charge-consents/{id}/decisions": {
+            "post": {
+                "operationId": "orders.charge.decide",
+                "tags": [
+                    "Charge"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ACCEPT",
+                                            "REJECT"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "decision"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "revision": {
+                                                    "type": "integer"
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string"
+                                                },
+                                                "invoice_number": {
+                                                    "type": "string"
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "start": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "type",
+                                                            "description",
+                                                            "qty",
+                                                            "unit_amount",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status",
+                                                "revision",
+                                                "amount",
+                                                "expires_at",
+                                                "lines"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/orders/{number}/charge-consents": {
+            "post": {
+                "operationId": "orders.staff.charge.propose",
+                "tags": [
+                    "Charge"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "DOMESTIC_SHIPPING",
+                                            "IMPORT_TAX",
+                                            "INTERNATIONAL_SHIPPING",
+                                            "SERVICE_FEE"
+                                        ]
+                                    },
+                                    "quote_id": {
+                                        "type": "string"
+                                    },
+                                    "order_item_id": {
+                                        "type": "string"
+                                    },
+                                    "qty": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 100000
+                                    },
+                                    "unit_amount": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 1000000000000
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                    },
+                                    "expires_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "type",
+                                    "expires_at"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "revision": {
+                                                    "type": "integer"
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string"
+                                                },
+                                                "invoice_number": {
+                                                    "type": "string"
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "start": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "type",
+                                                            "description",
+                                                            "qty",
+                                                            "unit_amount",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status",
+                                                "revision",
+                                                "amount",
+                                                "expires_at",
+                                                "lines"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/orders/{number}/credit-adjustments": {
+            "post": {
+                "operationId": "invoices.staff.correct",
+                "tags": [
+                    "Charge"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "order_item_id": {
+                                        "type": "string"
+                                    },
+                                    "invoice_number": {
+                                        "type": "string",
+                                        "maxLength": 40
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    }
+                                },
+                                "required": [
+                                    "order_item_id",
+                                    "invoice_number",
+                                    "reason_code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "order_status": {
+                                                    "type": "string"
+                                                },
+                                                "replaces_invoice_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "replaced_by_invoice_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "purpose": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "FULL_PAYMENT",
+                                                        "DEPOSIT",
+                                                        "BALANCE",
+                                                        "ADDITIONAL_CHARGE"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "ISSUED",
+                                                        "PAID",
+                                                        "VOID"
+                                                    ]
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "subtotal_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "discount_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "tax_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "shipping_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "total_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "issued_at": {
+                                                    "type": "string"
+                                                },
+                                                "due_at": {
+                                                    "type": "string"
+                                                },
+                                                "paid_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "covered_qty": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "covered_qty",
+                                                            "type",
+                                                            "description",
+                                                            "qty",
+                                                            "unit_amount",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "pdf_ready": {
+                                                    "type": "boolean"
+                                                },
+                                                "pdf_status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "PENDING",
+                                                        "RENDERING",
+                                                        "FAILED",
+                                                        "READY"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "order_status",
+                                                "replaces_invoice_number",
+                                                "replaced_by_invoice_number",
+                                                "purpose",
+                                                "status",
+                                                "currency",
+                                                "subtotal_amount",
+                                                "discount_amount",
+                                                "tax_amount",
+                                                "shipping_amount",
+                                                "total_amount",
+                                                "issued_at",
+                                                "due_at",
+                                                "paid_at",
+                                                "items",
+                                                "pdf_ready",
+                                                "pdf_status"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/checkout/previews": {
             "post": {
                 "operationId": "checkout.preview",
@@ -15927,6 +16558,18 @@
                                                         "items": {
                                                             "type": "object",
                                                             "properties": {
+                                                                "order_item_id": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "covered_qty": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                },
                                                                 "type": {
                                                                     "type": "string"
                                                                 },
@@ -15944,6 +16587,8 @@
                                                                 }
                                                             },
                                                             "required": [
+                                                                "order_item_id",
+                                                                "covered_qty",
                                                                 "type",
                                                                 "description",
                                                                 "qty",
@@ -16181,6 +16826,18 @@
                                                     "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "order_item_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "covered_qty": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "type": {
                                                                 "type": "string"
                                                             },
@@ -16198,6 +16855,8 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            "order_item_id",
+                                                            "covered_qty",
                                                             "type",
                                                             "description",
                                                             "qty",
@@ -16693,6 +17352,18 @@
                                                         "items": {
                                                             "type": "object",
                                                             "properties": {
+                                                                "order_item_id": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "covered_qty": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                },
                                                                 "type": {
                                                                     "type": "string"
                                                                 },
@@ -16710,6 +17381,8 @@
                                                                 }
                                                             },
                                                             "required": [
+                                                                "order_item_id",
+                                                                "covered_qty",
                                                                 "type",
                                                                 "description",
                                                                 "qty",
@@ -16947,6 +17620,18 @@
                                                     "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "order_item_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "covered_qty": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "type": {
                                                                 "type": "string"
                                                             },
@@ -16964,6 +17649,8 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            "order_item_id",
+                                                            "covered_qty",
                                                             "type",
                                                             "description",
                                                             "qty",
@@ -17460,6 +18147,18 @@
                                                     "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "order_item_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "covered_qty": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "type": {
                                                                 "type": "string"
                                                             },
@@ -17477,6 +18176,8 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            "order_item_id",
+                                                            "covered_qty",
                                                             "type",
                                                             "description",
                                                             "qty",
@@ -17863,6 +18564,18 @@
                                                     "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "order_item_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "covered_qty": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "type": {
                                                                 "type": "string"
                                                             },
@@ -17880,6 +18593,8 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            "order_item_id",
+                                                            "covered_qty",
                                                             "type",
                                                             "description",
                                                             "qty",
@@ -18271,6 +18986,18 @@
                                                     "items": {
                                                         "type": "object",
                                                         "properties": {
+                                                            "order_item_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "covered_qty": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "type": {
                                                                 "type": "string"
                                                             },
@@ -18288,6 +19015,8 @@
                                                             }
                                                         },
                                                         "required": [
+                                                            "order_item_id",
+                                                            "covered_qty",
                                                             "type",
                                                             "description",
                                                             "qty",

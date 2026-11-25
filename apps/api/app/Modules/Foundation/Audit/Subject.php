@@ -7,6 +7,7 @@ enum Subject: string
     case User = 'user';
     case Role = 'role';
     case Order = 'order';
+    case ChargeConsent = 'charge_consent';
     case Cart = 'cart';
     case Campaign = 'preorder_campaign';
     case CampaignVariant = 'preorder_campaign_variant';

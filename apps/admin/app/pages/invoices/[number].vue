@@ -17,6 +17,12 @@ const canVoid = computed(() => mutable.value && invoice.value?.status === 'ISSUE
 const canIssue = computed(() => mutable.value && invoice.value?.status === 'VOID' && !invoice.value.replaced_by_invoice_number && may('issue'))
 const canRevise = computed(() => invoice.value?.order_status === 'CONFIRMED' && invoice.value.status === 'ISSUED' && Date.parse(invoice.value.due_at) < Date.now() && may('revise_due'))
 const reason = ref('')
+const itemRef = ref('')
+const chargeType = ref('IMPORT_TAX')
+const qty = ref(1)
+const fee = ref<number>()
+const description = ref('')
+const quote = ref('')
 const due = ref('')
 const dueIso = computed(() => due.value && Number.isFinite(Date.parse(due.value)) ? new Date(due.value).toISOString() : '')
 const error = ref('')
@@ -59,6 +65,79 @@ async function saved() {
       Memuat tagihan…
     </p>
     <template v-else>
+      <UCard v-if="invoice.order_status === 'CONFIRMED' && (may('issue') || may('credit_adjust') || (can('orders.order.view') && can('orders.order.manage') && can('orders.charge.propose')))">
+        <template #header>
+          Termin dan biaya pesanan
+        </template>
+        <div class="flex flex-wrap items-end gap-3">
+          <UFormField label="Batas waktu">
+            <UInput
+              v-model="due"
+              type="datetime-local"
+            />
+          </UFormField>
+          <UButton
+            v-if="invoice.purpose === 'DEPOSIT' && invoice.status === 'PAID' && may('issue')"
+            label="Tagih saldo barang diterima"
+            :disabled="!dueIso"
+            @click="action = { method: 'POST', url: `/api/v1/admin/orders/${invoice.order_number}/invoices`, body: { purpose: 'BALANCE', due_at: dueIso }, label: 'Hitung sisa setelah DP untuk unit diterima yang belum ditagih' }"
+          />
+          <UFormField label="Item pesanan">
+            <USelect
+              v-model="itemRef"
+              :items="invoice.items.filter(x => x.order_item_id).map(x => ({ label: x.description, value: x.order_item_id! }))"
+            />
+          </UFormField>
+          <template v-if="invoice.status === 'ISSUED' && invoice.purpose === 'BALANCE' && may('credit_adjust')">
+            <UFormField label="Kode alasan shortage">
+              <UInput v-model="reason" />
+            </UFormField>
+            <UButton
+              label="Koreksi shortage"
+              :disabled="!itemRef || !reason"
+              @click="action = { method: 'POST', url: `/api/v1/admin/orders/${invoice.order_number}/credit-adjustments`, body: { invoice_number: invoice.number, order_item_id: itemRef, reason_code: reason }, label: 'Batalkan dan hitung ulang cakupan invoice akibat shortage' }"
+            />
+          </template>
+          <template v-if="can('orders.order.view') && can('orders.order.manage') && can('orders.charge.propose')">
+            <UFormField label="Jenis biaya">
+              <USelect
+                v-model="chargeType"
+                :items="['IMPORT_TAX', 'INTERNATIONAL_SHIPPING', 'SERVICE_FEE', 'DOMESTIC_SHIPPING']"
+              />
+            </UFormField>
+            <UFormField
+              v-if="chargeType === 'DOMESTIC_SHIPPING'"
+              label="ID quote paket"
+            >
+              <UInput v-model="quote" />
+            </UFormField>
+            <template v-else>
+              <UFormField label="Jumlah unit">
+                <UInput
+                  v-model.number="qty"
+                  type="number"
+                  min="1"
+                />
+              </UFormField>
+              <UFormField label="Biaya per unit (IDR)">
+                <UInput
+                  v-model.number="fee"
+                  type="number"
+                  min="1"
+                />
+              </UFormField>
+              <UFormField label="Rincian biaya">
+                <UInput v-model="description" />
+              </UFormField>
+            </template>
+            <UButton
+              label="Ajukan biaya ke pelanggan"
+              :disabled="!dueIso || (chargeType === 'DOMESTIC_SHIPPING' ? !quote : !itemRef || !fee || !description || qty < 1)"
+              @click="action = { method: 'POST', url: `/api/v1/admin/orders/${invoice.order_number}/charge-consents`, body: { type: chargeType, expires_at: dueIso, ...(chargeType === 'DOMESTIC_SHIPPING' ? { quote_id: quote } : { order_item_id: itemRef, qty, unit_amount: fee, description }) }, label: 'Kirim usulan; tagihan baru terbit setelah diterima pelanggan' }"
+            />
+          </template>
+        </div>
+      </UCard>
       <UCard>
         <p>Pesanan {{ invoice.order_number }} · {{ invoicePurpose[invoice.purpose] }} · {{ invoiceStatus[invoice.status] }}</p>
         <p>Terbit {{ inventoryTime(invoice.issued_at) }} · Jatuh tempo {{ inventoryTime(invoice.due_at) }}</p>
