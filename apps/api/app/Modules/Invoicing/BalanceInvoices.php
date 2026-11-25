@@ -24,6 +24,11 @@ final class BalanceInvoices
     /** Every range is half open. Voiding an earlier tranche leaves a gap, not a credit on later units. */
     public static function issue(object $order, int $actor, string $due, ?object $original = null): string
     {
+        return self::issueEligible($order, $actor, $due, $original) ?? throw self::invalid();
+    }
+
+    private static function issueEligible(object $order, int $actor, string $due, ?object $original): ?string
+    {
         if ($order->status !== 'CONFIRMED' || $order->term !== 'DEPOSIT' || $order->selling_method === 'READY_TO_SHIP' || Carbon::parse($due)->lte(now())
             || ! DB::table('invoices')->where(['order_id' => $order->id, 'purpose' => 'DEPOSIT', 'status' => 'PAID'])->exists()) {
             throw self::invalid();
@@ -70,7 +75,7 @@ final class BalanceInvoices
             }
         }
         if (! $lines || $subtotal + $tax <= 0) {
-            return $original->number ?? throw self::invalid();
+            return null;
         }
 
         return app(InvoiceIssuer::class)->issue($order->id, $actor, 'balance:'.Str::ulid(), 'BALANCE', $due, ['subtotal_amount' => $subtotal, 'tax_amount' => $tax, 'shipping_amount' => 0, 'total_amount' => $subtotal + $tax], $lines, $original?->id);
@@ -107,6 +112,6 @@ final class BalanceInvoices
         app(Journal::class)->audit('InvoiceVoided', Subject::Invoice, $v->id, $actor, ['status' => 'ISSUED'], ['status' => 'VOID']);
         app(Outbox::class)->record('InvoiceVoided', 'invoice', $v->id, ['number' => $v->number]);
 
-        return self::issue($order, $actor, max(Carbon::parse($v->due_at), now()->addDay())->toISOString(), $v);
+        return self::issueEligible($order, $actor, max(Carbon::parse($v->due_at), now()->addDay())->toISOString(), $v) ?? $v->number;
     }
 }

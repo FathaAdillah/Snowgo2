@@ -60,6 +60,16 @@ it('freezes a fee revision, rejects foreign decisions and issues once only after
     expect(DB::table('invoices')->where('purpose', 'ADDITIONAL_CHARGE')->count())->toBe(1);
     $this->getJson("/api/v1/orders/$this->order")->assertOk()->assertJsonPath('data.charge_consents.1.status', 'ACCEPTED');
 });
+it('returns 409 when a fresh balance already covers a void invoice', function () {
+    $url = "admin/orders/$this->order/invoices";
+    $original = ($this->write)($url, $this->balance)->assertOk()->json('data.number');
+    DB::table('reason_codes')->insert(['domain' => 'invoicing', 'code' => 'REISSUE', 'label' => 'Reissue']);
+    ($this->write)("admin/invoices/$original/voids", ['reason_code' => 'REISSUE'])->assertOk();
+    ($this->write)($url, $this->balance)->assertOk();
+
+    ($this->write)($url, ['replaces_invoice_number' => $original] + $this->balance)->assertConflict()->assertJsonPath('code', 'QUANTITY_CONFLICT');
+    $this->assertDatabaseMissing('invoices', ['replaces_invoice_id' => DB::table('invoices')->where('number', $original)->value('id')]);
+});
 it('preserves the original unpaid tranche when shortage reduces eligible units', function () {
     DB::table('order_items')->update(['received_qty' => 3]);
     $v = ($this->write)("admin/orders/$this->order/invoices", $this->balance)->assertOk()->json('data.number');
