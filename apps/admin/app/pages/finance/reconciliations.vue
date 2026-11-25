@@ -33,7 +33,13 @@ async function upload(event: Event) {
     const result = await $fetch<{ data: { id: string } }>('/api/v1/admin/files', { method: 'POST', body: form, headers: { 'X-XSRF-TOKEN': await csrf(), 'Idempotency-Key': crypto.randomUUID() } })
     if (selected.value?.id === id) proof.value = result.data.id
     uploadError.value = ''
-  } catch (e) { uploadError.value = authErrorMessage(e) } finally { password.value = totp.value = ''; (event.target as HTMLInputElement).value = '' }
+  } catch (e) {
+    uploadError.value = authErrorMessage(e)
+  } finally {
+    password.value = totp.value = ''
+    const input = event.target as HTMLInputElement
+    input.value = ''
+  }
 }
 const action = ref<{ url: string, method: 'POST', body: Record<string, unknown>, label: string }>()
 function ask(url: string, body: Record<string, unknown>, label: string) {
@@ -106,8 +112,21 @@ async function saved() {
             <UInput v-model="reference" />
           </UFormField>
           <template v-if="can('foundation.file.create')">
-            <UFormField label="Password untuk konfirmasi unggah"><UInput v-model="password" type="password" autocomplete="current-password" /></UFormField>
-            <UFormField label="Kode authenticator"><UInput v-model="totp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" /></UFormField>
+            <UFormField label="Password untuk konfirmasi unggah">
+              <UInput
+                v-model="password"
+                type="password"
+                autocomplete="current-password"
+              />
+            </UFormField>
+            <UFormField label="Kode authenticator">
+              <UInput
+                v-model="totp"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+              />
+            </UFormField>
           </template>
           <UFormField
             v-if="can('foundation.file.create')"
