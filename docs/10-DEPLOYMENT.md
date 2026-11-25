@@ -204,3 +204,15 @@ Scheduler menjalankan `inventory:expire-holds` setiap menit. Klaim yang ditingga
 Setelah pull, jalankan `docker compose exec api php artisan migrate --force`. Tidak perlu seeder izin atau build frontend: keempat endpoint hanya mengizinkan pelanggan terverifikasi mengakses keranjangnya sendiri. Tidak ada menu admin baru.
 
 `GET /api/v1/cart` tidak membuat baris di database. Gunakan `version` dari respons terakhir untuk setiap mutasi; pada `409 VERSION_CONFLICT`, muat ulang keranjang sebelum pelanggan mengedit lagi. Penawaran RTS memakai stok gudang default. Keranjang bisa membaca penawaran PO terbuka, tetapi pembuatan dan pengelolaan kampanye baru tersedia di TASK-017. Tidak ada stok atau kuota yang ditahan oleh keranjang.
+
+## Mengaktifkan checkout pelanggan (TASK-014)
+
+Setelah pull, jalankan `docker compose exec api php artisan migrate --force` dan `docker compose restart scheduler`. Tidak perlu seeder izin atau build frontend: ketiga endpoint baru khusus pelanggan terverifikasi. Belum ada layar checkout, tagihan bank, atau UI untuk mengelola tarif. Tidak ada tarif contoh di produksi.
+
+1. Kirim `cart_version` dan `address_id` ke `POST /api/v1/checkout/previews`. Untuk RTS, diperlukan gudang default dengan stok dan tarif manual aktif antara kecamatan gudang dan alamat pelanggan. Tanpa tarif, respons `409 NO_SHIPPING_RATE`, bukan gratis. Untuk PO saja tidak perlu tarif.
+2. Untuk RTS, pilih `shipping_quote_id` dari daftar dan kirim preview lagi dengan pilihan itu. `quote_hash` hanya tersedia untuk pilihan akhir, berlaku paling lama 15 menit. Ongkir PO ditagih belakangan. Pajak dihitung half-up per baris; untuk DP, pajak awal dihitung atas bagian yang ditagih sekarang.
+3. Kirim input preview akhir beserta `quote_hash` ke `POST /api/v1/checkout` dengan `Idempotency-Key`. Bila koneksi putus, ulangi dengan key/payload yang sama. Jika quote berubah atau kedaluwarsa, tampilkan preview baru dan gunakan key baru setelah pembeli mengonfirmasi. `GET /api/v1/checkouts/{id}` mengambil nomor pesanan dan invoice awal milik pelanggan.
+
+Tenggat pembayaran awal 24 jam (asumsi MVP), terpisah dari masa berlaku quote. Jangan aktifkan penjualan live sebelum lifecycle pesanan, kuota PO, pembayaran dan rekonsiliasi tersedia. Jika ada histori transaksi, gunakan backup atau perbaikan maju, bukan rollback yang menghapus snapshot.
+
+Jika kelas pajak produk diarsipkan, checkout ditolak sampai staf menetapkan kelas aktif atau melepas penugasannya. Produk tanpa kelas pajak tetap memakai tarif default 0; invoice lama tidak dihitung ulang.

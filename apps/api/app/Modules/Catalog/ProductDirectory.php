@@ -34,9 +34,17 @@ final class ProductDirectory
         return DB::table('product_variants')->where('active', true)->whereNull('deleted_at');
     }
 
-    public static function publishedVariants(): Builder
+    public static function activeTaxClasses(): Builder
     {
-        return self::variants()->whereIn('product_id', self::published()->select('products.id'));
+        return DB::table('tax_classes')->where('active', true);
+    }
+
+    public static function offerableVariants(): Builder
+    {
+        $products = self::published()->where(fn ($q) => $q->whereNull('tax_class_id')
+            ->orWhereIn('tax_class_id', self::activeTaxClasses()->select('id')));
+
+        return self::variants()->whereIn('product_id', $products->select('products.id'));
     }
 
     /**
@@ -55,7 +63,7 @@ final class ProductDirectory
         $brands = DB::table('brands')->where('active', true)->whereIntegerInRaw('id', $products->pluck('brand_id')->filter()->all())->pluck('slug', 'id');
         $covers = self::media()->whereIntegerInRaw('m.product_id', $ids)->selectRaw('DISTINCT ON (m.product_id) m.product_id,m.published_key')
             ->get()->keyBy('product_id');
-        $prices = self::variants()->whereIntegerInRaw('product_id', $ids)->where('rts_enabled', true)
+        $prices = self::offerableVariants()->whereIntegerInRaw('product_id', $ids)->where('rts_enabled', true)
             ->leftJoinSub(StockAvailability::readyToShip(), 'stock', 'stock.variant_id', '=', 'product_variants.id')
             ->selectRaw('product_id, COALESCE(min(rts_price_amount) FILTER (WHERE stock.variant_id IS NOT NULL),min(rts_price_amount)) AS price,
                 bool_or(stock.variant_id IS NOT NULL) AS available')->groupBy('product_id')->get()->keyBy('product_id');
@@ -83,11 +91,13 @@ final class ProductDirectory
             ->whereIntegerInRaw('o.variant_id', $variants->pluck('id')->all())->orderBy('o.attribute_id')->get(['o.variant_id', 'av.code', 'av.label'])->groupBy('variant_id');
         $media = self::media()->where('m.product_id', $p->id)->get(['m.published_key', 'm.alt', 'm.position', 'v.sku']);
 
-        return self::cards(collect([$p]))[0] + ['description' => $p->description, 'seo_title' => $p->seo_title, 'seo_description' => $p->seo_description,
+        $card = self::cards(collect([$p]))[0];
+
+        return $card + ['description' => $p->description, 'seo_title' => $p->seo_title, 'seo_description' => $p->seo_description,
             'media' => $media->map(fn ($m) => ['url' => Storage::disk('catalog')->url($m->published_key), 'alt' => $m->alt, 'position' => $m->position, 'sku' => $m->sku])->all(),
             'variants' => $variants->map(fn ($v) => ['sku' => $v->sku, 'name' => $v->name, 'weight_g' => $v->weight_g,
                 'options' => ($options[$v->id] ?? collect())->map(fn ($o) => ['code' => $o->code, 'label' => $o->label])->all(),
-                'offers' => $v->rts_enabled ? [['method' => 'RTS', 'unit_amount' => $v->rts_price_amount, 'available' => $v->available]] : [],
+                'offers' => $v->rts_enabled && $card['offers'] ? [['method' => 'RTS', 'unit_amount' => $v->rts_price_amount, 'available' => $v->available]] : [],
             ])->all()];
     }
 }

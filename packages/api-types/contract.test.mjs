@@ -9,9 +9,9 @@ const ajv = new Ajv2020({ strict: false })
 ajv.addSchema(spec, 'urn:snowego:api')
 const client = createApiClient({ baseUrl: new URL(apiBase, process.env.API_CONTRACT_ORIGIN).href })
 
-function validateResponse(path, status, body) {
-  const response = spec.paths[path].get.responses[status]
-  const pointer = response.$ref ?? `#/paths/${path.replaceAll('/', '~1')}/get/responses/${status}`
+function validateResponse(path, status, body, method = 'get') {
+  const response = spec.paths[path][method].responses[status]
+  const pointer = response.$ref ?? `#/paths/${path.replaceAll('/', '~1')}/${method}/responses/${status}`
   const validate = ajv.compile({ $ref: `urn:snowego:api${pointer}/content/application~1json/schema` })
   assert.ok(validate(body), ajv.errorsText(validate.errors))
 }
@@ -92,6 +92,15 @@ test('public catalog and missing product use their published schemas', async () 
   const missing = await client.GET('/products/{slug}', { params: { path: { slug: 'ci-missing-5b025cdf' } } })
   assert.equal(missing.response.status, 404)
   validateResponse('/products/{slug}', 404, missing.error)
+})
+
+test('checkout data and mutations reject unauthenticated API callers', async () => {
+  for (const path of ['/checkout/previews', '/checkout', '/checkouts/{id}']) {
+    const read = path.endsWith('{id}')
+    const result = read ? await client.GET(path, { params: { path: { id: '01J00000000000000000000000' } } }) : await client.POST(path, { body: {} })
+    assert.equal(result.response.status, 401)
+    validateResponse(path, 401, result.error, read ? 'get' : 'post')
+  }
 })
 
 test('inventory reads are staff-only and use the documented error envelope', async () => {

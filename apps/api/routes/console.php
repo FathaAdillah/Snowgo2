@@ -52,6 +52,10 @@ Schedule::command('files:prune')->daily()->withoutOverlapping();
 Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=', now())->delete())
     ->name('prune-idempotency-keys')->daily();
 Schedule::command('auth:clear-resets')->hourly();
+Schedule::call(function () {
+    DB::table('checkout_previews')->where('expires_at', '<', now()->subDay())->delete();
+    DB::table('shipping_quotes')->whereNull('used_at')->where('expires_at', '<', now()->subDay())->delete();
+})->name('prune-checkout-quotes')->hourly();
 Schedule::call(fn () => DB::table('staff_email_changes')->where('expires_at', '<=', now())->delete())
     ->name('prune-staff-email-changes')->hourly();
 Schedule::call(fn () => DB::table('staff_invitations')->where('expires_at', '<=', now())->delete())

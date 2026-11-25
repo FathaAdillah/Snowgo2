@@ -130,11 +130,15 @@ final class CatalogAdmin
                 // A taxonomy change can affect many products. Serialize catalog edits, never public reads.
                 DB::select("SELECT pg_advisory_xact_lock(hashtextextended('catalog:edit', 0))");
                 $authorize();
-                $before = $id === null ? null : ($this->query($kind)->where('r.id', $id)
-                    ->when($kind === Resource::Variant, fn ($q) => $q->lockForUpdate())->first() ?? abort(404));
-                $product = $kind === Resource::Product ? $id : ($data['product_id'] ?? $before->product_id ?? null);
+                $resource = $this->query($kind)->where('r.id', $id);
+                $before = $id === null ? null : ((clone $resource)->first() ?? abort(404));
+                $product = $kind === Resource::Product ? $id : ($before->product_id ?? $data['product_id'] ?? null);
                 if ($product !== null && ! DB::table('products')->where('id', $product)->whereNull('deleted_at')->lockForUpdate()->first(['id'])) {
                     throw ValidationException::withMessages(['product_id' => 'Select an existing product.']);
+                }
+                // Checkout and stock reservations lock the product before its variants.
+                if ($id !== null && $kind === Resource::Variant) {
+                    $before = $resource->lockForUpdate()->first() ?? abort(404);
                 }
                 $key = app(CatalogEditor::class)->save($kind, $data, $before);
                 $event = $kind->name.'Changed';

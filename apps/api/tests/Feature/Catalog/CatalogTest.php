@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Catalog\CheckoutProducts;
 use App\Modules\Catalog\Resource;
 use App\Modules\Foundation\Files\MalwareScanner;
 use App\Modules\Foundation\Files\ScanStoredFile;
@@ -64,6 +65,28 @@ it('grants content managers read-only catalog access on a fresh install', functi
         expect($this->actor->can($kind->permission('archive')))->toBeFalse();
     }
     expect($this->actor->can('catalog.product.publish'))->toBeFalse();
+});
+
+it('lets checkout read a published variant while staff are about to lock its product for an edit', function () {
+    $this->actor->assignRole('product_manager');
+    $category = ($this->create)('categories', ['name' => 'Pins', 'slug' => 'pins', 'active' => true]);
+    $product = ($this->create)('products', $this->item);
+    $variant = ($this->create)('variants', ['product_id' => $product] + $this->variant);
+    ($this->api)('PATCH', "products/$product", ['status' => 'PUBLISHED', 'category_ids' => [$category]])->assertOk();
+
+    config(['database.connections.checkout_reader' => config('database.connections.pgsql')]);
+    $seen = null;
+    DB::connection()->beforeExecuting(function (string $sql) use ($variant, &$seen) {
+        if ($seen === null && str_contains($sql, 'from "products"') && str_contains($sql, 'for update')) {
+            $seen = DB::usingConnection('checkout_reader', fn () => DB::transaction(function () use ($variant) {
+                DB::statement("SET LOCAL lock_timeout = '1s'");
+
+                return app(CheckoutProducts::class)->snapshots(collect([$variant]))->get($variant)->rts_price_amount;
+            }));
+        }
+    });
+    ($this->api)('PATCH', "variants/$variant", ['rts_price_amount' => 30000])->assertOk()->assertJsonPath('data.rts_price_amount', 30000);
+    expect($seen)->toBe(25000);
 });
 
 it('rejects cycles and duplicates and applies active filters before pagination', function () {

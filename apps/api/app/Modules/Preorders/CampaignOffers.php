@@ -9,7 +9,7 @@ final class CampaignOffers
 {
     public static function open(): Builder
     {
-        return ProductDirectory::publishedVariants()
+        return ProductDirectory::offerableVariants()
             ->join('preorder_campaign_variants as cv', 'cv.variant_id', '=', 'product_variants.id')
             ->join('preorder_campaigns as c', 'c.id', '=', 'cv.campaign_id')
             ->where('c.status', 'OPEN')->whereRaw('c.starts_at <= statement_timestamp() AND c.ends_at > statement_timestamp()')
