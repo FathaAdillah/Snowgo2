@@ -10,7 +10,8 @@ final class InvoicePaymentGuard
     public static function voidIntents(int $invoice, ?int $actor): void
     {
         foreach (DB::table('payments')->whereIn('id', DB::table('payment_allocations')->where('invoice_id', $invoice)->select('payment_id'))->where('status', 'UNPAID')->orderBy('id')->lockForUpdate()->get() as $payment) {
-            PaymentFlow::change($payment, 'CANCELLED', 'PaymentInvoiceVoided', $actor);
+            $expired = now()->gte($payment->expires_at);
+            PaymentFlow::change($payment, $expired ? 'EXPIRED' : 'CANCELLED', $expired ? 'PaymentExpired' : 'PaymentInvoiceVoided', $actor);
         }
     }
 
