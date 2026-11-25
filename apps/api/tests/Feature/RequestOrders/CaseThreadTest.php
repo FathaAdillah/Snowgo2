@@ -161,6 +161,21 @@ it('preserves operational history and accepts an empty rollback and reapply', fu
     $this->assertDatabaseCount('status_histories', 2);
 });
 
+it('limits customer submissions per account without blocking discussion, cancellation or other buyers', function () {
+    $number = ($this->submitCase)();
+    for ($i = 1; $i < 5; $i++) {
+        ($this->submitCase)();
+    }
+    ($this->postCase)($this->api, $this->input, 'extra')->assertTooManyRequests()->assertJsonPath('code', 'THROTTLED')->assertHeader('Retry-After');
+    $this->getJson($this->api)->assertOk();
+    $this->assertDatabaseCount('request_orders', 1);
+    ($this->postCase)("$this->api/$number/messages", ['body' => 'Hello'])->assertOk();
+    ($this->postCase)("$this->api/$number/cancellations", ['reason_code' => 'CHANGE'])->assertOk();
+    ($this->customer)(User::factory()->create());
+    ($this->submitCase)();
+    $this->assertDatabaseCount('request_orders', 2);
+});
+
 function requestReviewWorker(string $number, int $actor, string $barrier): Closure
 {
     return static function () use ($number, $actor, $barrier) {

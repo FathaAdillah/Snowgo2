@@ -40,6 +40,7 @@ final class CaseController
     #[Response(409, 'Request in progress', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(419, 'CSRF mismatch', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(422, 'Invalid input or reused key', type: CaseMutation::INVALID)]
+    #[Response(429, 'Submission rate limit', type: ApiResponse::ERROR_SCHEMA)]
     public function create(Request $request): JsonResponse
     {
         $data = $request->validate(['title' => 'required|string|max:160', 'description' => 'required|string|max:5000',
@@ -67,6 +68,7 @@ final class CaseController
     #[Response(409, 'State or request conflict', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(419, 'CSRF mismatch', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(422, 'Invalid input or reused key', type: CaseMutation::INVALID)]
+    #[Response(429, 'Message rate limit', type: ApiResponse::ERROR_SCHEMA)]
     public function message(Request $request, string $number): JsonResponse
     {
         $data = $request->validate(['body' => 'required|string|max:5000']);
@@ -82,6 +84,7 @@ final class CaseController
     #[Response(409, 'State or request conflict', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(419, 'CSRF mismatch', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(422, 'Invalid input or reused key', type: CaseMutation::INVALID)]
+    #[Response(429, 'Cancellation rate limit', type: ApiResponse::ERROR_SCHEMA)]
     public function cancel(Request $request, string $number): JsonResponse
     {
         $data = $request->validate(['reason_code' => 'required|'.CaseMutation::CODE]);

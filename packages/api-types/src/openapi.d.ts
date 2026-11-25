@@ -14828,6 +14828,23 @@ export interface operations {
                     };
                 };
             };
+            /** @description Submission rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
         };
     };
     "requests.show": {
@@ -15061,6 +15078,23 @@ export interface operations {
                     };
                 };
             };
+            /** @description Cancellation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
         };
     };
     "requests.message": {
@@ -15186,6 +15220,23 @@ export interface operations {
                         errors?: {
                             [key: string]: string[];
                         };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Message rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
                         message: string;
                         meta: {
                             request_id: string;
