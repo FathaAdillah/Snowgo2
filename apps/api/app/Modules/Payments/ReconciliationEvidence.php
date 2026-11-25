@@ -13,7 +13,7 @@ final class ReconciliationEvidence implements FileOwnerPolicy
      */
     public function forUpload(User $actor, bool $staff, string $reference, string $collection): ?int
     {
-        if (! $staff || ! ctype_digit($reference) || ! $actor->can('payments.payment.recover') || $collection !== 'reconciliation_proof') {
+        if (! $staff || ! ctype_digit($reference) || ! $actor->can(['payments.reconciliation.view', 'payments.payment.recover']) || request()->session()->has(\App\Modules\Identity\Staff\StaffAccess::PASSWORD_ONLY_VERSION) || request()->session()->get('staff.step_up', 0) <= now()->subMinutes(10)->timestamp || $collection !== 'reconciliation_proof') {
             return null;
         }
 
