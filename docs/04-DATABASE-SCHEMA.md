@@ -758,7 +758,7 @@ Spesifikasi barang. URL HTTPS/HTTP sebagai teks, tanpa fetch otomatis
 | notes | text | Ya | — |
 | public_id | char(26) | Tidak | Unique |
 
-**Constraint dan indeks tambahan** · I(request_order_id); C(qty>0).
+**Constraint dan indeks tambahan** · I(request_order_id,id); C(qty BETWEEN 1 AND 10000). URL maksimum 2048 karakter; opsi dan catatan masing-masing maksimum 1000.
 
 ### DB-REQ-003 — request_order_messages
 
@@ -771,7 +771,7 @@ Diskusi dan notes. STAFF hanya dilihat staff berizin
 | visibility | CHECK (CUSTOMER,STAFF) | Tidak | — |
 | body | text | Tidak | — |
 
-**Constraint dan indeks tambahan** · I(request_order_id,created_at).
+**Constraint dan indeks tambahan** · I(request_order_id,created_at,id); pesan append-only, 1–5000 karakter. Lampiran berada di `stored_files` dengan owner `request_order` dan koleksi `request_attachment`; isi pesan tidak disalin ke audit/outbox.
 
 ### DB-REQ-004 — quotations
 

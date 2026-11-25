@@ -41,7 +41,7 @@ export const adminNavigation: NavEntry[] = [
       { label: 'Pesanan & RTS', icon: 'i-lucide-package' },
       { label: 'Kampanye Preorder', icon: 'i-lucide-calendar-clock' },
       { label: 'Batch Pengadaan', icon: 'i-lucide-boxes', to: '/procurement', permission: 'procurement.batch.view' },
-      { label: 'Request Order', icon: 'i-lucide-message-square-quote' },
+      { label: 'Request Order', icon: 'i-lucide-message-square-quote', to: '/request-orders', permission: 'request_orders.request.view' },
       { label: 'Invoice', icon: 'i-lucide-file-text' },
       { label: 'Return', icon: 'i-lucide-undo-2' }
     ]

@@ -13,6 +13,7 @@ Threat model mencakup penyalahgunaan sesi customer/staff, akses lintas order, bu
 - **Profil → Setting:** perubahan password, email login, dan preferensi MFA memerlukan password saat ini serta TOTP segar. Email lama tetap berlaku sampai akun yang sama mengonfirmasi kode sekali pakai dari email baru (15 menit). Perubahan keamanan yang selesai mencabut seluruh sesi dan membatalkan permintaan email tertunda. Nama tampilan bukan identitas login. Permission Spatie dan policy tetap diperiksa di API; menu hanya refleksi izin.
 - Step-up dengan password dan kode TOTP segar melalui endpoint staff; re-auth/MFA berlaku maksimal 10 menit untuk role, bank, refund, stock correction berisiko dan recovery. Maker-checker untuk settlement manual exception dan refund, reviewer/capturer berbeda dari eksekutor/finalizer kecuali tim bisnis menyetujui prosedur darurat ter-audit melalui operator. Finance cocokkan mutasi rekening. Review biasa pun menyimpan actor/reason dan nilai transaksi.
 - CORS hanya exact origins dev yang terdaftar jika mode transisi membutuhkan; produksi same-origin, tanpa wildcard credentials. Edge rate limit burst dan Laravel keyed threshold lebih spesifik. Baseline upload 10/menit per akun dan checkout 10/menit per akun (ASSUMPTION). Expose Retry-After.
+- Request Order: batas per akun per menit terpisah untuk pengajuan (5), pesan pelanggan (20), dan pembatalan (10). `429 THROTTLED` menyertakan `Retry-After`; daftar dan detail tidak memakai kuota aksi tulis.
 
 ## Input, content dan file
 

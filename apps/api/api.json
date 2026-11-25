@@ -2884,6 +2884,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 },
@@ -3011,6 +3019,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -8170,6 +8186,1616 @@
                 }
             }
         },
+        "/request-orders": {
+            "get": {
+                "operationId": "requests.index",
+                "tags": [
+                    "Case"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "SUBMITTED",
+                                "UNDER_REVIEW",
+                                "NEED_INFORMATION",
+                                "QUOTED",
+                                "REVISION_REQUESTED",
+                                "CONVERTED_TO_ORDER",
+                                "EXPIRED",
+                                "REJECTED",
+                                "CANCELLED"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Own requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "target_date": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "number",
+                                                    "title",
+                                                    "status",
+                                                    "target_date",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "total",
+                                                "last_page"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "description": "Verified customer required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "operationId": "requests.create",
+                "tags": [
+                    "Case"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 5000
+                                    },
+                                    "budget_amount": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 1000000000000
+                                    },
+                                    "target_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "maxLength": 200
+                                                },
+                                                "source_url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "maxLength": 2048
+                                                },
+                                                "options": {
+                                                    "type": "string",
+                                                    "maxLength": 1000
+                                                },
+                                                "qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 10000
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "maxLength": 1000
+                                                }
+                                            },
+                                            "required": [
+                                                "name",
+                                                "qty"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 200
+                                    }
+                                },
+                                "required": [
+                                    "title",
+                                    "description",
+                                    "items"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "429": {
+                        "description": "Submission rate limit",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or reused key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "201": {
+                        "description": "Request submitted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "target_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "title",
+                                                "status",
+                                                "target_date",
+                                                "created_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Verified customer required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Request in progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/request-orders/{number}": {
+            "get": {
+                "operationId": "requests.show",
+                "tags": [
+                    "Case"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Customer-visible case thread",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "target_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "budget_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "source_url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "options": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "notes": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "source_url",
+                                                            "options",
+                                                            "notes",
+                                                            "qty"
+                                                        ]
+                                                    }
+                                                },
+                                                "messages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "body": {
+                                                                "type": "string"
+                                                            },
+                                                            "visibility": {
+                                                                "type": "string"
+                                                            },
+                                                            "author_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "body",
+                                                            "visibility",
+                                                            "author_label",
+                                                            "created_at"
+                                                        ]
+                                                    }
+                                                },
+                                                "files": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "mime": {
+                                                                "type": "string"
+                                                            },
+                                                            "size_bytes": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "mime",
+                                                            "size_bytes",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
+                                                "quotations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "number": {
+                                                                "type": "string"
+                                                            },
+                                                            "version": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "number",
+                                                            "version",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "title",
+                                                "status",
+                                                "target_date",
+                                                "created_at",
+                                                "description",
+                                                "budget_amount",
+                                                "items",
+                                                "messages",
+                                                "files",
+                                                "quotations"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "description": "Verified customer required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Request not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/request-orders/{number}/messages": {
+            "post": {
+                "operationId": "requests.message",
+                "tags": [
+                    "Case"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "body": {
+                                        "type": "string",
+                                        "maxLength": 5000
+                                    }
+                                },
+                                "required": [
+                                    "body"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer message",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "body": {
+                                                    "type": "string"
+                                                },
+                                                "visibility": {
+                                                    "type": "string"
+                                                },
+                                                "author_label": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "body",
+                                                "visibility",
+                                                "author_label",
+                                                "created_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Message rate limit",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or reused key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "description": "Verified customer required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Request not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "State or request conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/request-orders/{number}/cancellations": {
+            "post": {
+                "operationId": "requests.cancel",
+                "tags": [
+                    "Case"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason_code": {
+                                        "type": "string",
+                                        "pattern": "^[A-Za-z0-9_.-]+$",
+                                        "maxLength": 48
+                                    }
+                                },
+                                "required": [
+                                    "reason_code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Request cancelled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "target_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "title",
+                                                "status",
+                                                "target_date",
+                                                "created_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Cancellation rate limit",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or reused key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "description": "Verified customer required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Request not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "State or request conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/categories": {
             "get": {
                 "operationId": "catalog.categories.index",
@@ -9185,6 +10811,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -9344,6 +10978,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -9474,6 +11116,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -9613,6 +11263,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -9879,6 +11537,14 @@
                                     ]
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -10142,6 +11808,14 @@
                                         "message",
                                         "meta"
                                     ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -11507,6 +13181,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -11872,6 +13554,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -11996,6 +13686,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -12156,6 +13854,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -12523,6 +14229,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -12649,6 +14363,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -12771,6 +14493,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 },
@@ -12832,6 +14562,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -13025,6 +14763,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -21468,6 +23214,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -21583,6 +23337,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -21689,6 +23451,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -21819,6 +23589,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -22005,6 +23783,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -23833,6 +25619,1364 @@
                 }
             }
         },
+        "/admin/request-orders": {
+            "get": {
+                "operationId": "requests.staff.index",
+                "tags": [
+                    "StaffCase"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "SUBMITTED",
+                                "UNDER_REVIEW",
+                                "NEED_INFORMATION",
+                                "QUOTED",
+                                "REVISION_REQUESTED",
+                                "CONVERTED_TO_ORDER",
+                                "EXPIRED",
+                                "REJECTED",
+                                "CANCELLED"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "number",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 40
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Case queue",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "target_date": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "budget_amount": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string"
+                                                                },
+                                                                "source_url": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "options": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "notes": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "qty": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "name",
+                                                                "source_url",
+                                                                "options",
+                                                                "notes",
+                                                                "qty"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "messages": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "body": {
+                                                                    "type": "string"
+                                                                },
+                                                                "visibility": {
+                                                                    "type": "string"
+                                                                },
+                                                                "author_label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "created_at": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "body",
+                                                                "visibility",
+                                                                "author_label",
+                                                                "created_at"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "files": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "mime": {
+                                                                    "type": "string"
+                                                                },
+                                                                "size_bytes": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "mime",
+                                                                "size_bytes",
+                                                                "status"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "quotations": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "number": {
+                                                                    "type": "string"
+                                                                },
+                                                                "version": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "number",
+                                                                "version",
+                                                                "status"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "assigned_to": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "review_actions": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "can_message": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "number",
+                                                    "title",
+                                                    "status",
+                                                    "target_date",
+                                                    "created_at",
+                                                    "description",
+                                                    "budget_amount",
+                                                    "items",
+                                                    "messages",
+                                                    "files",
+                                                    "quotations",
+                                                    "assigned_to",
+                                                    "review_actions",
+                                                    "can_message"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "total",
+                                                "last_page"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/request-orders/{number}": {
+            "get": {
+                "operationId": "requests.staff.show",
+                "tags": [
+                    "StaffCase"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Staff case detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "target_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "budget_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "source_url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "options": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "notes": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "source_url",
+                                                            "options",
+                                                            "notes",
+                                                            "qty"
+                                                        ]
+                                                    }
+                                                },
+                                                "messages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "body": {
+                                                                "type": "string"
+                                                            },
+                                                            "visibility": {
+                                                                "type": "string"
+                                                            },
+                                                            "author_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "body",
+                                                            "visibility",
+                                                            "author_label",
+                                                            "created_at"
+                                                        ]
+                                                    }
+                                                },
+                                                "files": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "mime": {
+                                                                "type": "string"
+                                                            },
+                                                            "size_bytes": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "mime",
+                                                            "size_bytes",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
+                                                "quotations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "number": {
+                                                                "type": "string"
+                                                            },
+                                                            "version": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "number",
+                                                            "version",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
+                                                "assigned_to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "review_actions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "can_message": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "title",
+                                                "status",
+                                                "target_date",
+                                                "created_at",
+                                                "description",
+                                                "budget_amount",
+                                                "items",
+                                                "messages",
+                                                "files",
+                                                "quotations",
+                                                "assigned_to",
+                                                "review_actions",
+                                                "can_message"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Request not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/request-orders/{number}/reviews": {
+            "post": {
+                "operationId": "requests.staff.review",
+                "tags": [
+                    "StaffCase"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "START",
+                                            "NEED_INFORMATION",
+                                            "REJECT",
+                                            "REOPEN"
+                                        ]
+                                    },
+                                    "assignee_id": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "pattern": "^[A-Za-z0-9_.-]+$",
+                                        "maxLength": 48
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "decision"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reviewed case",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "target_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "budget_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "source_url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "options": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "notes": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "source_url",
+                                                            "options",
+                                                            "notes",
+                                                            "qty"
+                                                        ]
+                                                    }
+                                                },
+                                                "messages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "body": {
+                                                                "type": "string"
+                                                            },
+                                                            "visibility": {
+                                                                "type": "string"
+                                                            },
+                                                            "author_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "body",
+                                                            "visibility",
+                                                            "author_label",
+                                                            "created_at"
+                                                        ]
+                                                    }
+                                                },
+                                                "files": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "mime": {
+                                                                "type": "string"
+                                                            },
+                                                            "size_bytes": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "mime",
+                                                            "size_bytes",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
+                                                "quotations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "number": {
+                                                                "type": "string"
+                                                            },
+                                                            "version": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "number",
+                                                            "version",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                },
+                                                "assigned_to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "review_actions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "can_message": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "title",
+                                                "status",
+                                                "target_date",
+                                                "created_at",
+                                                "description",
+                                                "budget_amount",
+                                                "items",
+                                                "messages",
+                                                "files",
+                                                "quotations",
+                                                "assigned_to",
+                                                "review_actions",
+                                                "can_message"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or reused key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Request not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "State or request conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/request-orders/{number}/messages": {
+            "post": {
+                "operationId": "requests.staff.message",
+                "tags": [
+                    "StaffCase"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "body": {
+                                        "type": "string",
+                                        "maxLength": 5000
+                                    },
+                                    "visibility": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CUSTOMER",
+                                            "STAFF"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "body",
+                                    "visibility"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Public reply or internal note",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "body": {
+                                                    "type": "string"
+                                                },
+                                                "visibility": {
+                                                    "type": "string"
+                                                },
+                                                "author_label": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "body",
+                                                "visibility",
+                                                "author_label",
+                                                "created_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or reused key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Request not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "State or request conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/orders": {
             "get": {
                 "operationId": "orders.staff.index",
@@ -25575,6 +28719,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -25688,6 +28840,14 @@
                                     "$ref": "#/components/schemas/ApiError"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "422": {
@@ -25791,6 +28951,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -25898,6 +29066,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -26036,6 +29212,14 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
