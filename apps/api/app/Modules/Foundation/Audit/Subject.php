@@ -15,6 +15,7 @@ enum Subject: string
     case RequestOrder = 'request_order';
     case Quotation = 'quotation';
     case Payment = 'payment';
+    case BankAccount = 'bank_account';
     case Invoice = 'invoice';
     case Refund = 'refund';
     case ReturnCase = 'return';

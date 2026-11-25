@@ -293,6 +293,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/bank-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.banks"];
+        put?: never;
+        post: operations["payments.staff.bank.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/bank-accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.bank"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["payments.staff.bank.update"];
+        trace?: never;
+    };
     "/admin/brands": {
         parameters: {
             query?: never;
@@ -655,6 +687,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["invoices.staff.issue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payments/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payments/{number}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payments/{number}/review-claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.claim"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1711,6 +1807,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bank-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.customer.banks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cart": {
         parameters: {
             query?: never;
@@ -1999,6 +2111,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.customer.index"];
+        put?: never;
+        post: operations["payments.customer.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.customer.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{number}/cancellations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.customer.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{number}/proofs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.customer.proof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/preorders": {
         parameters: {
             query?: never;
@@ -2255,6 +2431,15 @@ export interface components {
         };
         /** @description Authorization error */
         AuthorizationException: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+        /** @description Not found */
+        ModelNotFoundException: {
             headers: {
                 [name: string]: unknown;
             };
@@ -3929,6 +4114,197 @@ export interface operations {
                     "application/json": components["schemas"]["ApiError"];
                 };
             };
+        };
+    };
+    "payments.staff.banks": {
+        parameters: {
+            query?: {
+                active?: "0" | "1" | "true" | "false";
+                page?: number;
+                per_page?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bank accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            bank_code: string;
+                            code: string;
+                            holder_name: string;
+                            id: number;
+                            masked_number: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.bank.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    account_number: string;
+                    active: boolean;
+                    bank_code: string;
+                    code: string;
+                    holder_name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Bank account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            bank_code: string;
+                            code: string;
+                            holder_name: string;
+                            id: number;
+                            masked_number: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.bank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bank account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            bank_code: string;
+                            code: string;
+                            holder_name: string;
+                            id: number;
+                            masked_number: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "payments.staff.bank.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    account_number?: string;
+                    active?: boolean;
+                    bank_code?: string;
+                    code?: string;
+                    holder_name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated bank account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            bank_code: string;
+                            code: string;
+                            holder_name: string;
+                            id: number;
+                            masked_number: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "catalog.brands.index": {
@@ -6720,6 +7096,231 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "payments.staff.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                order?: string;
+                page?: number;
+                per_page?: number;
+                status?: "UNPAID" | "WAITING_CONFIRMATION" | "UNDER_REVIEW" | "EXPIRED" | "CANCELLED" | "REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "payments.staff.decision": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "REJECT";
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Finance decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.claim": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "CLAIM" | "RELEASE";
+                };
+            };
+        };
+        responses: {
+            /** @description Review lease changed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "admin.roles.catalog": {
@@ -14178,6 +14779,42 @@ export interface operations {
             };
         };
     };
+    "payments.customer.banks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active transfer destinations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            bank_code: string;
+                            code: string;
+                            holder_name: string;
+                            id: number;
+                            masked_number: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "cart.show": {
         parameters: {
             query?: never;
@@ -16132,6 +16769,273 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "payments.customer.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                order?: string;
+                page?: number;
+                per_page?: number;
+                status?: "UNPAID" | "WAITING_CONFIRMATION" | "UNDER_REVIEW" | "EXPIRED" | "CANCELLED" | "REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.customer.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bank_account_code: string;
+                    invoice_numbers: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Payment instructions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.customer.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "payments.customer.cancel": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled intent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "payments.customer.proof": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    file_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Proof submitted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            account_number?: string;
+                            amount: number;
+                            bank_code?: string;
+                            claim_until: string | null;
+                            claimed_by_me: boolean;
+                            currency: string;
+                            expires_at: string;
+                            holder_name?: string;
+                            invoice_numbers: string[];
+                            number: string;
+                            proof_ids: string[];
+                            reason_code: string | null;
+                            status: string;
+                            submitted_at: string | null;
+                            verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "preorders.index": {

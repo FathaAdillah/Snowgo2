@@ -309,3 +309,9 @@ Invoice lama ikut antre tanpa mengirim ulang email. Penerbitan baru mencatat `In
 PDF terbit berada di prefix privat `generated/invoice_pdf/`, bukan prefix upload sementara. Jangan pasang aturan expiry untuk prefix ini. Untuk nama barang beraksara Korea, image membawa [Nanum Gothic Regular](https://github.com/google/fonts/tree/16680f8688ffcd467d2eb2146a9ce0343404581d/ofl/nanumgothic) berlisensi SIL OFL dan metrik Dompdf; worker tidak memerlukan unduhan font.
 
 Sesudah ada invoice, jangan rollback skema. Pembayaran tetap di TASK-022/023; sumber saldo, biaya tambahan dengan persetujuan, dan koreksi shortage di TASK-024. Staf tidak dapat mengetik nominal tagihan baru.
+
+## Mengaktifkan pembayaran manual (TASK-022)
+
+Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di kontainer API, restart scheduler dan build ulang admin. Di **Finance → Rekening Tujuan**, buat setidaknya satu rekening aktif. Seeder tidak mengganti grant role lama; berikan `payments.bank.view` atau `payments.payment.view` dan izin aksi sesuai tugas masing-masing. Pemeriksa membutuhkan sesi MFA. Buat kode alasan aktif pada domain `payments` sebelum menolak pembayaran.
+
+Pelanggan memilih invoice miliknya dan rekening aktif, mengunggah bukti melalui API file privat dengan `owner_type=payment`, lalu mengirim ID bukti setelah scan READY. Antrean **Finance → Pembayaran** mendukung klaim selama 15 menit, pelepasan dan penolakan. Bukti pertama memperpanjang hold paling lama 24 jam; penggantian bukti tidak mengulang waktu. Persetujuan dan dana pengecualian mengikuti TASK-023.
