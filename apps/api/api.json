@@ -10756,6 +10756,43 @@
                                                 "shipping_amount": {
                                                     "type": "integer"
                                                 },
+                                                "checkout_shipping": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "quote_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "carrier_label": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "service_code": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "amount": {
+                                                            "type": "integer"
+                                                        },
+                                                        "estimated_days_from": {
+                                                            "type": "integer"
+                                                        },
+                                                        "estimated_days_to": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "quote_id",
+                                                        "carrier_label",
+                                                        "service_code",
+                                                        "amount",
+                                                        "estimated_days_from",
+                                                        "estimated_days_to"
+                                                    ]
+                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
@@ -19164,6 +19201,43 @@
                                                     "shipping_amount": {
                                                         "type": "integer"
                                                     },
+                                                    "checkout_shipping": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "quote_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "carrier_label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "service_code": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estimated_days_from": {
+                                                                "type": "integer"
+                                                            },
+                                                            "estimated_days_to": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "quote_id",
+                                                            "carrier_label",
+                                                            "service_code",
+                                                            "amount",
+                                                            "estimated_days_from",
+                                                            "estimated_days_to"
+                                                        ]
+                                                    },
                                                     "items": {
                                                         "type": "array",
                                                         "items": {
@@ -19585,6 +19659,43 @@
                                                 },
                                                 "shipping_amount": {
                                                     "type": "integer"
+                                                },
+                                                "checkout_shipping": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "quote_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "carrier_label": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "service_code": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "amount": {
+                                                            "type": "integer"
+                                                        },
+                                                        "estimated_days_from": {
+                                                            "type": "integer"
+                                                        },
+                                                        "estimated_days_to": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "quote_id",
+                                                        "carrier_label",
+                                                        "service_code",
+                                                        "amount",
+                                                        "estimated_days_from",
+                                                        "estimated_days_to"
+                                                    ]
                                                 },
                                                 "items": {
                                                     "type": "array",
@@ -20074,6 +20185,43 @@
                                                 },
                                                 "shipping_amount": {
                                                     "type": "integer"
+                                                },
+                                                "checkout_shipping": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "quote_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "carrier_label": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "service_code": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "amount": {
+                                                            "type": "integer"
+                                                        },
+                                                        "estimated_days_from": {
+                                                            "type": "integer"
+                                                        },
+                                                        "estimated_days_to": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "quote_id",
+                                                        "carrier_label",
+                                                        "service_code",
+                                                        "amount",
+                                                        "estimated_days_from",
+                                                        "estimated_days_to"
+                                                    ]
                                                 },
                                                 "items": {
                                                     "type": "array",

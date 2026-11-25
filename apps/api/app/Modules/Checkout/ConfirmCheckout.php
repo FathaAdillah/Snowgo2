@@ -62,8 +62,8 @@ final class ConfirmCheckout
                 app(InitialInvoices::class)->issue($order['id'], $owner, $g, $order['lines'], $due);
             }
             $this->checkExpiry($preview);
-            if ($selection) {
-                app(DomesticQuotes::class)->consume($selection);
+            if ($selection !== null) {
+                app(DomesticQuotes::class)->consume($cart->id, $plan['options'][0]);
             }
             $carts->convert($cart->id);
             app(Outbox::class)->record('CheckoutCompleted', 'checkout', $id, ['cart_version' => $version]);

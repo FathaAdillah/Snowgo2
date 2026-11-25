@@ -6,6 +6,7 @@ use App\Modules\Checkout\CheckoutPricing;
 use App\Modules\Checkout\ConfirmCheckout;
 use App\Modules\Inventory\StockLedger;
 use App\Support\Http\ApiProblem;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\DB;
@@ -59,11 +60,22 @@ it('prices and converts mixed groups once with immutable snapshots, tax rounding
     $this->assertDatabaseCount('stock_reservations', 1);
     $this->assertDatabaseCount('preorder_allocations', 1);
     $this->assertDatabaseHas('invoices', ['purpose' => 'DEPOSIT', 'total_amount' => 611, 'tax_amount' => 56]);
+    $this->assertDatabaseHas('invoices', ['purpose' => 'FULL_PAYMENT', 'status' => 'ISSUED', 'total_amount' => 2411, 'shipping_amount' => 200]);
     $this->assertDatabaseHas('carts', ['status' => 'CONVERTED']);
     expect(DB::table('outbox_events')->where('event_type', 'OrderCreated')->count())->toBe(2)
         ->and(DB::table('outbox_events')->where('event_type', 'CheckoutCompleted')->count())->toBe(1);
     DB::table('addresses')->update(['line1' => 'New address']);
     DB::table('products')->update(['name' => 'New title']);
+    DB::table('couriers')->update(['name' => 'New carrier']);
+    DB::table('courier_services')->update(['code' => 'NEW']);
+    DB::table('shipping_rates')->update(['eta_max_days' => 9, 'base_amount' => 900]);
+    $rts = DB::table('orders')->where('selling_method', 'READY_TO_SHIP')->first();
+    $po = DB::table('orders')->where('selling_method', 'PREORDER')->first();
+    $this->getJson("/api/v1/orders/$rts->number")->assertOk()->assertJsonPath('data.status', 'PENDING_PAYMENT')
+        ->assertJsonPath('data.checkout_shipping', ['quote_id' => $data['shipping_quote_id'], 'carrier_label' => 'Local Courier',
+            'service_code' => 'REG', 'amount' => 200, 'estimated_days_from' => 1, 'estimated_days_to' => 3]);
+    $this->getJson("/api/v1/orders/$po->number")->assertOk()->assertJsonMissingPath('data.checkout_shipping');
+    expect(fn () => DB::table('shipping_quotes')->where('public_id', $data['shipping_quote_id'])->update(['used_at' => null]))->toThrow(QueryException::class);
     $this->assertDatabaseHas('order_addresses', ['line1' => 'Old address']);
     $this->assertDatabaseHas('order_items', ['product_snapshot' => 'Album']);
     $path = '/api/v1/checkouts/'.$result['id'];
@@ -174,6 +186,34 @@ it('rolls back an RTS hold and invoice when the subsequent preorder invoice fail
     ($this->confirm)($data)->assertCreated();
 });
 
+it('leaves the chosen shipping option reusable when cart conversion fails after consumption', function () {
+    ($this->login)($this->buyer);
+    app(CustomerCart::class)->set($this->buyer->id, $this->rts);
+    $express = DB::table('courier_services')->insertGetId(['courier_id' => DB::table('couriers')->value('id'), 'code' => 'EXP', 'name' => 'Express']);
+    DB::table('shipping_rates')->insert(['service_id' => $express, 'origin_region_id' => $this->district, 'destination_region_id' => $this->district,
+        'base_amount' => 400, 'eta_min_days' => 1, 'eta_max_days' => 1]);
+    [$regular, $selected] = ($this->preview)($this->body)->assertOk()->json('data.shipping_quotes');
+    $data = $this->body + ['shipping_quote_id' => $selected['id']];
+    $data['quote_hash'] = ($this->preview)($data)->assertOk()->json('data.quote_hash');
+    DB::statement("ALTER TABLE carts ADD CONSTRAINT simulate_conversion_failure CHECK (status <> 'CONVERTED')");
+    try {
+        ($this->confirm)($data)->assertServerError();
+        $this->assertDatabaseHas('shipping_quotes', ['public_id' => $data['shipping_quote_id'], 'used_at' => null, 'carrier_label_snapshot' => null]);
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertDatabaseCount('stock_reservations', 0);
+        $this->assertDatabaseHas('inventory_levels', ['available' => 12, 'on_hand' => 12]);
+    } finally {
+        DB::statement('ALTER TABLE carts DROP CONSTRAINT simulate_conversion_failure');
+    }
+    $result = ($this->confirm)($data)->assertCreated()->json('data');
+    ($this->confirm)($data, 'replay')->assertCreated()->assertJsonPath('data', $result);
+    $this->assertDatabaseHas('shipping_quotes', ['public_id' => $regular['id'], 'used_at' => null]);
+    $this->getJson('/api/v1/orders/'.$result['order_numbers'][0])->assertOk()->assertJsonPath('data.checkout_shipping.service_code', 'EXP')
+        ->assertJsonPath('data.checkout_shipping.quote_id', $selected['id'])->assertJsonPath('data.checkout_shipping.amount', 400);
+    expect(DB::table('shipping_quotes')->whereNotNull('used_at')->count())->toBe(1);
+});
+
 function checkoutWorker(array $intents, string $barrier, int $workers): Closure
 {
     return static function () use ($intents, $barrier, $workers) {
@@ -194,7 +234,7 @@ function checkoutWorker(array $intents, string $barrier, int $workers): Closure
                 app(ConfirmCheckout::class)->submit($owner, $data);
                 $results[] = 'OK';
             } catch (ApiProblem $e) {
-                $results[] = $e->errorCode;
+                $results[] = $e->getStatusCode().':'.$e->errorCode;
             }
         }
 
@@ -203,6 +243,9 @@ function checkoutWorker(array $intents, string $barrier, int $workers): Closure
 }
 
 it('reserves exactly the available units when independent buyers confirm competing quotes', function (bool $po, int $count, int $units) {
+    if (! $po && $units < 12) {
+        app(StockLedger::class)->adjust(['level_id' => DB::table('inventory_levels')->value('id'), 'delta' => $units - 12, 'reason_code' => 'INITIAL'], $this->buyer->id, 'set-last-unit');
+    }
     $intents = [];
     for ($i = 0; $i < $count; $i++) {
         $owner = User::factory()->create()->id;
@@ -228,11 +271,18 @@ it('reserves exactly the available units when independent buyers confirm competi
         rmdir($barrier);
     }
     $outcomes = array_count_values($results);
-    expect($outcomes['OK'])->toBe($units)->and($outcomes[$po ? 'QUOTA_FULL' : 'OUT_OF_STOCK'])->toBe($count - $units);
+    expect($outcomes['OK'])->toBe($units)->and($outcomes[$po ? '409:QUOTA_FULL' : '409:OUT_OF_STOCK'])->toBe($count - $units);
     $this->assertDatabaseCount('orders', $units);
     $this->assertDatabaseCount('invoices', $units);
     $this->assertDatabaseCount('checkouts', $units);
     $this->assertDatabaseCount($po ? 'preorder_allocations' : 'stock_reservations', $units);
     $this->assertDatabaseHas('inventory_levels', ['reserved' => $po ? 0 : $units]);
     $this->assertDatabaseHas('preorder_campaign_variants', ['reserved_qty' => $po ? $units : 0]);
-})->with([[false, 100, 12], [true, 2, 1]]);
+    if (! $po) {
+        expect(DB::table('orders')->where(['status' => 'PENDING_PAYMENT', 'payment_status' => 'UNPAID'])->count())->toBe($units)
+            ->and(DB::table('stock_reservations')->where('status', 'ACTIVE')->count())->toBe($units)
+            ->and(DB::table('shipping_quotes')->whereNotNull('used_at')->count())->toBe($units)
+            ->and(DB::table('carts')->where('status', 'ACTIVE')->count())->toBe($count - $units);
+        $this->assertDatabaseHas('inventory_levels', ['available' => 0, 'reserved' => $units, 'on_hand' => $units, 'committed' => 0]);
+    }
+})->with(['last RTS unit' => [false, 2, 1], 'RTS contention' => [false, 100, 12], 'last preorder slot' => [true, 2, 1]]);

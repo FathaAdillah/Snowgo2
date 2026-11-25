@@ -27,7 +27,11 @@ final class OrderDirectory
                 FROM order_items i WHERE i.order_id=o.id) AS items,
             (SELECT json_agg(json_build_object('dimension',h.dimension,'to_status',h.to_status,'occurred_at',h.occurred_at) ORDER BY h.id)
                 FROM status_histories h WHERE h.subject_type='order' AND h.subject_id=o.id) AS history,
-            (SELECT json_agg(v.number ORDER BY v.id) FROM invoices v WHERE v.order_id=o.id) AS invoice_numbers
+            (SELECT json_agg(v.number ORDER BY v.id) FROM invoices v WHERE v.order_id=o.id) AS invoice_numbers,
+            (SELECT json_build_object('quote_id',q.public_id,'carrier_label',q.carrier_label_snapshot,'service_code',q.service_code_snapshot,
+                'amount',q.amount,'estimated_days_from',q.estimated_days_from,'estimated_days_to',q.estimated_days_to)
+                FROM checkouts c JOIN shipping_quotes q ON q.cart_id=c.cart_id AND q.used_at IS NOT NULL
+                WHERE o.selling_method='READY_TO_SHIP' AND c.id=o.checkout_id) AS checkout_shipping
             SQL);
         if ($address) {
             $rows->selectRaw("(SELECT json_build_object('recipient',a.recipient,'phone',a.phone,'line1',a.line1,'line2',a.line2,'postal_code',a.postal_code,'regions',a.region_snapshot) FROM order_addresses a WHERE a.order_id=o.id) AS address");
@@ -53,6 +57,11 @@ final class OrderDirectory
             $data[$field] = json_decode($data[$field] ?? '[]', false, flags: JSON_THROW_ON_ERROR);
         }
         $data['address'] = json_decode($data['address'] ?? 'null', false, flags: JSON_THROW_ON_ERROR);
+        if (isset($data['checkout_shipping'])) {
+            $data['checkout_shipping'] = json_decode($data['checkout_shipping'], false, flags: JSON_THROW_ON_ERROR);
+        } else {
+            unset($data['checkout_shipping']);
+        }
 
         return $data + ['shipment_numbers' => [], 'payment_numbers' => [], 'charge_consents' => []];
     }
