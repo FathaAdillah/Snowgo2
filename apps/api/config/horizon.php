@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Administration\Http\Middleware\LocalOperatorAccess;
+use App\Modules\Identity\Staff\StaffAccess;
 use Illuminate\Support\Str;
 
 return [
@@ -28,7 +30,7 @@ return [
     |
     */
 
-    'domain' => env('HORIZON_DOMAIN'),
+    'domain' => parse_url((string) env('ADMIN_URL', 'http://admin.localhost'), PHP_URL_HOST),
 
     /*
     |--------------------------------------------------------------------------
@@ -41,7 +43,7 @@ return [
     |
     */
 
-    'path' => env('HORIZON_PATH', 'horizon'),
+    'path' => 'horizon',
 
     /*
     |--------------------------------------------------------------------------
@@ -83,7 +85,7 @@ return [
     |
     */
 
-    'middleware' => ['web'],
+    'middleware' => ['web', LocalOperatorAccess::class.':'.StaffAccess::HORIZON],
 
     /*
     |--------------------------------------------------------------------------
