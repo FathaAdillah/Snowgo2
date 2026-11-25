@@ -35,6 +35,26 @@ final class Settlement
         return new ApiProblem(409, 'TRANSFER_CONFLICT', 'Transfer cannot be captured. Review the bank receipt and reconciliation queue.');
     }
 
+    /** Serialize by statement reference even if the same physical destination has been re-registered. */
+    public static function guardReceipt(object $payment, string $ref, ?int $except = null): void
+    {
+        DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?,0))', ['receipt:'.$ref]);
+        $prior = DB::table('payments')->where('bank_tx_ref', $ref)->select('id')->union(DB::table('payment_reconciliations')->where('bank_tx_ref', $ref)->where('status', '!=', 'REJECTED')->when($except, fn ($q) => $q->where('id', '!=', $except))->select('payment_id'));
+        $destination = self::destination($payment);
+        foreach (DB::table('payments')->whereIn('id', $prior)->get() as $used) {
+            if ($used->bank_account_id === $payment->bank_account_id || self::destination($used) === $destination) {
+                throw self::conflict();
+            }
+        }
+    }
+
+    /** @return array{string,string} */
+    private static function destination(object $payment): array
+    {
+        $snapshot = json_decode(\Illuminate\Support\Facades\Crypt::decryptString($payment->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR);
+        return [mb_strtoupper($snapshot['bank_code']), $snapshot['account_number']];
+    }
+
     public static function capture(string $number, int $actor, string $reference, int $amount, ?object $recovery = null): void
     {
         [$p,$orders] = PaymentFlow::lock($number, null);
@@ -61,10 +81,7 @@ final class Settlement
         DB::table('preorder_campaign_variants')->whereIn('id', DB::table('preorder_allocations')->whereIn('order_item_id', $items)->select('campaign_variant_id'))->orderBy('id')->lockForUpdate()->get('id');
         DB::table('inventory_levels')->whereIn('id', DB::table('stock_reservations')->whereIn('order_item_id', $items)->select('level_id'))->orderBy('id')->lockForUpdate()->get('id');
         DB::table('bank_accounts')->where('id', $p->bank_account_id)->lockForUpdate()->firstOrFail();
-        $ref = ['bank_account_id' => $p->bank_account_id, 'bank_tx_ref' => $reference];
-        if (DB::table('payments')->where($ref)->exists() || DB::table('payment_reconciliations')->where($ref)->where('status', '!=', 'REJECTED')->when($recovery, fn ($q) => $q->where('id', '!=', $recovery->id))->exists()) {
-            throw self::conflict();
-        }
+        self::guardReceipt($p, $reference, $recovery?->id);
         foreach ($rows as $r) {
             DB::table('payment_allocations')->where('id', $r->id)->update(['applied_at' => now()]);
             DB::table('invoices')->where('id', $r->invoice_id)->update(['status' => 'PAID', 'paid_at' => now()]);

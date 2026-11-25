@@ -30,9 +30,7 @@ final class Reconciliations
         [$p,$orders] = PaymentFlow::lock($number, null);
         DB::table('bank_accounts')->where('id', $p->bank_account_id)->lockForUpdate()->firstOrFail();
         $ref = ['bank_account_id' => $p->bank_account_id, 'bank_tx_ref' => mb_strtoupper(trim($input['bank_tx_ref']))];
-        if (DB::table('payments')->where($ref)->exists() || DB::table('payment_reconciliations')->where($ref)->where('status', '!=', 'REJECTED')->exists()) {
-            throw Settlement::conflict();
-        }
+        Settlement::guardReceipt($p, $ref['bank_tx_ref']);
         $id = DB::table('payment_reconciliations')->insertGetId($ref + ['payment_id' => $p->id, 'order_id' => $orders->firstOrFail()->id, 'handled_by' => $actor, 'amount' => $input['received_amount'], 'reason_id' => self::reason($input['reason_code'])]);
         self::record($id, null, 'OPEN', $actor, 'PaymentReconciliationOpened');
 
