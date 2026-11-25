@@ -53,6 +53,7 @@ final class OrderInvoices
         if ($order->term !== 'DEPOSIT' || ! DB::table('order_items')->where('order_id', $order->id)->where('cancelled_qty', '>', 0)->exists()) {
             return DB::table('invoices')->where(['order_id' => $order->id, 'status' => 'PAID'])->where('purpose', '!=', 'ADDITIONAL_CHARGE')->sum('total_amount') >= $order->total_amount;
         }
+
         return ! DB::table('order_items as i')->where(['i.order_id' => $order->id, 'i.term' => 'DEPOSIT'])->whereRaw("i.qty - i.cancelled_qty > coalesce((select sum(l.covered_qty) from invoice_items l join invoices v on v.id=l.invoice_id where l.order_item_id=i.id and v.status='PAID' and v.purpose='BALANCE'),0)")->exists();
     }
 
