@@ -86,13 +86,33 @@ final class Packages
             throw self::quantity();
         }
         $n = sprintf('SHP-%s-%06d', now()->format('Ymd'), DB::scalar("SELECT nextval('shipment_number_seq')"));
-        $s = DB::table('shipments')->insertGetId(['number' => $n, 'order_id' => $o->id, 'warehouse_id' => $warehouse->id, 'weight_g' => $d['measured_weight_g'] ?? $weight, 'rate_id' => $r->id, 'service_id' => $r->service_id, 'carrier_id' => $r->carrier_id, 'carrier_label' => $selected->carrier_label_snapshot ?? $r->carrier_label, 'service_code' => $d['service_code'], 'shipping_amount' => $selected->amount ?? ($r->base_amount + $kg * $r->amount_per_kg), 'eta_min_days' => $selected->estimated_days_from ?? $r->eta_min_days, 'eta_max_days' => $selected->estimated_days_to ?? $r->eta_max_days]);
+        $amount = $selected ? self::checkoutFreightShare($o->id, $selected->amount, $rows) : $r->base_amount + $kg * $r->amount_per_kg;
+        $s = DB::table('shipments')->insertGetId(['number' => $n, 'order_id' => $o->id, 'warehouse_id' => $warehouse->id, 'weight_g' => $d['measured_weight_g'] ?? $weight, 'rate_id' => $r->id, 'service_id' => $r->service_id, 'carrier_id' => $r->carrier_id, 'carrier_label' => $selected->carrier_label_snapshot ?? $r->carrier_label, 'service_code' => $d['service_code'], 'shipping_amount' => $amount, 'eta_min_days' => $selected->estimated_days_from ?? $r->eta_min_days, 'eta_max_days' => $selected->estimated_days_to ?? $r->eta_max_days]);
         foreach ($rows as $row) {
             DB::table('shipment_items')->insert(['shipment_id' => $s] + $row);
         }
         self::record($s, 'status', null, 'PENDING', 'ShipmentCreated', $actor);
 
         return $n;
+    }
+
+    /** @param list<array{order_item_id:int,public_id:string,coverage_start:int,qty:int}> $rows */
+    private static function checkoutFreightShare(int $order, int $amount, array $rows): int
+    {
+        $units = DB::table('order_items')->where('order_id', $order)->orderBy('id')->pluck('qty', 'id');
+        $count = (int) $units->sum();
+        $offset = $share = 0;
+        $byItem = array_column($rows, null, 'order_item_id');
+        foreach ($units as $id => $qty) {
+            if (isset($byItem[$id])) {
+                $line = $byItem[$id];
+                $start = $offset + $line['coverage_start'];
+                $share += intdiv($amount, $count) * $line['qty'] + min($line['qty'], max(0, $amount % $count - $start));
+            }
+            $offset += $qty;
+        }
+
+        return $share;
     }
 
     /** @return array{object,object} */

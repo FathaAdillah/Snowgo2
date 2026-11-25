@@ -32,6 +32,7 @@ beforeEach(function () {
     };
 });
 it('dispatches one RTS unit once after packing and isolates buyer shipment detail', function () {
+    DB::table('shipping_rates')->increment('base_amount');
     ($this->login)($this->buyer);
     app(CustomerCart::class)->set($this->buyer->id, $this->rts);
     [$body] = ($this->finalQuote)($this->body);
@@ -47,6 +48,10 @@ it('dispatches one RTS unit once after packing and isolates buyer shipment detai
     });
     $n = ($this->write)('admin/shipments', $plan, 'one')->assertOk()->json('data.number');
     ($this->write)('admin/shipments', $plan, 'one')->assertOk()->assertJsonPath('data.number', $n);
+    $secondShare = ($this->write)('admin/shipments', $plan)->assertOk()->json('data.shipping_amount');
+    $orderFreight = DB::table('invoices')->sole()->shipping_amount;
+    expect($secondShare)->toBe(intdiv($orderFreight, 2))
+        ->and(DB::table('shipments')->where('number', $n)->value('shipping_amount'))->toBe($orderFreight - $secondShare);
     $route = "admin/shipments/$n/dispatches";
     $d = ['service_code' => 'REG', 'tracking_number' => ' abc '];
     ($this->write)($route, $d)->assertConflict();
