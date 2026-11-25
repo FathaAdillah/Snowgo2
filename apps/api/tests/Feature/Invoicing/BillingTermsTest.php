@@ -104,3 +104,26 @@ it('keeps an unshipped unit eligible for fees when a later package leaves first'
     ($this->write)($url, $fee)->assertConflict();
     ($this->write)($url, ['type' => 'SERVICE_FEE'] + $fee)->assertOk()->assertJsonPath('data.lines.0.start', 0);
 });
+
+it('releases a package only when the entire consent invoice chain is void', function () {
+    $package = ['order_number' => $this->order, 'warehouse_id' => DB::table('warehouses')->sole()->id, 'service_code' => 'REG', 'items' => [['order_item_id' => $this->item->public_id, 'qty' => 1]]];
+    $number = ($this->write)('admin/shipments', $package)->assertOk()->json('data.number');
+    $quote = ($this->write)('admin/shipping-quotes', ['order_number' => $this->order, 'shipment_number' => $number])->assertOk()->json('data.0.id');
+    $consent = ($this->write)("admin/orders/$this->order/charge-consents", ['type' => 'DOMESTIC_SHIPPING', 'quote_id' => $quote, 'expires_at' => now()->addHour()->toISOString()])->assertOk()->json('data.id');
+    ($this->login)($this->buyer);
+    $invoice = ($this->write)("orders/$this->order/charge-consents/$consent/decisions", ['decision' => 'ACCEPT'])->assertOk()->json('data.invoice_number');
+    ($this->asStaff)();
+    foreach (['shipping', 'invoicing'] as $domain) {
+        DB::table('reason_codes')->insert(['domain' => $domain, 'code' => 'REPLAN', 'label' => 'Replan']);
+    }
+    $reason = ['reason_code' => 'REPLAN'];
+    $cancel = "admin/shipments/$number/cancellations";
+    $replace = fn ($original) => ($this->write)("admin/orders/$this->order/invoices", ['purpose' => 'ADDITIONAL_CHARGE', 'replaces_invoice_number' => $original, 'due_at' => now()->addDay()->toISOString()]);
+    ($this->write)("admin/invoices/$invoice/voids", $reason)->assertOk();
+    $replacement = $replace($invoice)->assertOk()->json('data.number');
+    ($this->write)($cancel, $reason)->assertConflict();
+    ($this->write)("admin/invoices/$replacement/voids", $reason)->assertOk();
+    ($this->write)($cancel, $reason)->assertOk();
+    $replace($replacement)->assertConflict();
+    ($this->write)('admin/shipments', $package)->assertOk();
+});

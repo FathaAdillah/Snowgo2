@@ -142,7 +142,10 @@ final class Packages
             return $number;
         }
         if ($action === 'cancel') {
-            if (DB::table('shipping_quotes')->where('shipment_id', $s->id)->whereNotNull('used_at')->exists()) {
+            if (DB::scalar("WITH RECURSIVE billed AS (
+                SELECT i.id,i.status FROM invoices i JOIN order_charge_consents c ON c.invoice_id=i.id JOIN shipping_quotes q ON q.id=c.quote_id WHERE q.shipment_id=?
+                UNION ALL SELECT i.id,i.status FROM invoices i JOIN billed b ON i.replaces_invoice_id=b.id
+            ) SELECT EXISTS(SELECT FROM billed WHERE status!='VOID')", [$s->id])) {
                 throw self::invalid();
             }
             $reason = DB::table('reason_codes')->where(['domain' => 'shipping', 'code' => $d['reason_code'], 'active' => true])->sharedLock()->value('id') ?? throw self::invalid();
