@@ -31,7 +31,7 @@ final class ChargeConsents
         $until = Carbon::parse($input['expires_at']);
         if ($input['type'] === 'DOMESTIC_SHIPPING') {
             $quote = DB::table('shipping_quotes')->where(['order_id' => $order->id, 'user_id' => $order->user_id, 'public_id' => $input['quote_id']])->lockForUpdate()->first() ?? abort(404);
-            if ($quote->used_at || ! $quote->service_code_snapshot) {
+            if (($quote->shipment_id && !DB::table('shipments')->where(['id'=>$quote->shipment_id,'status'=>'PENDING'])->exists()) || $quote->used_at || ! $quote->service_code_snapshot) {
                 throw self::invalid();
             }
             $until = $until->min(Carbon::parse($quote->expires_at));
@@ -78,6 +78,7 @@ final class ChargeConsents
         $line = json_decode($c->lines, true, flags: JSON_THROW_ON_ERROR)[0];
         $item = null;
         if ($c->quote_id) {
+            if (DB::table('shipping_quotes as q')->join('shipments as s','s.id','=','q.shipment_id')->where('q.id',$c->quote_id)->where('s.status','!=','PENDING')->exists()) {throw self::invalid();}
             if (! DB::table('shipping_quotes')->where(['id' => $c->quote_id, 'order_id' => $order->id])->whereNull('used_at')->whereRaw('expires_at>clock_timestamp()')->update(['used_at' => now()])) {
                 throw self::invalid();
             }
