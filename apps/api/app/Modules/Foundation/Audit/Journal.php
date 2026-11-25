@@ -42,6 +42,9 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::BankAccount) {
+            $fields = [...$fields, 'bank_code', 'masked_number'];
+        }
         if ($subject === Subject::RequestOrder) {
             $fields = [...$fields, 'assigned_to', 'message_id'];
         }
