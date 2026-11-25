@@ -5288,7 +5288,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        code: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
                         message: string;
                         meta: {
                             request_id: string;
@@ -11806,7 +11810,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        code: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
                         message: string;
                         meta: {
                             request_id: string;
@@ -11939,7 +11947,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        code: string;
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
                         message: string;
                         meta: {
                             request_id: string;

@@ -11311,11 +11311,24 @@
                                             "type": "boolean",
                                             "const": false
                                         },
-                                        "code": {
-                                            "type": "string"
-                                        },
                                         "message": {
                                             "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
                                         },
                                         "meta": {
                                             "type": "object",
@@ -11331,8 +11344,8 @@
                                     },
                                     "required": [
                                         "success",
-                                        "code",
                                         "message",
+                                        "code",
                                         "meta"
                                     ]
                                 }
@@ -11803,11 +11816,24 @@
                                             "type": "boolean",
                                             "const": false
                                         },
-                                        "code": {
-                                            "type": "string"
-                                        },
                                         "message": {
                                             "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
                                         },
                                         "meta": {
                                             "type": "object",
@@ -11823,8 +11849,8 @@
                                     },
                                     "required": [
                                         "success",
-                                        "code",
                                         "message",
+                                        "code",
                                         "meta"
                                     ]
                                 }
@@ -20364,11 +20390,24 @@
                                             "type": "boolean",
                                             "const": false
                                         },
-                                        "code": {
-                                            "type": "string"
-                                        },
                                         "message": {
                                             "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
                                         },
                                         "meta": {
                                             "type": "object",
@@ -20384,8 +20423,8 @@
                                     },
                                     "required": [
                                         "success",
-                                        "code",
                                         "message",
+                                        "code",
                                         "meta"
                                     ]
                                 }

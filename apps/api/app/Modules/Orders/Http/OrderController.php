@@ -45,7 +45,7 @@ final class OrderController
     #[Response(404, 'Order not found', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(409, 'INVALID_STATE_TRANSITION or REQUEST_IN_PROGRESS', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(419, 'CSRF mismatch', type: ApiResponse::ERROR_SCHEMA)]
-    #[Response(422, 'Invalid input or IDEMPOTENCY_KEY_REUSED', type: ApiResponse::ERROR_SCHEMA)]
+    #[Response(422, 'Invalid input or IDEMPOTENCY_KEY_REUSED', type: OrderResponse::INVALID)]
     public function cancel(Request $request, string $number): JsonResponse
     {
         return OrderMutation::run($request, $number, 'CANCEL', $request->validate(['reason_code' => 'required|'.self::REASON, 'note' => 'sometimes|required|string|max:1000']));
@@ -58,7 +58,7 @@ final class OrderController
     #[Response(404, 'Order not found', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(409, 'INVALID_STATE_TRANSITION or REQUEST_IN_PROGRESS', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(419, 'CSRF mismatch', type: ApiResponse::ERROR_SCHEMA)]
-    #[Response(422, 'Invalid input or IDEMPOTENCY_KEY_REUSED', type: ApiResponse::ERROR_SCHEMA)]
+    #[Response(422, 'Invalid input or IDEMPOTENCY_KEY_REUSED', type: OrderResponse::INVALID)]
     public function complete(Request $request, string $number): JsonResponse
     {
         return OrderMutation::run($request, $number, 'COMPLETE', []);

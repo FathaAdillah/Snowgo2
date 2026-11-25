@@ -29,6 +29,8 @@ final class OrderResponse
 
     public const FULL = 'array{success:bool,message:string,data:'.self::DETAIL.',meta:array{request_id:string}}';
 
+    public const INVALID = "array{success:false,message:string,code:'VALIDATION_FAILED'|'IDEMPOTENCY_KEY_REUSED',errors?:array<string,list<string>>,meta:array{request_id:string}}";
+
     public static function one(string $number, ?int $owner, bool $detail, bool $address = false, bool $totals = false): JsonResponse
     {
         $query = $detail ? OrderDirectory::details($owner, $address, $totals) : OrderDirectory::summaries($owner);

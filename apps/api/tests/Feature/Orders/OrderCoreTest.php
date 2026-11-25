@@ -66,10 +66,10 @@ it('voids invoices and releases only the purchased supply once, with an auditabl
     $data = ['reason_code' => 'BUYER', 'note' => 'private note'];
     $key = ['Idempotency-Key' => 'cancel'];
     $this->postJson($url, $data)->assertUnprocessable();
-    $this->postJson($url, ['reason_code' => 'INITIAL'], $key)->assertUnprocessable();
+    $this->postJson($url, ['reason_code' => 'INITIAL'], $key)->assertUnprocessable()->assertJsonValidationErrors('reason_code');
     $this->postJson($url, $data, $key)->assertOk()->assertJsonPath('data.status', 'CANCELLED');
     $this->postJson($url, $data, $key)->assertOk();
-    $this->postJson($url, ['reason_code' => 'BUYER'], $key)->assertUnprocessable()->assertJsonPath('code', 'IDEMPOTENCY_KEY_REUSED');
+    $this->postJson($url, ['reason_code' => 'BUYER'], $key)->assertUnprocessable()->assertJsonPath('code', 'IDEMPOTENCY_KEY_REUSED')->assertJsonMissingPath('errors');
     $this->postJson($url, $data, ['Idempotency-Key' => 'another'])->assertConflict()->assertJsonPath('code', 'INVALID_STATE_TRANSITION');
     $this->assertDatabaseHas('invoices', ['status' => 'VOID']);
     $this->assertDatabaseHas('order_items', ['cancelled_qty' => $method === 'RTS' ? 2 : 1]);

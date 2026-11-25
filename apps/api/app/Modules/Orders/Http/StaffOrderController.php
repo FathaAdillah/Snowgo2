@@ -61,7 +61,7 @@ final class StaffOrderController
     #[Response(404, 'Order or action not found', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(409, 'INVALID_STATE_TRANSITION or REQUEST_IN_PROGRESS', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(419, 'CSRF mismatch', type: ApiResponse::ERROR_SCHEMA)]
-    #[Response(422, 'Invalid input or IDEMPOTENCY_KEY_REUSED', type: ApiResponse::ERROR_SCHEMA)]
+    #[Response(422, 'Invalid input or IDEMPOTENCY_KEY_REUSED', type: OrderResponse::INVALID)]
     public function action(Request $request, string $number, string $action): JsonResponse
     {
         abort_unless($request->user()->can('orders.order.'.strtolower($action)), 403);
