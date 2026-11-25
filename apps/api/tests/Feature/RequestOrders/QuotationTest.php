@@ -32,9 +32,9 @@ beforeEach(function () {
     $this->input = ['items' => [['request_item_id' => $this->item, 'label' => 'Set', 'qty' => 3, 'unit_amount' => 500, 'options' => 'Green', 'foreign_currency' => 'JPY', 'foreign_amount' => '13.20', 'exchange_rate' => '4.95']],
         'terms' => 'Goods only', 'term' => 'DEPOSIT', 'deposit_amount' => 1001, 'shipping_estimate_amount' => 250, 'valid_until' => now()->addDay()->toISOString()];
     $this->post = fn ($url, $data = [], $key = null) => $this->postJson($url, $data, ['Idempotency-Key' => $key ?? (string) Str::uuid()]);
-    $this->patchQuote = fn ($n, $data) => $this->patchJson("$this->quotes/$n", $data, ['Idempotency-Key' => (string) Str::uuid()]);
+    $this->patchQuote = fn ($n, $data) => $this->patchJson("$this->quotes/$n", $data + ['revision' => 1], ['Idempotency-Key' => (string) Str::uuid()]);
     $this->draft = fn () => ($this->post)($this->quotes, $this->input)->assertCreated()->json('data.number');
-    $this->dispatch = fn ($q) => ($this->post)("$this->quotes/$q/dispatches")->assertOk();
+    $this->dispatch = fn ($q, $revision = 1) => ($this->post)("$this->quotes/$q/dispatches", ['revision' => $revision])->assertOk();
     $this->address = function () {
         $parent = null;
         foreach (['COUNTRY' => 'ID', 'PROVINCE' => '11', 'CITY' => '11.01', 'DISTRICT' => '11.01.01'] as $kind => $code) {
@@ -71,8 +71,13 @@ it('scopes drafts and edit permissions, freezes sent prices and supersedes versi
     ($this->patchQuote)($q, ['terms' => 'Next'])->assertForbidden();
     ($this->post)("$this->quotes/$q/dispatches")->assertForbidden();
     $this->staff->assignRole('order_staff');
-    ($this->patchQuote)($q, ['terms' => 'Next'])->assertOk()->assertJsonPath('data.terms', 'Next');
-    ($this->dispatch)($q);
+    ($this->patchQuote)($q, ['terms' => 'Next'])->assertOk()->assertJsonPath('data.terms', 'Next')->assertJsonPath('data.revision', 2);
+    ($this->post)("$this->quotes/$q/dispatches")->assertUnprocessable();
+    ($this->post)("$this->quotes/$q/dispatches", ['revision' => 1])->assertConflict()->assertJsonPath('code', 'VERSION_CONFLICT');
+    ($this->patchQuote)($q, ['terms' => 'Stale'])->assertConflict()->assertJsonPath('code', 'VERSION_CONFLICT');
+    $this->assertDatabaseHas('quotations', ['number' => $q, 'status' => 'DRAFT', 'terms' => 'Next']);
+    $this->assertDatabaseMissing('outbox_events', ['event_type' => 'QuotationSent']);
+    ($this->dispatch)($q, 2);
     ($this->patchQuote)($q, ['terms' => 'No'])->assertConflict();
     expect(fn () => DB::table('quotation_items')->update(['label' => 'No']))->toThrow(QueryException::class);
     expect(fn () => DB::table('quotations')->update(['terms' => 'No']))->toThrow(QueryException::class);

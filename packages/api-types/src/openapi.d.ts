@@ -8642,6 +8642,7 @@ export interface operations {
                                     weight_g: number | null;
                                 }[];
                                 number: string;
+                                revision: number;
                                 shipping_estimate_amount: number | null;
                                 status: string;
                                 subtotal_amount: number;
@@ -8733,6 +8734,7 @@ export interface operations {
                                     weight_g: number | null;
                                 }[];
                                 number: string;
+                                revision: number;
                                 shipping_estimate_amount: number | null;
                                 status: string;
                                 subtotal_amount: number;
@@ -8955,6 +8957,7 @@ export interface operations {
                                 weight_g: number | null;
                             }[];
                             number: string;
+                            revision: number;
                             shipping_estimate_amount: number | null;
                             status: string;
                             subtotal_amount: number;
@@ -9062,7 +9065,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": {
                     deposit_amount?: number | null;
@@ -9077,6 +9080,7 @@ export interface operations {
                         unit_amount: number;
                         weight_g?: number;
                     }[];
+                    revision: number;
                     shipping_estimate_amount?: number | null;
                     /** @enum {string} */
                     term?: "FULL" | "DEPOSIT";
@@ -9108,6 +9112,7 @@ export interface operations {
                                 weight_g: number | null;
                             }[];
                             number: string;
+                            revision: number;
                             shipping_estimate_amount: number | null;
                             status: string;
                             subtotal_amount: number;
@@ -9215,7 +9220,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    revision: number;
+                };
+            };
+        };
         responses: {
             /** @description Frozen quotation sent */
             200: {
@@ -9238,6 +9249,7 @@ export interface operations {
                                 weight_g: number | null;
                             }[];
                             number: string;
+                            revision: number;
                             shipping_estimate_amount: number | null;
                             status: string;
                             subtotal_amount: number;
@@ -9374,6 +9386,7 @@ export interface operations {
                                 weight_g: number | null;
                             }[];
                             number: string;
+                            revision: number;
                             shipping_estimate_amount: number | null;
                             status: string;
                             subtotal_amount: number;
@@ -9540,6 +9553,7 @@ export interface operations {
                                     weight_g: number | null;
                                 }[];
                                 number: string;
+                                revision: number;
                                 shipping_estimate_amount: number | null;
                                 status: string;
                                 subtotal_amount: number;
@@ -15665,6 +15679,7 @@ export interface operations {
                                     weight_g: number | null;
                                 }[];
                                 number: string;
+                                revision: number;
                                 shipping_estimate_amount: number | null;
                                 status: string;
                                 subtotal_amount: number;
@@ -16079,6 +16094,7 @@ export interface operations {
                                     weight_g: number | null;
                                 }[];
                                 number: string;
+                                revision: number;
                                 shipping_estimate_amount: number | null;
                                 status: string;
                                 subtotal_amount: number;

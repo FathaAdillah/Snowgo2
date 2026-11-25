@@ -8912,6 +8912,9 @@
                                                             "version": {
                                                                 "type": "integer"
                                                             },
+                                                            "revision": {
+                                                                "type": "integer"
+                                                            },
                                                             "status": {
                                                                 "type": "string"
                                                             },
@@ -9004,6 +9007,7 @@
                                                         "required": [
                                                             "number",
                                                             "version",
+                                                            "revision",
                                                             "status",
                                                             "valid_until",
                                                             "term",
@@ -19970,6 +19974,9 @@
                                                         "version": {
                                                             "type": "integer"
                                                         },
+                                                        "revision": {
+                                                            "type": "integer"
+                                                        },
                                                         "status": {
                                                             "type": "string"
                                                         },
@@ -20062,6 +20069,7 @@
                                                     "required": [
                                                         "number",
                                                         "version",
+                                                        "revision",
                                                         "status",
                                                         "valid_until",
                                                         "term",
@@ -20591,6 +20599,9 @@
                                                 "version": {
                                                     "type": "integer"
                                                 },
+                                                "revision": {
+                                                    "type": "integer"
+                                                },
                                                 "status": {
                                                     "type": "string"
                                                 },
@@ -20683,6 +20694,7 @@
                                             "required": [
                                                 "number",
                                                 "version",
+                                                "revision",
                                                 "status",
                                                 "valid_until",
                                                 "term",
@@ -20877,11 +20889,16 @@
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "revision": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    },
                                     "valid_until": {
                                         "type": "string",
                                         "format": "date-time",
@@ -20970,7 +20987,10 @@
                                         "minimum": 0,
                                         "maximum": 1000000000000
                                     }
-                                }
+                                },
+                                "required": [
+                                    "revision"
+                                ]
                             }
                         }
                     }
@@ -20997,6 +21017,9 @@
                                                     "type": "string"
                                                 },
                                                 "version": {
+                                                    "type": "integer"
+                                                },
+                                                "revision": {
                                                     "type": "integer"
                                                 },
                                                 "status": {
@@ -21091,6 +21114,7 @@
                                             "required": [
                                                 "number",
                                                 "version",
+                                                "revision",
                                                 "status",
                                                 "valid_until",
                                                 "term",
@@ -21342,6 +21366,25 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "revision": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    }
+                                },
+                                "required": [
+                                    "revision"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Frozen quotation sent",
@@ -21364,6 +21407,9 @@
                                                     "type": "string"
                                                 },
                                                 "version": {
+                                                    "type": "integer"
+                                                },
+                                                "revision": {
                                                     "type": "integer"
                                                 },
                                                 "status": {
@@ -21458,6 +21504,7 @@
                                             "required": [
                                                 "number",
                                                 "version",
+                                                "revision",
                                                 "status",
                                                 "valid_until",
                                                 "term",
@@ -21485,6 +21532,58 @@
                                         "success",
                                         "message",
                                         "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or reused key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
                                         "meta"
                                     ]
                                 }
@@ -21613,58 +21712,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "description": "Invalid input or reused key",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "const": false
-                                        },
-                                        "code": {
-                                            "type": "string",
-                                            "enum": [
-                                                "VALIDATION_FAILED",
-                                                "IDEMPOTENCY_KEY_REUSED"
-                                            ]
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "errors": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        },
-                                        "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "request_id": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "request_id"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "code",
-                                        "message",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -21751,6 +21798,9 @@
                                                     "type": "string"
                                                 },
                                                 "version": {
+                                                    "type": "integer"
+                                                },
+                                                "revision": {
                                                     "type": "integer"
                                                 },
                                                 "status": {
@@ -21845,6 +21895,7 @@
                                             "required": [
                                                 "number",
                                                 "version",
+                                                "revision",
                                                 "status",
                                                 "valid_until",
                                                 "term",
@@ -28116,6 +28167,9 @@
                                                                 "version": {
                                                                     "type": "integer"
                                                                 },
+                                                                "revision": {
+                                                                    "type": "integer"
+                                                                },
                                                                 "status": {
                                                                     "type": "string"
                                                                 },
@@ -28208,6 +28262,7 @@
                                                             "required": [
                                                                 "number",
                                                                 "version",
+                                                                "revision",
                                                                 "status",
                                                                 "valid_until",
                                                                 "term",
@@ -28471,6 +28526,9 @@
                                                             "version": {
                                                                 "type": "integer"
                                                             },
+                                                            "revision": {
+                                                                "type": "integer"
+                                                            },
                                                             "status": {
                                                                 "type": "string"
                                                             },
@@ -28563,6 +28621,7 @@
                                                         "required": [
                                                             "number",
                                                             "version",
+                                                            "revision",
                                                             "status",
                                                             "valid_until",
                                                             "term",
@@ -28898,6 +28957,9 @@
                                                             "version": {
                                                                 "type": "integer"
                                                             },
+                                                            "revision": {
+                                                                "type": "integer"
+                                                            },
                                                             "status": {
                                                                 "type": "string"
                                                             },
@@ -28990,6 +29052,7 @@
                                                         "required": [
                                                             "number",
                                                             "version",
+                                                            "revision",
                                                             "status",
                                                             "valid_until",
                                                             "term",

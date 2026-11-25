@@ -40,7 +40,7 @@ final class QuotationDrafts
             $id = $quotes->insertGetId($header + ['number' => $number, 'version' => 1 + (int) $quotes->max('version'), 'request_order_id' => $case->id]);
         } else {
             $id = $draft->id;
-            $quotes->where('id', $id)->update($header);
+            $quotes->where('id', $id)->update($header + ['revision' => $draft->revision + 1]);
         }
         if ($lines !== null) {
             DB::table('quotation_items')->where('quotation_id', $id)->delete();

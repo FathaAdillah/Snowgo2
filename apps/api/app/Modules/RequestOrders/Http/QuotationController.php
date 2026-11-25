@@ -54,9 +54,9 @@ final class QuotationController
     #[Response(422, 'Invalid input or reused key', type: CaseMutation::INVALID)]
     public function update(Request $request, string $number, string $quotation_number): JsonResponse
     {
-        $data = $request->validate(['valid_until' => ['sometimes', 'required', ...self::DATE], 'term' => 'sometimes|required|string|in:FULL,DEPOSIT', 'terms' => 'sometimes|required|string|max:5000', 'items' => 'sometimes|required|'.self::ITEMS, ...self::LINES]);
+        $data = $request->validate(['revision' => 'required|integer|min:1', 'valid_until' => ['sometimes', 'required', ...self::DATE], 'term' => 'sometimes|required|string|in:FULL,DEPOSIT', 'terms' => 'sometimes|required|string|max:5000', 'items' => 'sometimes|required|'.self::ITEMS, ...self::LINES]);
 
-        return $this->staff($request, $number, 'update', $data, fn ($case, $actor) => ApiResponse::success(QuotationDrafts::save($case, QuotationData::locked($case->id, $quotation_number), $actor, $data)));
+        return $this->staff($request, $number, 'update', $data, fn ($case, $actor) => ApiResponse::success(QuotationDrafts::save($case, QuotationData::locked($case->id, $quotation_number, (int) $data['revision']), $actor, $data)));
     }
 
     #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
@@ -68,7 +68,9 @@ final class QuotationController
     #[Response(422, 'Invalid input or reused key', type: CaseMutation::INVALID)]
     public function dispatch(Request $request, string $number, string $quotation_number): JsonResponse
     {
-        return $this->staff($request, $number, 'dispatch', [], fn ($case, $actor) => ApiResponse::success(QuotationLifecycle::dispatch($case, QuotationData::locked($case->id, $quotation_number), $actor)));
+        $data = $request->validate(['revision' => 'required|integer|min:1']);
+
+        return $this->staff($request, $number, 'dispatch', $data, fn ($case, $actor) => ApiResponse::success(QuotationLifecycle::dispatch($case, QuotationData::locked($case->id, $quotation_number, (int) $data['revision']), $actor)));
     }
 
     #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
@@ -98,13 +100,13 @@ final class QuotationController
     {
         $data = $request->validate(['decision' => 'required|string|in:ACCEPT,REJECT,REVISE', 'note' => 'sometimes|required|string|max:1000', 'address_id' => 'required_if:decision,ACCEPT|prohibited_unless:decision,ACCEPT|string|ulid']);
 
-        return CaseMutation::run($request, $data, $number, null, fn ($case,$actor) => ApiResponse::success(QuotationLifecycle::decide($case,QuotationData::locked($case->id,$quotation_number),$actor,$data)));
+        return CaseMutation::run($request, $data, $number, null, fn ($case, $actor) => ApiResponse::success(QuotationLifecycle::decide($case, QuotationData::locked($case->id, $quotation_number), $actor, $data)));
     }
 
     /** @param array<string,mixed> $data
      * @param Closure(object,int):JsonResponse $write */
-    private function staff(Request $request,string $number,string $action,array $data,Closure $write): JsonResponse
+    private function staff(Request $request, string $number, string $action, array $data, Closure $write): JsonResponse
     {
-        return CaseMutation::authorized($request,$data,$number,['request_orders.request.view', 'request_orders.quotation.view', 'request_orders.quotation.manage', 'request_orders.quotation.'.$action],$write);
+        return CaseMutation::authorized($request, $data, $number, ['request_orders.request.view', 'request_orders.quotation.view', 'request_orders.quotation.manage', 'request_orders.quotation.'.$action], $write);
     }
 }

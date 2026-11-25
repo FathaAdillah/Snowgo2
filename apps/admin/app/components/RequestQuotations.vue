@@ -43,7 +43,7 @@ function save() {
   const q = editing.value
   if (!q || !total.value || !allowed(q === 'new' ? 'create' : 'update')) return
   action.value = { url: q === 'new' ? base.value : `${base.value}/${q.number}`, method: q === 'new' ? 'POST' : 'PATCH',
-    label: `Simpan draf senilai ${money(total.value)}?`, body: { valid_until: new Date(until.value).toISOString(), term: term.value, terms: terms.value,
+    label: `Simpan draf senilai ${money(total.value)}?`, body: { ...(q === 'new' ? {} : { revision: q.revision }), valid_until: new Date(until.value).toISOString(), term: term.value, terms: terms.value,
       deposit_amount: term.value === 'DEPOSIT' ? Number(deposit.value) : null, shipping_estimate_amount: shipping.value === undefined || String(shipping.value) === '' ? null : Number(shipping.value),
       items: lines.value.filter(i => i.selected).map(({ selected: _selected, ...i }) =>
         Object.fromEntries(Object.entries(i).filter(([, v]) => v !== undefined && v !== ''))) } }
@@ -51,7 +51,7 @@ function save() {
 function prepare(q: Quote, send: boolean) {
   if (!allowed(send ? 'dispatch' : 'withdraw')) return
   action.value = { url: `${base.value}/${q.number}/${send ? 'dispatches' : 'withdrawals'}`, method: 'POST',
-    body: send ? {} : { reason_code: reason.value }, label: send ? `Kirim versi ${q.version} senilai ${money(q.total_amount)} dan bekukan isinya?` : `Tarik penawaran ${q.number}?` }
+    body: send ? { revision: q.revision } : { reason_code: reason.value }, label: send ? `Kirim versi ${q.version} senilai ${money(q.total_amount)} dan bekukan isinya?` : `Tarik penawaran ${q.number}?` }
 }
 function saved() {
   editing.value = withdrawing.value = action.value = undefined
