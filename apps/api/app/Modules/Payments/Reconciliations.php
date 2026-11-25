@@ -67,7 +67,7 @@ final class Reconciliations
                 }
                 $ref = mb_strtoupper(trim($input['refund_transfer_ref']));
                 DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?,0))', ["return:$ref"]);
-                if (DB::table('payment_reconciliations')->where('refund_transfer_ref', $ref)->exists()) {
+                if (DB::table('refund_transfers')->where('transfer_ref', $ref)->exists() || DB::table('payment_reconciliations')->where('refund_transfer_ref', $ref)->exists()) {
                     throw Settlement::conflict();
                 }
                 $columns += ['refund_transfer_ref' => $ref, 'proof_file_id' => $proof->id];

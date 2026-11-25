@@ -334,3 +334,7 @@ Di **Pengiriman**, isi kurir, layanan, dan tarif per pasangan kecamatan. Untuk R
 ### Mengaktifkan tracking dan completion (TASK-026)
 
 Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di container API, restart scheduler dan rebuild admin-preview. Berikan `shipping.shipment.view` dan `shipping.tracking.manage` ke staf pelacakan. Form dan timeline berada pada detail Paket & Dispatch. Untuk FAILED atau RETURNED isi catatan kejadian. Scheduler memeriksa pesanan tiap jam setelah jangka terlama dari `RETURN_WINDOW_HOURS` (48) dan `COMPLETION_DELAY_HOURS` (72). Polling memakai adapter fake dalam pengujian. Integrasi kurir jaringan dijadwalkan pada Phase 2.
+
+### Mengaktifkan refund manual (TASK-027)
+
+Jalankan migrasi dan PermissionSeeder. Berikan izin melalui Role & Izin pada role yang sudah ada. Pelanggan dapat meminta refund dari alokasi pembayaran yang telah dicapture. Finance mereview nominal, lalu staf lain memeriksa mutasi sebelum START/RETRY. Pemindahan dana dilakukan di bank. Catat satu referensi, bukti privat READY dan daftar alokasi sesuai transfer aktual. FAILED tetap memegang cap sampai bank terkonfirmasi. Izin pembatalan memerlukan izin review dan cancel. Alur yang menutup order hanya berlaku saat belum ada unit dikirim.

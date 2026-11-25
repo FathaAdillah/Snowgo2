@@ -1205,6 +1205,102 @@ export interface paths {
         patch: operations["geography.reason-codes.update"];
         trace?: never;
     };
+    "/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.staff.index"];
+        put?: never;
+        post: operations["refunds.staff.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/cancellations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/execution-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.attempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/region-imports": {
         parameters: {
             query?: never;
@@ -2605,6 +2701,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["customers.profile.update"];
+        trace?: never;
+    };
+    "/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.customer.index"];
+        put?: never;
+        post: operations["refunds.customer.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/refunds/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.customer.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/regions": {
@@ -10927,6 +11055,425 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "refunds.staff.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    cancel_order?: boolean;
+                    items?: {
+                        order_item_id: string;
+                        qty: number;
+                        requested_amount: number;
+                    }[];
+                    /** @enum {string} */
+                    kind: "FULL" | "PARTIAL" | "ITEM";
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    requested_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "refunds.staff.cancel": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bank_checked?: boolean;
+                    note: string;
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.attempt": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "START" | "FAIL" | "RETRY";
+                    bank_checked?: boolean;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.review": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    approved_amount?: number;
+                    /** @enum {string} */
+                    decision: "START" | "APPROVE" | "REJECT";
+                    items?: {
+                        approved_amount: number;
+                        order_item_id: string;
+                    }[];
+                    note: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.transfer": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    allocations: {
+                        amount: number;
+                        invoice_number: string;
+                        payment_number: string;
+                    }[];
+                    proof_file_id: string;
+                    transfer_ref: string;
+                    /** Format: date-time */
+                    transferred_at: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -19357,6 +19904,173 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.customer.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "refunds.customer.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    cancel_order?: boolean;
+                    items?: {
+                        order_item_id: string;
+                        qty: number;
+                        requested_amount: number;
+                    }[];
+                    /** @enum {string} */
+                    kind: "FULL" | "PARTIAL" | "ITEM";
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    requested_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.customer.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "public.regions": {

@@ -29623,6 +29623,1863 @@
                 }
             }
         },
+        "/refunds": {
+            "get": {
+                "operationId": "refunds.customer.index",
+                "tags": [
+                    "Refund"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "order_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "reason_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "requested_amount": {
+                                                        "type": "integer"
+                                                    },
+                                                    "approved_amount": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "cancel_order": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "order_item_id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "qty": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "requested_amount": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "approved_amount": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "order_item_id",
+                                                                "qty",
+                                                                "requested_amount",
+                                                                "approved_amount"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "completed_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "number",
+                                                    "order_number",
+                                                    "status",
+                                                    "kind",
+                                                    "reason_code",
+                                                    "requested_amount",
+                                                    "approved_amount",
+                                                    "cancel_order",
+                                                    "items",
+                                                    "completed_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "refunds.customer.create",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "order_number": {
+                                        "type": "string",
+                                        "maxLength": 40
+                                    },
+                                    "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                            "FULL",
+                                            "PARTIAL",
+                                            "ITEM"
+                                        ]
+                                    },
+                                    "requested_amount": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 999999999999
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    },
+                                    "cancel_order": {
+                                        "type": "boolean"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "order_item_id": {
+                                                    "type": "string"
+                                                },
+                                                "qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 100000
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 999999999999
+                                                }
+                                            },
+                                            "required": [
+                                                "order_item_id",
+                                                "qty",
+                                                "requested_amount"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "order_number",
+                                    "kind",
+                                    "requested_amount",
+                                    "reason_code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/refunds/{number}": {
+            "get": {
+                "operationId": "refunds.customer.show",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds": {
+            "get": {
+                "operationId": "refunds.staff.index",
+                "tags": [
+                    "Refund"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "order_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "reason_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "requested_amount": {
+                                                        "type": "integer"
+                                                    },
+                                                    "approved_amount": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "cancel_order": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "order_item_id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "qty": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "requested_amount": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "approved_amount": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "order_item_id",
+                                                                "qty",
+                                                                "requested_amount",
+                                                                "approved_amount"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "completed_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "number",
+                                                    "order_number",
+                                                    "status",
+                                                    "kind",
+                                                    "reason_code",
+                                                    "requested_amount",
+                                                    "approved_amount",
+                                                    "cancel_order",
+                                                    "items",
+                                                    "completed_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "refunds.staff.create",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "order_number": {
+                                        "type": "string",
+                                        "maxLength": 40
+                                    },
+                                    "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                            "FULL",
+                                            "PARTIAL",
+                                            "ITEM"
+                                        ]
+                                    },
+                                    "requested_amount": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 999999999999
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    },
+                                    "cancel_order": {
+                                        "type": "boolean"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "order_item_id": {
+                                                    "type": "string"
+                                                },
+                                                "qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 100000
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 999999999999
+                                                }
+                                            },
+                                            "required": [
+                                                "order_item_id",
+                                                "qty",
+                                                "requested_amount"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "order_number",
+                                    "kind",
+                                    "requested_amount",
+                                    "reason_code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/refunds/{number}": {
+            "get": {
+                "operationId": "refunds.staff.show",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/{number}/reviews": {
+            "post": {
+                "operationId": "refunds.staff.review",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "START",
+                                            "APPROVE",
+                                            "REJECT"
+                                        ]
+                                    },
+                                    "approved_amount": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 999999999999
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "order_item_id": {
+                                                    "type": "string"
+                                                },
+                                                "approved_amount": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "maximum": 999999999999
+                                                }
+                                            },
+                                            "required": [
+                                                "order_item_id",
+                                                "approved_amount"
+                                            ]
+                                        },
+                                        "maxItems": 100,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "decision",
+                                    "note"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/{number}/execution-attempts": {
+            "post": {
+                "operationId": "refunds.staff.attempt",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": [
+                                            "START",
+                                            "FAIL",
+                                            "RETRY"
+                                        ]
+                                    },
+                                    "bank_checked": {
+                                        "type": "boolean"
+                                    },
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    }
+                                },
+                                "required": [
+                                    "action"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/{number}/transfers": {
+            "post": {
+                "operationId": "refunds.staff.transfer",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "transfer_ref": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "proof_file_id": {
+                                        "type": "string"
+                                    },
+                                    "transferred_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "allocations": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "payment_number": {
+                                                    "type": "string",
+                                                    "maxLength": 40
+                                                },
+                                                "invoice_number": {
+                                                    "type": "string",
+                                                    "maxLength": 40
+                                                },
+                                                "amount": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 999999999999
+                                                }
+                                            },
+                                            "required": [
+                                                "payment_number",
+                                                "invoice_number",
+                                                "amount"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "transfer_ref",
+                                    "proof_file_id",
+                                    "transferred_at",
+                                    "allocations"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/{number}/cancellations": {
+            "post": {
+                "operationId": "refunds.staff.cancel",
+                "tags": [
+                    "Refund"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    },
+                                    "bank_checked": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "reason_code",
+                                    "note"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "order_number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "reason_code": {
+                                                    "type": "string"
+                                                },
+                                                "requested_amount": {
+                                                    "type": "integer"
+                                                },
+                                                "approved_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cancel_order": {
+                                                    "type": "boolean"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "order_item_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requested_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "approved_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "order_item_id",
+                                                            "qty",
+                                                            "requested_amount",
+                                                            "approved_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "completed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "order_number",
+                                                "status",
+                                                "kind",
+                                                "reason_code",
+                                                "requested_amount",
+                                                "approved_amount",
+                                                "cancel_order",
+                                                "items",
+                                                "completed_at"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/regions": {
             "get": {
                 "operationId": "geography.regions.index",

@@ -181,3 +181,46 @@ it('requires a separate checker before recovering a late exact receipt', functio
     ($this->write)("admin/payments/$number/reconciliations", $input)->assertConflict();
     $this->assertDatabaseHas('payments', ['number' => $number, 'status' => 'PAID', 'reconciliation_id' => $id]);
 });
+
+it('holds refund caps, separates approval from transfer and replays a confirmed refund once', function () {
+    $payment = ($this->open)();
+    ($this->write)("payments/$payment/proofs", ['file_id' => ($this->file)($payment)])->assertOk();
+    ($this->finance)();
+    ($this->write)("admin/payments/$payment/review-claims", ['action' => 'CLAIM'])->assertOk();
+    $amount = $this->invoice->total_amount;
+    ($this->write)("admin/payments/$payment/decisions", ['decision' => 'APPROVE', 'received_amount' => $amount, 'bank_tx_ref' => 'RFD-IN'])->assertOk();
+    DB::table('reason_codes')->insert(['domain' => 'refunds', 'code' => 'CANCEL', 'label' => 'Cancel order']);
+    ($this->login)($this->buyer);
+    $request = ['order_number' => DB::table('orders')->sole()->number, 'kind' => 'FULL', 'reason_code' => 'CANCEL', 'requested_amount' => $amount, 'cancel_order' => true];
+    $refund = ($this->write)('refunds', $request, 'refund')->assertCreated()->json('data.number');
+    ($this->write)('refunds', $request, 'refund')->assertCreated()->assertJsonPath('data.number', $refund);
+    $other = ($this->write)('refunds', $request)->assertCreated()->json('data.number');
+    $case = "admin/refunds/$refund";
+    ($this->finance)();
+    foreach ([$refund, $other] as $number) {
+        ($this->write)("admin/refunds/$number/reviews", ['decision' => 'START', 'note' => 'Review'])->assertOk();
+    }
+    $approve = ['decision' => 'APPROVE', 'approved_amount' => $amount, 'note' => 'Matched'];
+    ($this->write)("$case/reviews", $approve)->assertOk();
+    ($this->write)("admin/refunds/$other/reviews", $approve)->assertConflict();
+    $start = ['action' => 'START', 'bank_checked' => true];
+    ($this->write)("$case/execution-attempts", $start)->assertForbidden();
+    $executor = ($this->finance)();
+    ($this->write)("$case/execution-attempts", $start)->assertOk();
+    ($this->write)("$case/execution-attempts", ['action' => 'FAIL', 'reason_code' => 'CANCEL'])->assertOk();
+    ($this->write)("admin/refunds/$other/reviews", $approve)->assertConflict();
+    ($this->write)("$case/execution-attempts", ['action' => 'RETRY', 'bank_checked' => true])->assertOk();
+    $proof = (string) Str::ulid();
+    DB::table('stored_files')->insert(['public_id' => $proof, 'owner_type' => 'refund', 'owner_id' => DB::table('refunds')->where('number', $refund)->value('id'),
+        'collection' => 'refund_transfer_proof', 'uploaded_by' => $executor->id, 'status' => 'QUARANTINED', 'object_key' => 'refund/'.$proof, 'mime' => 'image/png', 'size_bytes' => 10, 'sha256' => str_repeat('c', 64)]);
+    $transfer = ['transfer_ref' => 'bank-out', 'proof_file_id' => $proof, 'transferred_at' => now()->subSecond()->toISOString(),
+        'allocations' => [['payment_number' => $payment, 'invoice_number' => $this->invoice->number, 'amount' => $amount]]];
+    ($this->write)("$case/transfers", $transfer)->assertConflict();
+    DB::table('stored_files')->where('public_id', $proof)->update(['status' => 'READY']);
+    ($this->write)("$case/transfers", $transfer, 'out')->assertOk()->assertJsonPath('data.status', 'COMPLETED');
+    ($this->write)("$case/transfers", $transfer, 'out')->assertOk();
+    ($this->write)("$case/transfers", $transfer)->assertConflict();
+    $this->assertDatabaseCount('refund_transactions', 1);
+    $this->assertDatabaseHas('orders', ['status' => 'CANCELLED', 'payment_status' => 'REFUNDED']);
+    $this->assertDatabaseHas('stock_reservations',['status' => 'RELEASED']);
+});
