@@ -96,10 +96,10 @@ final class PaymentController
     {
         $data = $request->validate(['decision' => 'required|string|in:REJECT', 'reason_code' => 'required|string|max:48']);
 
-        return PaymentData::mutate($request,$data,['payments.payment.view', 'payments.payment.verify'],function () use ($request,$number,$data) {
-            PaymentFlow::finish($number,$request->user()->id,$data['reason_code']);
+        return PaymentData::mutate($request, $data, ['payments.payment.view', 'payments.payment.verify'], function () use ($request, $number, $data) {
+            PaymentFlow::finish($number, $request->user()->id, $data['reason_code']);
 
-            return PaymentData::detail($number,$request);
+            return PaymentData::detail($number, $request);
         });
     }
 }

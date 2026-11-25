@@ -60,6 +60,6 @@ final class BankController
     {
         $data = $request->validate(['code' => 'sometimes|required|string|alpha_dash:ascii|max:32', 'bank_code' => 'sometimes|required|string|alpha_dash:ascii|max:24', 'account_number' => 'sometimes|required|string|regex:/\A[0-9]{6,32}\z/', 'holder_name' => 'sometimes|required|string|max:160', 'active' => 'sometimes|required|boolean']);
 
-        return PaymentData::mutate($request, $data, ['payments.bank.view', 'payments.bank.manage', 'payments.bank.update'], fn () => ApiResponse::success(BankAccounts::save($id,$data,$request->user()->id)));
+        return PaymentData::mutate($request, $data, ['payments.bank.view', 'payments.bank.manage', 'payments.bank.update'], fn () => ApiResponse::success(BankAccounts::save($id, $data, $request->user()->id)));
     }
 }

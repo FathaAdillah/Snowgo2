@@ -103,7 +103,7 @@ function competingIntentWorker(int $id, string $number): Closure
             throw new LogicException('Expected test database');
         }
         try {
-            return DB::transaction(fn () => PaymentFlow::create($id,[$number],'MAIN'));
+            return DB::transaction(fn () => PaymentFlow::create($id, [$number], 'MAIN'));
         } catch (ApiProblem $e) {
             return $e->getStatusCode();
         }

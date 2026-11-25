@@ -80,6 +80,6 @@ final class PaymentData
     {
         $page = $query->paginate((int) ($filters['per_page'] ?? 20), page: (int) ($filters['page'] ?? 1));
 
-        return ApiResponse::success($map ? array_map($map, $page->items()) : $page->items(), meta: ['page' => $page->currentPage(), 'per_page' => $page->perPage(), 'last_page' => $page->lastPage(), 'total' => $page->total()])->header('Cache-Control','private, no-store');
+        return ApiResponse::success($map ? array_map($map, $page->items()) : $page->items(), meta: ['page' => $page->currentPage(), 'per_page' => $page->perPage(), 'last_page' => $page->lastPage(), 'total' => $page->total()])->header('Cache-Control', 'private, no-store');
     }
 }

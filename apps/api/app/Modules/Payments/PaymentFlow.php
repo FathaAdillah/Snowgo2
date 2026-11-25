@@ -204,16 +204,16 @@ final class PaymentFlow
     {
         app(Journal::class)->transition(Subject::Payment, $id, 'status', $from, $to, (string) Str::ulid(), $actor);
         app(Journal::class)->audit($event, Subject::Payment, $id, $actor, $from ? ['status' => $from] : null, ['status' => $to]);
-        app(Outbox::class)->record($event,'payment',$id,['status' => $to]);
+        app(Outbox::class)->record($event, 'payment', $id, ['status' => $to]);
     }
 
     public static function due(string $time): bool
     {
-        return DB::scalar('SELECT ?::timestamptz <= clock_timestamp()',[$time]);
+        return DB::scalar('SELECT ?::timestamptz <= clock_timestamp()', [$time]);
     }
 
     public static function invalid(): ApiProblem
     {
-        return new ApiProblem(409,'INVALID_STATE_TRANSITION','Payment state or review lease does not allow this action.');
+        return new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Payment state or review lease does not allow this action.');
     }
 }
