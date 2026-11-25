@@ -21,6 +21,9 @@ enum Subject: string
     case Invoice = 'invoice';
     case Refund = 'refund';
     case ReturnCase = 'return';
+    case Courier = 'courier';
+    case CourierService = 'courier_service';
+    case ShippingRate = 'shipping_rate';
     case Shipment = 'shipment';
     case Inventory = 'inventory';
     case StockReservation = 'stock_reservation';

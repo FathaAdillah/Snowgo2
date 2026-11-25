@@ -42,6 +42,9 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if (in_array($subject, [Subject::Courier, Subject::CourierService, Subject::ShippingRate], true)) {
+            $fields = [...$fields, 'code', 'name', 'courier_id', 'service_id', 'origin_region_id', 'destination_region_id', 'eta_min_days', 'eta_max_days', 'base_amount', 'amount_per_kg'];
+        }
         if ($subject === Subject::BankAccount) {
             $fields = [...$fields, 'bank_code', 'masked_number'];
         }
