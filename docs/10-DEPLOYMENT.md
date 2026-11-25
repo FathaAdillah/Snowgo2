@@ -263,3 +263,17 @@ Buka **Commerce → Batch Pengadaan**. Superadmin tetap login; untuk role lama t
 Pilihan item hanya berisi alokasi PO terkonfirmasi pada kampanye IN_PROCUREMENT/FULFILLING atau item request yang sudah dikonversi dan dibayar awal. Daftar kosong sebelum ada unit yang layak adalah normal. Alur pengajuan/konversi request, settlement transfer, tagihan lanjutan dan pembayaran refund tetap milik task masing-masing. Jangan mengubah status pembayaran manual untuk membuat data muncul.
 
 Rollback migrasi batch hanya diizinkan sebelum batch pertama dibuat. Sesudah itu rollback aplikasi tanpa menghapus skema; perbaiki data melalui migrasi lanjutan agar histori tetap terhubung ke order dan hold refund.
+
+## Mengaktifkan Request Order (TASK-019)
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin
+```
+
+Setelah login, superadmin dapat membuka **Commerce → Request Order**. Untuk role lama, berikan `request_orders.request.view` lewat **Role & Izin**; seeder tidak menimpa grant yang sudah disesuaikan. Untuk menulis, tambahkan `request_orders.request.review` dan izin aksi yang diperlukan dari [matriks](07-ADMIN-MENU-MATRIX.md). Izin membalas pelanggan dan menulis catatan internal terpisah. Siapkan kode alasan aktif domain `request_orders` di master alasan untuk pembatalan pelanggan.
+
+Antrean kosong sebelum ada pengajuan. Pelanggan terverifikasi mengajukan item melalui API, lalu mengunggah lampiran ke `POST /files` dengan `owner_type=request_order`, `owner_ref` nomor request, dan `collection=request_attachment`. Aktifkan layanan file privat, scanner dan worker seperti pada TASK-003. Lampiran milik pengajuan pelanggan, bukan catatan staf. Staf memerlukan `foundation.file.view` untuk melihat metadata dan `foundation.file.download` untuk mengunduh file yang berstatus `READY`. Tautan bertanda tangan berlaku lima menit.
+
+Rollback migrasi hanya sebelum ada item atau pesan. Sesudah dipakai, rollback aplikasi tanpa menghapus skema. Penawaran dan konversi menunggu TASK-020; halaman pelanggan menunggu TASK-034.

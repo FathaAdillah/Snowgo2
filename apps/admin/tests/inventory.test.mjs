@@ -14,6 +14,7 @@ after(() => server.close())
 const load = async path => (await server.ssrLoadModule(`/app/${path}`)).default
 const inventory = await server.ssrLoadModule('/app/composables/useInventory.ts')
 const procurement = await server.ssrLoadModule('/app/composables/useProcurement.ts')
+const requestOrders = await server.ssrLoadModule('/app/composables/useRequestOrders.ts')
 const { adminNavigation, hasPageAccess } = await server.ssrLoadModule('/app/composables/useAdminNavigation.ts')
 const components = {}
 for (const name of ['InventoryListTable', 'InventoryWarehouseList', 'InventoryAdjustmentList', 'InventoryStockForm', 'InventoryWarehouseForm', 'InventoryWarehousePicker']) {
@@ -25,7 +26,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   const requests = []
   const buttons = {}
   let pager, retry, state, meta
-  Object.assign(globalThis, inventory, procurement, {
+  Object.assign(globalThis, inventory, procurement, requestOrders, {
     computed, reactive, ref, watch, useTemplateRef, useHead() {}, definePageMeta(value) { meta = value },
     useRoute: () => ({ query: fixture.route ?? {} }), useAdminAuth: () => ({ can: grant => grants.includes(grant) }),
     useFetch(url, options) {
@@ -128,6 +129,41 @@ test('procurement actions require individual grants and a valid lifecycle state'
   receive.state.submit()
   assert.deepEqual(receive.state.action.value.body, { reason_code: 'SHORT', items: [{ order_item_id: 'I1', received_qty: 1, failed_qty: 1 }] })
   assert.match(receive.state.action.value.url, /BAT-1\/receipts$/)
+})
+
+test('request queue menu and detail link require the case read permission', async () => {
+  const link = adminNavigation.find(e => e.label === 'Commerce').children.find(e => e.label === 'Request Order')
+  assert.equal(link.to, '/request-orders')
+  assert.equal(hasPageAccess(link.permission, p => p === 'request_orders.request.review'), false)
+  const list = await render('pages/request-orders/index', ['request_orders.request.view'], { rows: [{ number: 'REQ-1', status: 'SUBMITTED', title: 'Album' }] })
+  assert.equal(list.meta.permission, link.permission)
+  assert.equal(list.buttons['Lihat request REQ-1'].to, '/request-orders/REQ-1')
+  assert.equal(list.requests[0].url, '/api/v1/admin/request-orders')
+})
+
+test('separates internal drafts, customer replies and state-dependent review actions', async () => {
+  const record = { number: 'REQ-1', can_message: true, review_actions: ['START', 'REJECT'] }
+  const show = (...grants) => render('components/RequestCaseActions', ['view', ...grants].map(g => `request_orders.request.${g}`), {}, { record })
+  assert.deepEqual((await show()).buttons, {})
+  assert.deepEqual((await show('review', 'note')).buttons['Balas pelanggan'], undefined)
+  const edit = await show('review', 'reply', 'note', 'start')
+  assert.deepEqual(Object.keys(edit.buttons), ['Mulai review', 'Balas pelanggan', 'Catatan internal'])
+  edit.buttons['Catatan internal'].onClick()
+  edit.state.text.value = 'Rahasia'
+  edit.state.submit()
+  assert.deepEqual(edit.state.action.value.body, { visibility: 'STAFF', body: 'Rahasia' })
+  edit.buttons['Balas pelanggan'].onClick()
+  assert.equal(edit.state.text.value, '')
+  assert.equal(edit.state.action.value, undefined)
+  edit.state.text.value = 'Bisa dipesan.'
+  edit.state.submit()
+  assert.deepEqual(edit.state.action.value.body, { visibility: 'CUSTOMER', body: 'Bisa dipesan.' })
+  edit.buttons['Mulai review'].onClick()
+  edit.state.submit()
+  assert.deepEqual(edit.state.action.value.body, { decision: 'START' })
+  assert.match(edit.state.action.value.url, /REQ-1\/reviews$/)
+  Object.assign(record, { can_message: false, review_actions: [] })
+  assert.deepEqual((await show('review', 'reply', 'note', 'start')).buttons, {})
 })
 
 test('reservation table shows partial dispatch without offering stock commands', async () => {

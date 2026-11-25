@@ -135,3 +135,17 @@ test('procurement detail and every mutation reject public callers with the publi
     validateResponse(path, result.response.status, result.error, method.toLowerCase())
   }
 })
+
+test('request orders keep both case surfaces private and document every thread mutation', async () => {
+  for (const base of ['/request-orders', '/admin/request-orders']) {
+    const staff = base.startsWith('/admin')
+    const routes = [['GET', base], ['GET', `${base}/{number}`], ['POST', `${base}/{number}/messages`],
+      ['POST', `${base}/{number}/${staff ? 'reviews' : 'cancellations'}`]]
+    if (!staff) routes.push(['POST', base])
+    for (const [method, path] of routes) {
+      const result = await client[method](path, { params: { path: { number: 'REQ-MISSING' } }, ...(method === 'POST' && { body: {} }) })
+      assert.ok([401, 403, 419].includes(result.response.status))
+      validateResponse(path, result.response.status, result.error, method.toLowerCase())
+    }
+  }
+})
