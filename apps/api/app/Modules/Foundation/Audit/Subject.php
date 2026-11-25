@@ -7,6 +7,7 @@ enum Subject: string
     case User = 'user';
     case Role = 'role';
     case Order = 'order';
+    case ChargeConsent = 'charge_consent';
     case Cart = 'cart';
     case Campaign = 'preorder_campaign';
     case CampaignVariant = 'preorder_campaign_variant';
@@ -15,10 +16,14 @@ enum Subject: string
     case RequestOrder = 'request_order';
     case Quotation = 'quotation';
     case Payment = 'payment';
+    case Reconciliation = 'payment_reconciliation';
     case BankAccount = 'bank_account';
     case Invoice = 'invoice';
     case Refund = 'refund';
     case ReturnCase = 'return';
+    case Courier = 'courier';
+    case CourierService = 'courier_service';
+    case ShippingRate = 'shipping_rate';
     case Shipment = 'shipment';
     case Inventory = 'inventory';
     case StockReservation = 'stock_reservation';

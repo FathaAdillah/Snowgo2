@@ -76,7 +76,7 @@ final class StaffAuthController
     {
         $permissions = StaffAccess::permissions($user);
         if (! app()->environment('local')) {
-            $permissions = array_values(array_diff($permissions, [StaffAccess::LOGS, StaffAccess::DB]));
+            $permissions = array_values(array_diff($permissions, StaffAccess::OPERATOR_TOOLS));
         }
 
         return ApiResponse::success(['id' => $user->id, 'surface' => User::STAFF, 'display_name' => $user->getAttribute('staff_display_name') ?? $user->email,

@@ -6,6 +6,7 @@ use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Invoicing\OrderInvoices;
+use App\Modules\Payments\Settlement;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +16,7 @@ final class OrderExpiry
     public function recordLocked(object $order): bool
     {
         if ($order->status !== 'PENDING_PAYMENT' || $order->payment_status !== 'UNPAID'
-            || ($order->checkout_id !== null && ! app(OrderInvoices::class)->voidUnpaid($order->id, null))) {
+            || ($order->checkout_id !== null && ! Settlement::awaitingRecovery($order->id) && ! app(OrderInvoices::class)->voidUnpaid($order->id, null))) {
             return false;
         }
         DB::table('orders')->where('id', $order->id)->update(['status' => 'EXPIRED']);

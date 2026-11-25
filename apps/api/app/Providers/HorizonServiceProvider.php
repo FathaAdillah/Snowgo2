@@ -2,35 +2,19 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Modules\Identity\Staff\StaffAccess;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+    protected function authorization(): void
     {
-        parent::boot();
-
-        // Horizon::routeSmsNotificationsTo('15556667777');
-        // Horizon::routeMailNotificationsTo('example@example.com');
-        // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
-    }
-
-    /**
-     * Register the Horizon gate.
-     *
-     * This gate determines who can access Horizon in non-local environments.
-     */
-    protected function gate(): void
-    {
-        Gate::define('viewHorizon', function ($user = null) {
-            return in_array(optional($user)->email, [
-                //
-            ]);
-        });
+        Gate::define('viewHorizon', static fn (User $user): bool => StaffAccess::super($user) && $user->can(StaffAccess::HORIZON));
+        // Horizon's default callback bypasses its gate in local environments.
+        Horizon::auth(static fn (Request $request): bool => Gate::forUser($request->user('web'))->allows('viewHorizon'));
     }
 }

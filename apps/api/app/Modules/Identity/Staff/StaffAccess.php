@@ -17,6 +17,10 @@ final class StaffAccess
 
     public const DB = 'operator.database.open';
 
+    public const HORIZON = 'operator.horizon.view';
+
+    public const OPERATOR_TOOLS = [self::LOGS, self::DB, self::HORIZON];
+
     public const PASSWORD_ONLY_VERSION = 'staff.password_only_version';
 
     public const DEFAULT_ROLES = ['admin', 'product_manager', 'inventory_staff', 'order_staff', 'finance', 'customer_service', 'warehouse', 'content_manager'];
@@ -47,7 +51,7 @@ final class StaffAccess
     public static function permissions(User $user): array
     {
         return (self::super($user) ? Permission::query()->where('guard_name', 'web')->pluck('name')
-            : $user->getAllPermissions()->where('guard_name', 'web')->pluck('name')->diff([self::LOGS, self::DB]))->sort()->values()->all();
+            : $user->getAllPermissions()->where('guard_name', 'web')->pluck('name')->diff(self::OPERATOR_TOOLS))->sort()->values()->all();
     }
 
     /** Registered RBAC names only; never skip a resource policy or an operator-console gate. */
@@ -59,6 +63,6 @@ final class StaffAccess
         }
 
         return self::active($user, request()) && (self::super($user)
-            || (! in_array($ability, [self::LOGS, self::DB], true) && $user->hasPermissionTo($permission)));
+            || (! in_array($ability, self::OPERATOR_TOOLS, true) && $user->hasPermissionTo($permission)));
     }
 }

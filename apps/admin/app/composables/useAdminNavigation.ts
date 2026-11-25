@@ -52,7 +52,7 @@ export const adminNavigation: NavEntry[] = [
     icon: 'i-lucide-wallet',
     children: [
       { label: 'Pembayaran', icon: 'i-lucide-credit-card', to: '/finance/payments', permission: 'payments.payment.view' },
-      { label: 'Rekonsiliasi', icon: 'i-lucide-clipboard-check' },
+      { label: 'Rekonsiliasi', icon: 'i-lucide-clipboard-check', to: '/finance/reconciliations', permission: 'payments.reconciliation.view' },
       { label: 'Refund', icon: 'i-lucide-hand-coins' },
       { label: 'Rekening Tujuan', icon: 'i-lucide-landmark', to: '/finance/banks', permission: 'payments.bank.view' },
       { label: 'Laporan Transaksi', icon: 'i-lucide-chart-column' }
@@ -63,9 +63,11 @@ export const adminNavigation: NavEntry[] = [
     label: 'Pengiriman',
     icon: 'i-lucide-truck',
     children: [
-      { label: 'Paket & Dispatch', icon: 'i-lucide-package-check' },
+      { label: 'Paket & Dispatch', icon: 'i-lucide-package-check', to: '/shipping/packages', permission: 'shipping.shipment.view' },
       { label: 'Tracking', icon: 'i-lucide-map-pin' },
-      { label: 'Kurir & Tarif', icon: 'i-lucide-route' }
+      { label: 'Kurir', icon: 'i-lucide-route', to: '/shipping/couriers', permission: 'shipping.courier.view' },
+      { label: 'Layanan Kurir', icon: 'i-lucide-route', to: '/shipping/courier-services', permission: 'shipping.service.view' },
+      { label: 'Tarif Kirim', icon: 'i-lucide-route', to: '/shipping/shipping-rates', permission: 'shipping.rate.view' }
     ]
   },
   {

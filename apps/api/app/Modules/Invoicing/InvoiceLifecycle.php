@@ -25,6 +25,13 @@ final class InvoiceLifecycle
             $orders->where('id', DB::table('invoices')->select('order_id')->where('number', $number));
         }
         $order = $orders->lockForUpdate()->first() ?? abort(404);
+        if ($action === 'issue' && $input['purpose'] === 'BALANCE' && ! isset($input['replaces_invoice_number'])) {
+            if (DB::table('order_transition_holds')->where('order_id', $order->id)->exists() || app(StockReservations::class)->underProofReview($order->id)) {
+                throw new ApiProblem(409, 'TRANSFER_CONFLICT', 'Resolve the outstanding review first.');
+            }
+
+            return BalanceInvoices::issue($order, $actor, $input['due_at']);
+        }
         if ($action === 'issue' && ! isset($input['replaces_invoice_number'])) {
             throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'A previously approved invoice source is required.');
         }
@@ -44,6 +51,18 @@ final class InvoiceLifecycle
             }
         }
         if ($action === 'issue') {
+            if ($invoice->purpose === 'ADDITIONAL_CHARGE' && DB::scalar("WITH RECURSIVE revisions AS (
+                SELECT id,replaces_invoice_id FROM invoices WHERE id=? UNION ALL SELECT i.id,i.replaces_invoice_id FROM invoices i JOIN revisions r ON r.replaces_invoice_id=i.id
+            ) SELECT EXISTS(SELECT FROM revisions r JOIN order_charge_consents c ON c.invoice_id=r.id JOIN shipping_quotes q ON q.id=c.quote_id JOIN shipments s ON s.id=q.shipment_id WHERE s.status='CANCELLED')", [$invoice->id])) {
+                throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Cannot reissue a shipping charge for a cancelled package.');
+            }
+            if ($invoice->purpose === 'BALANCE') {
+                if ($input['purpose'] !== 'BALANCE' || $invoice->status !== 'VOID' || DB::table('invoices')->where('replaces_invoice_id', $invoice->id)->exists()) {
+                    throw BalanceInvoices::invalid();
+                }
+
+                return BalanceInvoices::issue($order, $actor, $input['due_at'], $invoice);
+            }
             if ($invoice->purpose !== $input['purpose'] || $invoice->status !== 'VOID' || DB::table('invoices')->where('replaces_invoice_id', $invoice->id)->exists()) {
                 throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Only an unreplaced void invoice of the same purpose can be issued again.');
             }
@@ -59,6 +78,11 @@ final class InvoiceLifecycle
             app(Outbox::class)->record('InvoiceVoided', 'invoice', $invoice->id, ['number' => $invoice->number]);
         }
         if ($action === 'void') {
+            if ($order->payment_status === 'PARTIALLY_PAID' && app(OrderInvoices::class)->fullyPaid($order)) {
+                DB::table('orders')->where('id', $order->id)->update(['payment_status' => 'PAID']);
+                app(Journal::class)->transition(Subject::Order, $order->id, 'payment_status', 'PARTIALLY_PAID', 'PAID', 'void:'.$invoice->number, $actor);
+            }
+
             return $invoice->number;
         }
         $due = Carbon::parse($input['due_at']);
@@ -66,7 +90,7 @@ final class InvoiceLifecycle
             throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'The new deadline must be in the future and cannot extend an initial payment hold.');
         }
         $lines = DB::table('invoice_items')->where('invoice_id', $invoice->id)->orderBy('id')
-            ->get(['order_item_id', 'line_type', 'description', 'qty', 'unit_amount', 'amount', 'covered_qty'])->map(fn ($row) => (array) $row)->values()->all();
+            ->get(['order_item_id', 'line_type', 'description', 'qty', 'unit_amount', 'amount', 'covered_qty', 'coverage_start'])->map(fn ($row) => (array) $row)->values()->all();
 
         return app(InvoiceIssuer::class)->issue($order->id, $actor, 'revision:'.$invoice->number, $invoice->purpose, $due->toIso8601String(), [
             'currency' => $invoice->currency, 'subtotal_amount' => $invoice->subtotal_amount, 'shipping_amount' => $invoice->shipping_amount,
