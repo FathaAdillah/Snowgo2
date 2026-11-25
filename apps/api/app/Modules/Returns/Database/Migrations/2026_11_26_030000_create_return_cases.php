@@ -19,7 +19,7 @@ return new class extends Migration
             );
             CREATE INDEX ON returns(shipment_id,status); CREATE INDEX ON returns(order_id,status);
             -- Select the first n units across potentially disjoint ranges, without enumerating units.
-            CREATE FUNCTION return_first_units(coverage int8multirange, n bigint) RETURNS int8multirange
+            CREATE OR REPLACE FUNCTION return_first_units(coverage int8multirange, n bigint) RETURNS int8multirange
             LANGUAGE sql IMMUTABLE STRICT AS $$
                 SELECT coalesce(range_agg(int8range(lo,least(hi,lo+n-consumed))), '{}'::int8multirange)
                 FROM (

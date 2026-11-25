@@ -239,6 +239,12 @@ it('limits claims to delivered shipment units, restocks once and waits for a del
     $number = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
     $secondNumber = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
     ($this->write)('returns', $claim)->assertConflict()->assertJsonPath('code', 'QUANTITY_CONFLICT');
+    ($this->staffSession)();
+    ($this->write)("admin/returns/$number/reviews", ['decision' => 'START'])->assertOk();
+    ($this->write)("admin/returns/$number/reviews", ['decision' => 'REJECT', 'reason_code' => 'DAMAGED'])->assertOk();
+    ($this->login)($this->buyer);
+    $number = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
+    $this->assertDatabaseHas('return_items', ['return_id' => DB::table('returns')->where('number', $number)->value('id'), 'unit_coverage' => '{[0,1)}']);
     $this->travel(49)->hours();
     ($this->login)($this->buyer);
     ($this->write)('returns', $claim)->assertConflict()->assertJsonPath('code', 'RETURN_WINDOW_CLOSED');

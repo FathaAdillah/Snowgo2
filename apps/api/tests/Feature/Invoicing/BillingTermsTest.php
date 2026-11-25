@@ -176,4 +176,38 @@ it('attributes a captured deposit and a first-unit balance to the returned unit 
     expect(Refunds::paidForRange($this->item, 0, 1))->toBe(100)
         ->and(Refunds::paidForRange($this->item, 1, 2))->toBe(33)
         ->and(Refunds::paidForRange($this->item, 0, 3))->toBe(166);
+    $batch = DB::table('procurement_batches')->insertGetId(['number' => 'TEST-BATCH', 'campaign_id' => DB::table('preorder_campaigns')->value('id')]);
+    $batchLine = DB::table('procurement_batch_items')->insertGetId(['batch_id' => $batch, 'order_item_id' => $this->item->id, 'qty' => 3]);
+    $receipt = DB::table('procurement_receipt_lines')->insertGetId(['batch_item_id' => $batchLine, 'actor_id' => $this->staff->id, 'failed_qty' => 1, 'received_qty' => 0, 'reason_code' => 'SHORT']);
+    DB::table('order_transition_holds')->insert(['order_id' => $this->item->order_id, 'kind' => 'DISPUTE', 'source_ref' => 'procurement-receipt:'.$receipt]);
+    DB::table('reason_codes')->insert(['domain' => 'refunds', 'code' => 'SHORT', 'label' => 'Supplier shortage']);
+    $this->staff->assignRole('finance');
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    $path = "admin/refunds/supplier-shortages/$receipt/refunds";
+    ($this->write)($path, ['reason_code' => 'SHORT', 'requested_amount' => 34])->assertConflict()->assertJsonPath('code', 'REFUND_LIMIT');
+    ($this->write)($path, ['reason_code' => 'SHORT', 'requested_amount' => 33])->assertOk();
+    $this->assertDatabaseHas('refunds', ['requested_amount' => 33, 'cancel_order' => false]);
+});
+
+it('closes an unfulfillable deposit order only after the final shortage transfer', function () {
+    $order = DB::table('orders')->sole();
+    DB::table('order_items')->update(['received_qty' => 0, 'cancelled_qty' => $this->item->qty]);
+    $bank = DB::transaction(fn () => BankAccounts::save(null, ['code' => 'MAIN', 'bank_code' => 'BANK', 'account_number' => '123456789', 'holder_name' => 'Shop', 'active' => true], $this->staff->id));
+    $invoice = DB::table('invoices')->sole();
+    $payment = DB::table('payments')->insertGetId(['number' => 'PAY-DEPOSIT', 'user_id' => $this->buyer->id, 'bank_account_id' => $bank->id, 'amount' => $invoice->total_amount, 'status' => 'PAID', 'instruction_snapshot_ciphertext' => 'test', 'expires_at' => now()]);
+    DB::table('payment_allocations')->insert(['payment_id' => $payment, 'invoice_id' => $invoice->id, 'amount' => $invoice->total_amount, 'applied_at' => now()]);
+    $reason = DB::table('reason_codes')->insertGetId(['domain' => 'refunds', 'code' => 'SHORT', 'label' => 'Supplier shortage']);
+    $this->staff->assignRole('finance');
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    foreach ([33, 67] as $amount) {
+        $number = 'RFD-'.$amount;
+        $refund = DB::table('refunds')->insertGetId(['number' => $number, 'order_id' => $order->id, 'kind' => 'ITEM', 'requested_by' => $this->buyer->id, 'reason_id' => $reason, 'requested_amount' => $amount, 'approved_amount' => $amount, 'reviewed_by' => User::factory()->staff()->create()->id, 'cancel_order' => false, 'status' => 'APPROVED']);
+        $case = "admin/refunds/$number";
+        ($this->write)("$case/execution-attempts", ['action' => 'START', 'bank_checked' => true])->assertOk();
+        $file = (string) Str::ulid();
+        DB::table('stored_files')->insert(['public_id' => $file, 'owner_type' => 'refund', 'owner_id' => $refund, 'collection' => 'refund_transfer_proof', 'uploaded_by' => $this->staff->id, 'status' => 'READY', 'object_key' => 'test/'.$file, 'mime' => 'image/png', 'size_bytes' => 1, 'sha256' => str_repeat('a', 64)]);
+        ($this->write)("$case/transfers", ['transfer_ref' => 'TX-'.$amount, 'transferred_at' => now()->subSecond()->toISOString(), 'proof_file_id' => $file, 'allocations' => [['invoice_number' => $invoice->number, 'payment_number' => 'PAY-DEPOSIT', 'amount' => $amount]]])->assertOk();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => $amount === 33 ? 'CONFIRMED' : 'CANCELLED']);
+    }
+    $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'REFUNDED']);
 });
