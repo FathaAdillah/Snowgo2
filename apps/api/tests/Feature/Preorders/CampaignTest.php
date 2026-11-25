@@ -91,6 +91,25 @@ it('accepts the full campaign slug length in a customer cart without relaxing SK
     $this->postJson('/api/v1/cart/items', ['campaign_slug' => $slug] + $this->po)->assertCreated()->assertJsonPath('data.items.0.campaign_slug', $slug);
 });
 
+it('keeps full payment available when an individual SKU has no optional deposit', function () {
+    ($this->asStaff)('admin');
+    $variant = (array) DB::table('product_variants')->where('sku', 'A1')->first();
+    unset($variant['id']);
+    DB::table('product_variants')->insert(['sku' => 'A2', 'option_key' => 'b'] + $variant);
+    $input = $this->input;
+    $input['variants'][] = ['sku' => 'A2', 'deposit_unit_amount' => null] + $input['variants'][0];
+    $number = $this->postJson($this->admin, $input, ['Idempotency-Key' => 'mixed'])->assertCreated()->json('data.number');
+    $this->patchJson("$this->admin/$number", ['payment_scheme' => 'DEPOSIT_ONLY'], ['Idempotency-Key' => 'must-have-deposit'])->assertUnprocessable();
+    foreach (['SCHEDULE', 'OPEN'] as $action) {
+        $this->postJson("$this->admin/$number/actions/$action", [], ['Idempotency-Key' => $action])->assertOk();
+    }
+    ($this->login)($this->buyer);
+    $item = ['campaign_slug' => 'winter', 'sku' => 'A2'] + $this->po;
+    $this->postJson('/api/v1/cart/items', $item)->assertConflict()->assertJsonPath('code', 'OFFER_UNAVAILABLE');
+    $this->postJson('/api/v1/cart/items', ['term' => 'FULL'] + $item)->assertCreated();
+    $this->postJson('/api/v1/cart/items', ['cart_version' => 1, 'sku' => 'A1'] + $item)->assertCreated();
+});
+
 it('keeps quotas above active allocations and emits ETA changes only once', function () {
     ($this->place)();
     ($this->asStaff)('order_staff');

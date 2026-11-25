@@ -50,7 +50,8 @@ final class CampaignEditor
             $this->offer($id, $row, $actor);
         }
         $invalid = DB::table('preorder_campaign_variants')->where('campaign_id', $id);
-        if ($next['payment_scheme'] === 'FULL_ONLY' ? $invalid->whereNotNull('deposit_unit_amount')->exists() : $invalid->whereNull('deposit_unit_amount')->exists()) {
+        if (($next['payment_scheme'] === 'FULL_ONLY' && $invalid->whereNotNull('deposit_unit_amount')->exists())
+            || ($next['payment_scheme'] === 'DEPOSIT_ONLY' && $invalid->whereNull('deposit_unit_amount')->exists())) {
             throw ValidationException::withMessages(['variants' => 'Each deposit must match the campaign payment scheme.']);
         }
         $eta = Arr::only($next, self::ETA);
