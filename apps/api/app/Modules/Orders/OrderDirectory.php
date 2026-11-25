@@ -35,6 +35,9 @@ final class OrderDirectory
                 FROM checkouts c JOIN shipping_quotes q ON q.cart_id=c.cart_id AND q.used_at IS NOT NULL
                 WHERE o.selling_method='READY_TO_SHIP' AND c.id=o.checkout_id) AS checkout_shipping
             SQL);
+        if ($owner !== null || request()->user()?->can('shipping.shipment.view')) {
+            $rows->selectRaw('(SELECT json_agg(s.number ORDER BY s.id) FROM shipments s WHERE s.order_id=o.id) AS shipment_numbers');
+        }
         if ($address) {
             $rows->selectRaw("(SELECT json_build_object('recipient',a.recipient,'phone',a.phone,'line1',a.line1,'line2',a.line2,'postal_code',a.postal_code,'regions',a.region_snapshot) FROM order_addresses a WHERE a.order_id=o.id) AS address");
         }
@@ -55,7 +58,7 @@ final class OrderDirectory
         if (! array_key_exists('items', $data)) {
             return $data;
         }
-        foreach (['items', 'history', 'invoice_numbers', 'payment_numbers', 'charge_consents'] as $field) {
+        foreach (['items', 'history', 'invoice_numbers', 'payment_numbers', 'charge_consents', 'shipment_numbers'] as $field) {
             $data[$field] = json_decode($data[$field] ?? '[]', false, flags: JSON_THROW_ON_ERROR);
         }
         $data['address'] = json_decode($data['address'] ?? 'null', false, flags: JSON_THROW_ON_ERROR);

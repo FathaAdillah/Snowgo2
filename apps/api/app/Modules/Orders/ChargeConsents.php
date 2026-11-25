@@ -31,7 +31,7 @@ final class ChargeConsents
         $until = Carbon::parse($input['expires_at']);
         if ($input['type'] === 'DOMESTIC_SHIPPING') {
             $quote = DB::table('shipping_quotes')->where(['order_id' => $order->id, 'user_id' => $order->user_id, 'public_id' => $input['quote_id']])->lockForUpdate()->first() ?? abort(404);
-            if ($quote->used_at || ! $quote->service_code_snapshot) {
+            if (($quote->shipment_id && ! DB::table('shipments')->where(['id' => $quote->shipment_id, 'status' => 'PENDING'])->exists()) || $quote->used_at || ! $quote->service_code_snapshot) {
                 throw self::invalid();
             }
             $until = $until->min(Carbon::parse($quote->expires_at));
@@ -41,11 +41,7 @@ final class ChargeConsents
         } else {
             $item = DB::table('order_items')->where(['order_id' => $order->id, 'public_id' => $input['order_item_id']])->lockForUpdate()->first() ?? abort(404);
             $scope = $input['type'].':'.$item->public_id;
-            $used = DB::table('order_charge_consents')->where(['order_id' => $order->id, 'scope' => $scope, 'status' => 'ACCEPTED'])->selectRaw("coalesce(max((lines->0->>'start')::int+(lines->0->>'qty')::int),0) as n")->value('n');
-            $start = max($item->shipped_qty, $used);
-            if ($start + $input['qty'] > min($item->received_qty, $item->qty - $item->cancelled_qty)) {
-                throw self::invalid();
-            }
+            $start = self::availableStart($item, $scope, (int) $input['qty']);
             $amount = (int) $input['qty'] * (int) $input['unit_amount'];
             $line = ['type' => $input['type'], 'description' => $input['description'], 'order_item_id' => $item->public_id, 'start' => $start, 'qty' => (int) $input['qty'], 'unit_amount' => (int) $input['unit_amount'], 'amount' => $amount];
         }
@@ -78,12 +74,15 @@ final class ChargeConsents
         $line = json_decode($c->lines, true, flags: JSON_THROW_ON_ERROR)[0];
         $item = null;
         if ($c->quote_id) {
+            if (DB::table('shipping_quotes as q')->join('shipments as s', 's.id', '=', 'q.shipment_id')->where('q.id', $c->quote_id)->where('s.status', '!=', 'PENDING')->exists()) {
+                throw self::invalid();
+            }
             if (! DB::table('shipping_quotes')->where(['id' => $c->quote_id, 'order_id' => $order->id])->whereNull('used_at')->whereRaw('expires_at>clock_timestamp()')->update(['used_at' => now()])) {
                 throw self::invalid();
             }
         } else {
             $item = DB::table('order_items')->where(['order_id' => $order->id, 'public_id' => $line['order_item_id']])->lockForUpdate()->firstOrFail();
-            if ($line['start'] < $item->shipped_qty || min($item->received_qty, $item->qty - $item->cancelled_qty) < $line['start'] + $line['qty']) {
+            if (self::availableStart($item, $c->scope, $line['qty'], $line['start']) !== $line['start']) {
                 throw self::invalid();
             }
         }
@@ -93,6 +92,26 @@ final class ChargeConsents
             [['order_item_id' => $item?->id, 'line_type' => $line['type'], 'description' => $line['description'], 'qty' => $line['qty'], 'unit_amount' => $line['unit_amount'], 'amount' => $line['amount']]]);
         self::change($c, 'ACCEPTED', 'ChargeAccepted', $actor, ['accepted_at' => now(), 'invoice_id' => DB::table('invoices')->where('number', $number)->value('id')]);
 
+    }
+
+    private static function availableStart(object $item, string $scope, int $qty, int $start = 0): int
+    {
+        $fees = DB::table('order_charge_consents')->where(['order_id' => $item->order_id, 'scope' => $scope, 'status' => 'ACCEPTED'])
+            ->selectRaw("(lines->0->>'start')::int AS coverage_start, (lines->0->>'qty')::int AS qty");
+        $blocks = DB::table('shipment_items as l')->join('shipments as s', 's.id', '=', 'l.shipment_id')
+            ->where(['l.order_item_id' => $item->id, 's.status' => 'PICKED_UP'])->select('l.coverage_start', 'l.qty')
+            ->unionAll($fees)->orderBy('coverage_start')->get();
+        foreach ($blocks as $block) {
+            if ($start + $qty <= $block->coverage_start) {
+                break;
+            }
+            $start = max($start, $block->coverage_start + $block->qty);
+        }
+        if ($start + $qty > min($item->received_qty, $item->qty - $item->cancelled_qty)) {
+            throw self::invalid();
+        }
+
+        return $start;
     }
 
     public static function expire(): void

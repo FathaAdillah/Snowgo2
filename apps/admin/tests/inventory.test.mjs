@@ -353,3 +353,13 @@ test('receipt and correction confirm signed quantities against their own endpoin
   assert.equal(correction.action.value.url, '/api/v1/admin/stock-adjustments')
   assert.deepEqual(correction.action.value.body, { reason_code: 'COUNT', note: 'Selisih fisik', level_id: 7, delta: -3 })
 })
+
+test('shipping readers see packages but cannot plan without action grants', async () => {
+  const show = grants => render('pages/shipping/packages', grants, { rows: [], total: 0 })
+  const reader = await show(['shipping.shipment.view'])
+  assert.equal(reader.meta.permission, 'shipping.shipment.view')
+  assert.doesNotMatch(reader.html, /Tinjau paket/)
+  assert.match((await show(['shipping.shipment.view', 'shipping.shipment.manage', 'shipping.shipment.create'])).html, /Tinjau paket/)
+  const links = adminNavigation.find(e => e.label === 'Pengiriman').children
+  assert.deepEqual(links.filter(l => hasPageAccess(l.permission, p => p === 'shipping.rate.view')).map(l => l.to), ['/shipping/shipping-rates'])
+})
