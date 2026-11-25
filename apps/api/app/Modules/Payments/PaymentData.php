@@ -79,7 +79,14 @@ final class PaymentData
             return $action();
         });
         if ($response->isSuccessful() && $request->routeIs('payments.staff.claim', 'payments.staff.decision', 'payments.customer.create', 'payments.customer.proof', 'payments.customer.cancel')) {
-            return self::detail($response->getData()->data->number, $request);
+            $body = $response->getData();
+            if ($request->routeIs('payments.staff.*') && ! $request->user()->fresh()?->can('payments.proof.view')) {
+                $body->data->proof_ids = [];
+            }
+            if (isset($body->data->account_number) && ! DB::table('payments')->where(['number' => $body->data->number, 'user_id' => $request->user()->id, 'status' => 'UNPAID'])->whereRaw('expires_at>clock_timestamp()')->exists()) {
+                unset($body->data->bank_code, $body->data->holder_name, $body->data->account_number);
+            }
+            $response->setData($body);
         }
 
         return $response->header('Cache-Control', 'private, no-store');
