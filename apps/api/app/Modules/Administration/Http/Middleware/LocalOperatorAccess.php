@@ -24,8 +24,10 @@ final class LocalOperatorAccess
         $user = $request->user('web');
         abort_unless($user instanceof User && StaffAccess::active($user, $request), 401);
         abort_unless(StaffAccess::super($user) && $user->can($ability), 403);
-        $request->session()->put('staff.seen', now()->timestamp);
         abort_unless($request->isMethodSafe() && ! $request->is('*/download', '*/download/*'), 403);
+        if ($ability !== StaffAccess::HORIZON || ! $request->is('horizon/api/*')) {
+            $request->session()->put('staff.seen', now()->timestamp);
+        }
 
         if (! $request->session()->has("staff.opened.$ability")) {
             DB::transaction(fn () => app(Journal::class)->audit($ability, Subject::User, $user->id, $user->id));

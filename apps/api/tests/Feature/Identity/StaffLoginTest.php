@@ -357,6 +357,12 @@ it('serves the real Horizon page and stats only to an active local superadmin se
     }
     $root->removeRole(StaffAccess::SUPER);
     $read('/horizon/api/stats')->assertForbidden();
+    $root->assignRole(StaffAccess::SUPER);
+    $this->travel(20)->minutes();
+    $read('/horizon/api/stats')->assertOk();
+    $this->travel(11)->minutes();
+    $read('/horizon/api/stats')->assertUnauthorized();
+    ($this->send)('GET', '/api/v1/admin/auth/me')->assertUnauthorized();
 });
 
 it('requires every admin business endpoint to have a seeded permission and preserves custom role grants on reseed', function () {
