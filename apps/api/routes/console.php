@@ -51,6 +51,7 @@ Artisan::command('inventory:expire-holds', function (StockExpiry $expiry, StockR
 })->purpose('Release expired ACTIVE RTS stock holds once per order');
 Schedule::command('inventory:expire-holds')->everyMinute();
 Schedule::call(fn () => PaymentFlow::expireDue())->name('payments:expire')->everyMinute()->withoutOverlapping();
+Schedule::call(fn () => app(OrderExpiry::class)->expireRequestOrders())->name('orders:expire-request-orders')->everyMinute()->withoutOverlapping();
 Schedule::call(fn () => Settlement::closeWindows())->name('payments:close-windows')->hourly()->withoutOverlapping();
 Artisan::command('preorders:advance-windows', function (CampaignWindow $window) {
     $this->info('Campaign windows advanced: '.$window->advanceDue());

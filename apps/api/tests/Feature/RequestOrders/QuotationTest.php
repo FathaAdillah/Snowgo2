@@ -2,6 +2,10 @@
 
 use App\Models\User;
 use App\Modules\Identity\Sessions\DeviceSessions;
+use App\Modules\Orders\OrderExpiry;
+use App\Modules\Payments\BankAccounts;
+use App\Modules\Payments\PaymentFlow;
+use App\Modules\Payments\Settlement;
 use App\Modules\RequestOrders\CaseData;
 use App\Modules\RequestOrders\QuotationData;
 use App\Modules\RequestOrders\QuotationLifecycle;
@@ -134,6 +138,33 @@ it('converts owned active addresses only and replays without duplicating invoice
     $migration = require app_path('Modules/Orders/Database/Migrations/2026_11_25_085108_link_order_items_to_quotations.php');
     expect(fn () => DB::transaction(fn () => $migration->down()))->toThrow(QueryException::class, 'Cannot discard quotation conversions');
     $this->assertDatabaseEmpty('carts');
+});
+
+it('expires a converted request order but preserves its invoice through the late transfer window', function () {
+    $quote = ($this->draft)();
+    ($this->dispatch)($quote);
+    ($this->customer)($this->buyer);
+    $conversion = ($this->post)("$this->detail/quotations/$quote/decisions", ['decision' => 'ACCEPT', 'address_id' => ($this->address)()])->assertOk()->json('data');
+    DB::transaction(fn () => BankAccounts::save(null, ['code' => 'MAIN', 'bank_code' => 'BANK', 'account_number' => '123456789', 'holder_name' => 'Shop', 'active' => true], $this->staff->id));
+    $payment = DB::transaction(fn () => PaymentFlow::create($this->buyer->id, [$conversion['invoice_number']], 'MAIN'));
+    $order = DB::table('orders')->where('number', $conversion['order_number']);
+    $invoice = ['number' => $conversion['invoice_number']];
+    app(OrderExpiry::class)->expireRequestOrders();
+    $this->assertDatabaseHas('orders', ['number' => $conversion['order_number'], 'status' => 'PENDING_PAYMENT']);
+
+    $order->update(['payment_due_at' => now()->subHour()]);
+    DB::table('payments')->where('number', $payment)->update(['expires_at' => now()->subHour()]);
+    PaymentFlow::expireDue();
+    app(OrderExpiry::class)->expireRequestOrders();
+    Settlement::closeWindows();
+    $this->assertDatabaseHas('orders', ['number' => $conversion['order_number'], 'status' => 'EXPIRED']);
+    $this->assertDatabaseHas('invoices', $invoice + ['status' => 'ISSUED']);
+
+    DB::table('payments')->where('number', $payment)->update(['expires_at' => now()->subDays(8)]);
+    Settlement::closeWindows();
+    Settlement::closeWindows();
+    $this->assertDatabaseHas('invoices', $invoice + ['status' => 'VOID']);
+    expect(DB::table('outbox_events')->where('event_type', 'InvoiceVoided')->count())->toBe(1);
 });
 
 it('rejects a time-expired sent quotation before and after scheduler cleanup', function () {

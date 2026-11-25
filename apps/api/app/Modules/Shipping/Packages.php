@@ -181,7 +181,7 @@ final class Packages
         $rts = $o->selling_method === 'READY_TO_SHIP';
         if (! $rts && $s->shipping_amount > 0) {
             $invoice = DB::table('order_charge_consents as c')->join('shipping_quotes as q', 'q.id', '=', 'c.quote_id')->where(['q.shipment_id' => $s->id, 'c.status' => 'ACCEPTED'])->value('c.invoice_id');
-            if (! $invoice || ! self::paid($invoice)) {
+            if (! $invoice || self::currentInvoiceStatus($invoice) !== 'PAID') {
                 throw self::invalid();
             }
         }
@@ -216,7 +216,7 @@ final class Packages
             }
             if (! $rts) {
                 foreach (DB::table('order_charge_consents')->where('order_id', $o->id)->whereNull('quote_id')->whereIn('status', ['ACCEPTED', 'PROPOSED'])->whereRaw("lines->0->>'order_item_id'=? AND (lines->0->>'start')::int < ? AND (lines->0->>'start')::int+(lines->0->>'qty')::int > ?", [$i->public_id, $end, $l->coverage_start])->get() as $fee) {
-                    if (! $fee->invoice_id || ! self::paid($fee->invoice_id)) {
+                    if (! $fee->invoice_id || ! in_array(self::currentInvoiceStatus($fee->invoice_id), ['PAID', 'VOID'], true)) {
                         throw self::invalid();
                     }
                 }
@@ -239,9 +239,10 @@ final class Packages
         return $number;
     }
 
-    private static function paid(int $id): bool
+    private static function currentInvoiceStatus(int $id): ?string
     {
-        return (bool) DB::scalar("WITH RECURSIVE chain AS (SELECT id,status FROM invoices WHERE id=? UNION ALL SELECT i.id,i.status FROM invoices i JOIN chain c ON i.replaces_invoice_id=c.id) SELECT EXISTS(SELECT FROM chain WHERE status='PAID')", [$id]);
+        return DB::scalar('WITH RECURSIVE chain AS (SELECT id,status FROM invoices WHERE id=? UNION ALL SELECT i.id,i.status FROM invoices i JOIN chain c ON i.replaces_invoice_id=c.id)
+            SELECT status FROM chain c WHERE NOT EXISTS (SELECT FROM invoices i WHERE i.replaces_invoice_id=c.id)', [$id]);
     }
 
     private static function record(int $id, string $dim, ?string $from, string $to, string $event, int $actor, ?int $reason = null): void
