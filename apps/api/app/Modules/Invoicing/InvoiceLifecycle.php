@@ -26,6 +26,9 @@ final class InvoiceLifecycle
         }
         $order = $orders->lockForUpdate()->first() ?? abort(404);
         if ($action === 'issue' && $input['purpose'] === 'BALANCE' && ! isset($input['replaces_invoice_number'])) {
+            if (DB::table('order_transition_holds')->where('order_id', $order->id)->exists() || app(StockReservations::class)->underProofReview($order->id)) {
+                throw new ApiProblem(409, 'TRANSFER_CONFLICT', 'Resolve the outstanding review first.');
+            }
             return BalanceInvoices::issue($order, $actor, $input['due_at']);
         }
         if ($action === 'issue' && ! isset($input['replaces_invoice_number'])) {
