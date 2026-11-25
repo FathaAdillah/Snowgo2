@@ -69,6 +69,10 @@ final class InvoiceLifecycle
             app(Outbox::class)->record('InvoiceVoided', 'invoice', $invoice->id, ['number' => $invoice->number]);
         }
         if ($action === 'void') {
+            if ($order->payment_status === 'PARTIALLY_PAID' && app(OrderInvoices::class)->fullyPaid($order)) {
+                DB::table('orders')->where('id', $order->id)->update(['payment_status'=>'PAID']);
+                app(Journal::class)->transition(Subject::Order,$order->id,'payment_status','PARTIALLY_PAID','PAID','void:'.$invoice->number,$actor);
+            }
             return $invoice->number;
         }
         $due = Carbon::parse($input['due_at']);
