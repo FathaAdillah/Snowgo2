@@ -7,6 +7,7 @@ use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\BalanceInvoices;
+use App\Modules\Returns\ReturnInspection;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ final class Packages
             if ($rts && ! DB::table('stock_reservations as h')->join('inventory_levels as l', 'l.id', '=', 'h.level_id')->where(['h.order_item_id' => $i->id, 'l.warehouse_id' => $warehouse->id, 'h.status' => 'COMMITTED'])->whereRaw('h.qty-h.shipped_qty-h.released_qty>=?', [$qty])->exists()) {
                 throw self::quantity();
             }
-            foreach (DB::table('shipment_items as l')->join('shipments as s', 's.id', '=', 'l.shipment_id')->where('l.order_item_id', $i->id)->where('s.status', '!=', 'CANCELLED')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.qty']) as $c) {
+            foreach (DB::table('shipment_items as l')->join('shipments as s', 's.id', '=', 'l.shipment_id')->where('l.order_item_id', $i->id)->whereNull('s.replacement_return_id')->where('s.status', '!=', 'CANCELLED')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.qty']) as $c) {
                 if ($start + $qty <= $c->coverage_start) {
                     break;
                 }
@@ -120,7 +121,7 @@ final class Packages
     {
         $o = DB::table('orders')->where('id', DB::table('shipments')->select('order_id')->where('number', $number))->lockForUpdate()->first() ?? abort(404);
         $s = DB::table('shipments')->where('number', $number)->lockForUpdate()->firstOrFail();
-        if ($s->status !== 'PENDING' || $o->status !== 'CONFIRMED') {
+        if ($s->status !== 'PENDING' || ($o->status !== 'CONFIRMED' && ! ($s->replacement_return_id && $o->status === 'COMPLETED'))) {
             throw self::invalid();
         }
 
@@ -175,7 +176,8 @@ final class Packages
 
             return $number;
         }
-        if ($s->packing_status !== 'READY_FOR_DISPATCH' || DB::table('order_transition_holds')->where('order_id', $o->id)->exists() || ! DB::table('invoices')->where(['order_id' => $o->id, 'status' => 'PAID'])->whereIn('purpose', ['FULL_PAYMENT', 'DEPOSIT'])->exists()) {
+        if ($s->packing_status !== 'READY_FOR_DISPATCH' || DB::table('order_transition_holds')->where('order_id', $o->id)
+            ->when($s->replacement_return_id, fn ($q) => $q->where('source_ref', '!=', DB::table('returns')->where('id', $s->replacement_return_id)->value('number')))->exists() || ! DB::table('invoices')->where(['order_id' => $o->id, 'status' => 'PAID'])->whereIn('purpose', ['FULL_PAYMENT', 'DEPOSIT'])->exists()) {
             throw self::invalid();
         }
         $rts = $o->selling_method === 'READY_TO_SHIP';
@@ -195,6 +197,14 @@ final class Packages
         }
         foreach (DB::table('shipment_items')->where('shipment_id', $s->id)->orderBy('order_item_id')->get() as $l) {
             $i = DB::table('order_items')->where('id', $l->order_item_id)->lockForUpdate()->firstOrFail();
+            if ($s->replacement_return_id !== null) {
+                if ($rts) {
+                    $reason = DB::table('returns')->where('id', $s->replacement_return_id)->value('reason_id');
+                    ReturnInspection::stock($s->warehouse_id, $i->variant_id, -$l->qty, $actor, $reason, 'replacement:'.$l->id);
+                }
+
+                continue;
+            }
             $end = $l->coverage_start + $l->qty;
             if ($end > $i->qty - $i->cancelled_qty || (! $rts && $end > $i->received_qty)) {
                 throw self::quantity();
@@ -230,6 +240,9 @@ final class Packages
         DB::table('shipments')->where('id', $s->id)->update(['status' => 'PICKED_UP', 'tracking_number' => $tracking, 'shipped_at' => now()]);
         DB::table('tracking_events')->insert(['shipment_id' => $s->id, 'event_key' => 'dispatch', 'normalized_status' => 'PICKED_UP']);
         self::record($s->id, 'status', 'PENDING', 'PICKED_UP', 'ShipmentStatusUpdated', $actor);
+        if ($s->replacement_return_id !== null) {
+            return $number;
+        }
         $state = DB::table('order_items')->where('order_id', $o->id)->whereRaw('shipped_qty<qty-cancelled_qty')->exists() ? 'PARTIALLY_SHIPPED' : 'SHIPPED';
         if ($o->fulfillment_status !== $state) {
             DB::table('orders')->where('id', $o->id)->update(['fulfillment_status' => $state]);

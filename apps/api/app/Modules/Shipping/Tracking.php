@@ -46,7 +46,7 @@ final class Tracking
             $journal->transition(Subject::Shipment, $shipment->id, 'status', $shipment->status, $status, "tracking:$id", $actor);
             $journal->audit('ShipmentStatusUpdated', Subject::Shipment, $shipment->id, $actor, ['status' => $shipment->status], ['status' => $status]);
             app(Outbox::class)->record('ShipmentStatusUpdated', 'shipment', $shipment->id, ['number' => $number, 'status' => $status]);
-            if ($status === 'DELIVERED') {
+            if ($status === 'DELIVERED' && $shipment->replacement_return_id === null) {
                 DB::update('UPDATE order_items i SET delivered_qty=i.delivered_qty+l.qty FROM shipment_items l WHERE i.id=l.order_item_id AND l.shipment_id=?', [$shipment->id]);
                 if (! DB::table('order_items')->where('order_id', $orderId)->whereRaw('delivered_qty != qty-cancelled_qty')->exists()) {
                     DB::table('orders')->where('id', $orderId)->update(['fulfillment_status' => 'DELIVERED']);

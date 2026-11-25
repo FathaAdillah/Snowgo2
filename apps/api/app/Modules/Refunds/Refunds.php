@@ -43,7 +43,7 @@ final class Refunds
     }
 
     /** @param array<string,mixed> $data */
-    public static function request(int $actor, array $data, ?int $owner): string
+    public static function request(int $actor, array $data, ?int $owner, ?int $reasonId = null): string
     {
         $o = DB::table('orders')->where('number', $data['order_number'])->when($owner !== null, fn ($q) => $q->where('user_id', $owner))->lockForUpdate()->first() ?? abort(404);
         $amount = (int) $data['requested_amount'];
@@ -59,7 +59,7 @@ final class Refunds
         }
         $number = 'RFD-'.Str::ulid();
         $id = DB::table('refunds')->insertGetId(['number' => $number, 'order_id' => $o->id, 'requested_by' => $actor, 'kind' => $data['kind'],
-            'requested_amount' => $amount, 'reason_id' => self::reason($data['reason_code']), 'cancel_order' => $data['cancel_order'] ?? false, 'note' => $data['note'] ?? null, 'status' => 'REQUESTED']);
+            'requested_amount' => $amount, 'reason_id' => $reasonId ?? self::reason($data['reason_code']), 'cancel_order' => $data['cancel_order'] ?? false, 'note' => $data['note'] ?? null, 'status' => 'REQUESTED']);
         foreach ($items as $line) {
             $item = DB::table('order_items')->where(['public_id' => $line['order_item_id'], 'order_id' => $o->id])->first() ?? abort(404);
             $claims = DB::table('refund_items as ri')->join('refunds as r', 'r.id', '=', 'ri.refund_id')->where('ri.order_item_id', $item->id)
@@ -140,6 +140,6 @@ final class Refunds
     {
         app(Journal::class)->transition(Subject::Refund, $id, 'status', $from, $to, (string) Str::ulid(), $actor);
         app(Journal::class)->audit($event, Subject::Refund, $id, $actor, $from ? ['status' => $from] : null, ['status' => $to]);
-        app(Outbox::class)->record($event,'refund',$id,['status' => $to]);
+        app(Outbox::class)->record($event, 'refund', $id, ['status' => $to]);
     }
 }

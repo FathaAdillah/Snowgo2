@@ -1477,6 +1477,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.staff.index"];
+        put?: never;
+        post: operations["returns.staff.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/inspections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.inspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.receive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/resolutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/roles": {
         parameters: {
             query?: never;
@@ -2825,6 +2921,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["requests.quotation.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.customer.index"];
+        put?: never;
+        post: operations["returns.customer.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.customer.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns/{number}/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.customer.dispatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12941,6 +13085,463 @@ export interface operations {
             };
         };
     };
+    "returns.staff.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "returns.staff.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        qty: number;
+                        shipment_item_id: string;
+                    }[];
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    shipment_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "returns.staff.inspect": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        accepted_qty: number;
+                        /** @enum {string} */
+                        disposition: "RESTOCK" | "DAMAGE" | "NO_RECEIPT";
+                        shipment_item_id: string;
+                    }[];
+                    note: string;
+                    /** @enum {string} */
+                    result: "ACCEPT" | "FAIL";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.receive": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.resolve": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    note: string;
+                    /** @enum {string} */
+                    resolution: "REFUND" | "REPLACEMENT" | "REPAIR" | "SHIP_MISSING_ITEM" | "REJECTED";
+                    work_completed?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.review": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "START" | "APPROVE" | "REJECT" | "GIVE_INSTRUCTIONS" | "WAIVE_SHIPMENT";
+                    instructions?: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "admin.roles.index": {
         parameters: {
             query?: never;
@@ -14326,7 +14927,7 @@ export interface operations {
                 level_id?: number;
                 per_page?: number;
                 to?: string;
-                type?: "INITIAL" | "PURCHASE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "RESERVATION" | "RESERVATION_RELEASE" | "COMMIT" | "COMMIT_RELEASE" | "SALE";
+                type?: "INITIAL" | "PURCHASE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "RESERVATION" | "RESERVATION_RELEASE" | "COMMIT" | "COMMIT_RELEASE" | "SALE" | "RETURN" | "REPLACEMENT";
             };
             header?: never;
             path?: never;
@@ -20927,6 +21528,253 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "returns.customer.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "returns.customer.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        qty: number;
+                        shipment_item_id: string;
+                    }[];
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    shipment_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.customer.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "returns.customer.dispatch": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tracking_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "shipping.customer": {

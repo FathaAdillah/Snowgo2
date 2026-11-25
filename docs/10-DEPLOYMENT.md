@@ -338,3 +338,7 @@ Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di cont
 ### Mengaktifkan refund manual (TASK-027)
 
 Jalankan migrasi dan PermissionSeeder. Berikan izin melalui Role & Izin pada role yang sudah ada. Pelanggan dapat meminta refund dari alokasi pembayaran yang telah dicapture. Finance mereview nominal, lalu staf lain memeriksa mutasi sebelum START/RETRY. Pemindahan dana dilakukan di bank. Catat satu referensi, bukti privat READY dan daftar alokasi sesuai transfer aktual. FAILED tetap memegang cap sampai bank terkonfirmasi. Izin pembatalan memerlukan izin review dan cancel. Alur yang menutup order hanya berlaku saat belum ada unit dikirim.
+
+### Mengaktifkan retur per paket (TASK-028)
+
+Jalankan migrasi dan PermissionSeeder. Berikan izin review dan resolve ke CS, serta inspect ke warehouse. Retur dalam jendela 48 jam memerlukan dua foto privat (barang dan label) yang telah lulus scan untuk approval. Hanya barang RTS yang diterima fisik dan lolos inspeksi yang dapat direstock. Paket pengganti dipacking, dikirim, dan dilacak di halaman pengiriman. Selesaikan kasus setelah paket pengganti delivered, refund selesai atau perbaikan dikonfirmasi.
