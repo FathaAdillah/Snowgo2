@@ -6,6 +6,7 @@ use App\Modules\Payments\PaymentData;
 use App\Modules\Payments\Reconciliations;
 use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
+use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,8 @@ final class ReconciliationController
         return ApiResponse::success(Reconciliations::rows($request->user()->id)->where('r.id', $id)->first() ?? abort(404))->header('Cache-Control', 'private, no-store');
     }
 
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, type: self::ONE)]
     public function open(Request $request, string $number): JsonResponse
     {
@@ -44,6 +47,8 @@ final class ReconciliationController
         return PaymentData::mutate($request, $data, ['payments.reconciliation.view', 'payments.payment.recover'], fn () => $this->show($request, Reconciliations::open($number, $request->user()->id, $data)));
     }
 
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, type: self::ONE)]
     public function review(Request $request, int $id): JsonResponse
     {
@@ -56,15 +61,17 @@ final class ReconciliationController
         });
     }
 
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, type: self::ONE)]
     public function decide(Request $request, int $id): JsonResponse
     {
         $data = $request->validate(['decision' => 'required|string|in:APPLY,RETURN', 'proof_file_id' => 'required_if:decision,RETURN|string|ulid', 'refund_transfer_ref' => 'required_if:decision,RETURN|string|max:160', 'note' => 'required|string|max:1000']);
 
         return PaymentData::mutate($request, $data, ['payments.reconciliation.view', 'payments.payment.recover'], function () use ($request, $id, $data) {
-            Reconciliations::act($id,$request->user()->id,$data);
+            Reconciliations::act($id, $request->user()->id, $data);
 
-            return $this->show($request,$id);
+            return $this->show($request, $id);
         });
     }
 }

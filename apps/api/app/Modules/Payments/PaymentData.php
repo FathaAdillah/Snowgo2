@@ -41,7 +41,7 @@ final class PaymentData
             $data[$field] = $p->$field ? Carbon::parse($p->$field)->toISOString() : null;
         }
 
-        return $instruction && $p->user_id === $actor ? $data + json_decode(Crypt::decryptString($p->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR) : $data;
+        return $instruction && $p->user_id === $actor && $p->status === 'UNPAID' && now()->lt($p->expires_at) ? $data + json_decode(Crypt::decryptString($p->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR) : $data;
     }
 
     public static function detail(string $number, Request $request): JsonResponse
@@ -73,11 +73,16 @@ final class PaymentData
             return 'user:'.$actor->id;
         };
 
-        return app(IdempotentMutation::class)->run($request, $authorize, function () use ($action, $authorize) {
+        $response = app(IdempotentMutation::class)->run($request, $authorize, function () use ($action, $authorize) {
             $authorize();
 
             return $action();
-        })->header('Cache-Control', 'private, no-store');
+        });
+        if ($response->isSuccessful() && $request->routeIs('payments.staff.claim', 'payments.staff.decision', 'payments.customer.create', 'payments.customer.proof', 'payments.customer.cancel')) {
+            return self::detail($response->getData()->data->number, $request);
+        }
+
+        return $response->header('Cache-Control', 'private, no-store');
     }
 
     /** @param array<string,mixed> $filters */

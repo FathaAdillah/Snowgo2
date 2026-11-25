@@ -17,6 +17,9 @@ final class BankAccounts
     public static function save(?int $id, array $input, int $actor): object
     {
         $old = $id === null ? null : (DB::table('bank_accounts')->where('id', $id)->lockForUpdate()->first() ?? abort(404));
+        if ($old && isset($input['bank_code']) && $old->bank_code !== $input['bank_code'] && ! isset($input['account_number'])) {
+            throw new ApiProblem(409, 'TRANSFER_CONFLICT', 'Changing the bank requires confirming the destination number.');
+        }
         if (isset($input['account_number'])) {
             $number = $input['account_number'];
             unset($input['account_number']);
@@ -39,9 +42,15 @@ final class BankAccounts
             DB::table('bank_accounts')->where('id', $id)->update($input);
         }
         $bank = DB::table('bank_accounts')->select(self::FIELDS)->where('id', $id)->firstOrFail();
-        app(Journal::class)->audit('BankAccountChanged', Subject::BankAccount, $id, $actor, $old ? ['active' => $old->active] : null, ['active' => $bank->active]);
+        app(Journal::class)->audit('BankAccountChanged', Subject::BankAccount, $id, $actor, $old ? self::auditFields($old) : null, self::auditFields($bank));
         app(Outbox::class)->record('BankAccountChanged', 'bank_account', $id, ['code' => $bank->code]);
 
         return $bank;
+    }
+
+    /** @return array<string,mixed> */
+    private static function auditFields(object $bank): array
+    {
+        return ['active' => $bank->active, 'bank_code' => $bank->bank_code, 'masked_number' => $bank->masked_number];
     }
 }

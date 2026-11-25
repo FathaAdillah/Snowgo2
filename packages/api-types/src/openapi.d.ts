@@ -7474,7 +7474,10 @@ export interface operations {
     "payments.staff.reconciliation.decide": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
             path: {
                 id: number;
             };
@@ -7528,7 +7531,10 @@ export interface operations {
     "payments.staff.reconciliation.review": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
             path: {
                 id: number;
             };
@@ -7749,7 +7755,10 @@ export interface operations {
     "payments.staff.reconciliation.open": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
             path: {
                 number: string;
             };

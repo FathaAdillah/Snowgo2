@@ -18,9 +18,10 @@ return new class extends Migration
                 refund_transfer_ref varchar(160) UNIQUE, proof_file_id bigint UNIQUE REFERENCES stored_files, handled_by bigint NOT NULL REFERENCES users,
                 reviewed_by bigint REFERENCES users CHECK(reviewed_by<>handled_by), reason_id bigint NOT NULL REFERENCES reason_codes,
                 review_reason_id bigint REFERENCES reason_codes, review_note varchar(1000), decision_note varchar(1000), finalized_by bigint REFERENCES users,
-                created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(bank_account_id,bank_tx_ref),
+                created_at timestamptz NOT NULL DEFAULT now(),
                 CHECK(status='OPEN' OR reviewed_by IS NOT NULL), CHECK(status<>'RETURNED' OR (refund_transfer_ref IS NOT NULL AND proof_file_id IS NOT NULL))
             );
+            CREATE UNIQUE INDEX reconciliation_live_receipt ON payment_reconciliations(bank_account_id,bank_tx_ref) WHERE status<>'REJECTED';
             CREATE INDEX ON payment_reconciliations(status,created_at);
             ALTER TABLE payments ADD reconciliation_id bigint UNIQUE REFERENCES payment_reconciliations;
             CREATE UNIQUE INDEX allocated_invoice_once ON payment_allocations(invoice_id) WHERE applied_at IS NOT NULL;

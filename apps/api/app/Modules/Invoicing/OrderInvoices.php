@@ -34,6 +34,7 @@ final class OrderInvoices
             if ($invoice->status === 'VOID') {
                 continue;
             }
+            InvoicePaymentGuard::voidIntents($invoice->id, $actor);
             DB::table('invoices')->where('id', $invoice->id)->update(['status' => 'VOID']);
             app(Journal::class)->transition(Subject::Invoice, $invoice->id, 'status', $invoice->status, 'VOID', "order-void:$order", $actor);
             app(Journal::class)->audit('InvoiceVoided', Subject::Invoice, $invoice->id, $actor, ['status' => $invoice->status], ['status' => 'VOID']);

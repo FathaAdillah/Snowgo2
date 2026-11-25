@@ -61,6 +61,7 @@ final class InvoiceLifecycle
             if ($invoice->status !== 'ISSUED' || ($action === 'revise_due' && ($order->status !== 'CONFIRMED' || now()->lt($invoice->due_at)))) {
                 throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Invoice is not eligible for this change.');
             }
+            InvoicePaymentGuard::voidIntents($invoice->id, $actor);
             DB::table('invoices')->where('id', $invoice->id)->update(['status' => 'VOID']);
             $journal = app(Journal::class);
             $journal->transition(Subject::Invoice, $invoice->id, 'status', 'ISSUED', 'VOID', "invoice-void:$invoice->id", $actor, $reason);
