@@ -261,3 +261,5 @@ docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d -
 Buka **Commerce → Batch Pengadaan**. Superadmin tetap login; untuk role lama tambahkan `procurement.batch.view` lewat Role & Izin. Aksi tulis juga membutuhkan `procurement.batch.manage` dan izin aksi dari [matriks](07-ADMIN-MENU-MATRIX.md). Daftarkan kode alasan aktif domain `procurement` untuk pembatalan dan kekurangan final.
 
 Pilihan item hanya berisi alokasi PO terkonfirmasi pada kampanye IN_PROCUREMENT/FULFILLING atau item request yang sudah dikonversi dan dibayar awal. Daftar kosong sebelum ada unit yang layak adalah normal. Alur pengajuan/konversi request, settlement transfer, tagihan lanjutan dan pembayaran refund tetap milik task masing-masing. Jangan mengubah status pembayaran manual untuk membuat data muncul.
+
+Rollback migrasi batch hanya diizinkan sebelum batch pertama dibuat. Sesudah itu rollback aplikasi tanpa menghapus skema; perbaiki data melalui migrasi lanjutan agar histori tetap terhubung ke order dan hold refund.

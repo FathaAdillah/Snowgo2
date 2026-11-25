@@ -55,6 +55,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('DROP TABLE procurement_receipt_lines,procurement_stage_events,procurement_batch_items,procurement_batches');
+        DB::unprepared(<<<'SQL'
+            LOCK TABLE procurement_batches IN ACCESS EXCLUSIVE MODE;
+            DO $$ BEGIN
+                IF EXISTS (SELECT FROM procurement_batches) THEN
+                    RAISE EXCEPTION 'Cannot roll back recorded procurement batches; preserve receipt and stage history.';
+                END IF;
+            END $$;
+            DROP TABLE procurement_receipt_lines,procurement_stage_events,procurement_batch_items,procurement_batches;
+            SQL);
     }
 };

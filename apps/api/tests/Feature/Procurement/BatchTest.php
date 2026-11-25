@@ -5,6 +5,7 @@ use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Procurement\BatchLifecycle;
 use App\Support\Http\ApiProblem;
 use Database\Seeders\PermissionSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\DB;
@@ -99,6 +100,21 @@ it('returns only unresolved assignments to the pool when cancelling a failed sup
     ($this->postBatch)('', $payload)->assertConflict();
     ($this->postBatch)('', ($this->assign)($id, 2))->assertCreated();
     $this->assertDatabaseCount('order_transition_holds', 0);
+});
+
+it('permits a pristine rollback but preserves procurement evidence after first use', function () {
+    $migration = require app_path('Modules/Procurement/Database/Migrations/2026_11_25_045423_create_procurement_batches.php');
+    DB::transaction(function () use ($migration) {
+        $migration->down();
+        $migration->up();
+    });
+    $id = ($this->newLine)(1);
+    $n = ($this->postBatch)('', ($this->assign)($id, 1))->assertCreated()->json('data.number');
+    ($this->postBatch)("/$n/stage-events", ['stage' => 'PURCHASED'])->assertOk();
+    ($this->postBatch)("/$n/receipts", ['reason_code' => 'SHORT', 'items' => [['order_item_id' => $id, 'received_qty' => 0, 'failed_qty' => 1]]])->assertOk();
+    expect(fn () => DB::transaction(fn () => $migration->down()))->toThrow(QueryException::class, 'Cannot roll back recorded procurement batches');
+    $this->assertDatabaseCount('procurement_receipt_lines', 1);
+    $this->assertDatabaseCount('order_transition_holds', 1);
 });
 
 it('restricts request batches to paid items of one converted request and disallows mixed sources', function () {
