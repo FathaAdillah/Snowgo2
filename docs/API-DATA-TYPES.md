@@ -20,7 +20,7 @@ Referensi [daftar endpoint dan auth](05-API-CONTRACT.md), [schema](04-DATABASE-S
 | Tipe | Field dan aturan |
 |---|---|
 | AddressInput | recipient:text120, phone:phone, district_code:code, line1:text255, line2?:text255, postal_code:text12, is_default?:bool. District aktif dalam hierarki ID; satu default per akun. |
-| CartItemInput | sku:code, campaign_slug?:code, qty:qty, term:term, cart_version:int. Unique varian per offer; varian mesti terbit, RTS FULL, PO sesuai min/max dan skema. Qty absolut (bukan penambahan). |
+| CartItemInput | sku:code, campaign_slug?:slug kampanye (maks. 160), qty:qty, term:term, cart_version:int. Unique varian per offer; varian mesti terbit, RTS FULL, PO sesuai min/max dan skema. Qty absolut (bukan penambahan). |
 | ProductInput | name:text200, slug:text200, description:text10000, status:DRAFT/PUBLISHED/ARCHIVED, brand_id?:int, tax_class_id?:int, authenticity:OFFICIAL/UNOFFICIAL/UNKNOWN, seo_title?:text160, seo_description?:text320, category_ids:int[], collection_ids?:int[], tag_ids?:int[]. Untuk publish wajib kategori aktif dan minimal satu varian aktif. |
 | VariantInput | product_id:int, sku:code, name:text160, unit_id:int, rts_enabled:bool, rts_price_amount?:money, weight_g:int, length_mm?:int, width_mm?:int, height_mm?:int, active:bool, attribute_value_ids:int[]. Berat > 0. RTS price wajib bila enabled. Canonical option unique. |
 | CategoryInput / MasterInput | Category: name:text120, slug:text160, parent_id?:int, description?:text255, active:bool. Brand/collection/tag: name, slug, active, description? hanya collection. Attribute/unit/courier: name, code, active. Cegah siklus kategori dan kode ganda. |

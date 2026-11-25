@@ -4826,7 +4826,7 @@
                                     "campaign_slug": {
                                         "type": "string",
                                         "pattern": "^[A-Za-z0-9_.-]+$",
-                                        "maxLength": 80
+                                        "maxLength": 160
                                     },
                                     "qty": {
                                         "type": "integer",

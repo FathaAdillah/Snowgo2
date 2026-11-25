@@ -83,6 +83,14 @@ it('rejects invalid campaign data and rolls back offers, journal and events', fu
     [['payment_scheme' => 'FULL_ONLY'], 'variants'],
 ]);
 
+it('accepts the full campaign slug length in a customer cart without relaxing SKU validation', function () {
+    $slug = str_repeat('w', 160);
+    DB::table('preorder_campaigns')->where('slug', 'po')->update(['slug' => $slug]);
+    ($this->login)($this->buyer);
+    $this->postJson('/api/v1/cart/items', ['sku' => str_repeat('A', 81)] + $this->po)->assertUnprocessable()->assertJsonValidationErrors('sku');
+    $this->postJson('/api/v1/cart/items', ['campaign_slug' => $slug] + $this->po)->assertCreated()->assertJsonPath('data.items.0.campaign_slug', $slug);
+});
+
 it('keeps quotas above active allocations and emits ETA changes only once', function () {
     ($this->place)();
     ($this->asStaff)('order_staff');

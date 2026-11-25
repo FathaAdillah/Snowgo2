@@ -44,7 +44,7 @@ final class CartController
     #[Response(419, 'CSRF token mismatch', type: ApiResponse::ERROR_SCHEMA)]
     public function store(Request $request, CustomerCart $cart): JsonResponse
     {
-        $data = $request->validate(['sku' => self::CODE, 'campaign_slug' => 'sometimes|'.self::CODE, 'qty' => self::QTY,
+        $data = $request->validate(['sku' => self::CODE, 'campaign_slug' => 'sometimes|required|string|max:160|regex:/\A[A-Za-z0-9_.-]+\z/D', 'qty' => self::QTY,
             'term' => 'required|string|in:FULL,DEPOSIT', 'cart_version' => self::VERSION]);
         ApiInput::fields($request, $data);
 
