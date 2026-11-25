@@ -137,3 +137,28 @@ it('releases a package only when the entire consent invoice chain is void', func
     $replace($replacement)->assertConflict();
     ($this->write)('admin/shipments', $package)->assertOk();
 });
+
+it('dispatches units with a voided item fee but not with an unpaid replacement', function () {
+    DB::table('shipping_rates')->update(['base_amount' => 0, 'amount_per_kg' => 0]);
+    ($this->write)("admin/orders/$this->order/invoices", $this->balance)->assertOk();
+    DB::table('invoices')->where('purpose', 'BALANCE')->update(['status' => 'PAID']);
+    DB::table('reason_codes')->insert(['domain' => 'invoicing', 'code' => 'WAIVE', 'label' => 'Waive']);
+    $number = ($this->write)('admin/shipments', ['order_number' => $this->order, 'warehouse_id' => DB::table('warehouses')->sole()->id, 'service_code' => 'REG', 'items' => [['order_item_id' => $this->item->public_id, 'qty' => 1]]])->assertOk()->json('data.number');
+    foreach (['PACK_START', 'PACK_FINISH', 'READY_FOR_DISPATCH'] as $stage) {
+        ($this->write)("admin/orders/$this->order/packing-events", ['shipment_number' => $number, 'action' => $stage])->assertOk();
+    }
+    $id = ($this->write)("admin/orders/$this->order/charge-consents", ['type' => 'IMPORT_TAX', 'description' => 'Duty', 'order_item_id' => $this->item->public_id, 'qty' => 1, 'unit_amount' => 10, 'expires_at' => now()->addDay()->toISOString()])->assertOk()->json('data.id');
+    ($this->login)($this->buyer);
+    $invoice = ($this->write)("orders/$this->order/charge-consents/$id/decisions", ['decision' => 'ACCEPT'])->assertOk()->json('data.invoice_number');
+    ($this->asStaff)();
+    $void = fn ($v) => ($this->write)("admin/invoices/$v/voids", ['reason_code' => 'WAIVE'])->assertOk();
+    $replace = fn ($v) => ($this->write)("admin/orders/$this->order/invoices", ['purpose' => 'ADDITIONAL_CHARGE', 'due_at' => now()->addDay()->toISOString(), 'replaces_invoice_number' => $v]);
+    $dispatch = fn () => ($this->write)("admin/shipments/$number/dispatches", ['service_code' => 'REG', 'tracking_number' => 'ITEMFEE']);
+
+    $void($invoice);
+    $replacement = $replace($invoice)->assertOk()->json('data.number');
+    $dispatch()->assertConflict();
+    $void($replacement);
+    $dispatch()->assertOk();
+    $replace($replacement)->assertConflict();
+});
