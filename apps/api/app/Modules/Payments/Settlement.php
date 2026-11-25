@@ -9,6 +9,7 @@ use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\OrderInvoices;
 use App\Modules\Preorders\AllocationLifecycle;
 use App\Support\Http\ApiProblem;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 
 final class Settlement
@@ -51,7 +52,8 @@ final class Settlement
     /** @return array{string,string} */
     private static function destination(object $payment): array
     {
-        $snapshot = json_decode(\Illuminate\Support\Facades\Crypt::decryptString($payment->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR);
+        $snapshot = json_decode(Crypt::decryptString($payment->instruction_snapshot_ciphertext), true, flags: JSON_THROW_ON_ERROR);
+
         return [mb_strtoupper($snapshot['bank_code']), $snapshot['account_number']];
     }
 
@@ -120,9 +122,9 @@ final class Settlement
                 app(Journal::class)->transition(Subject::Order, $order->id, 'payment_status', $order->payment_status, $paymentStatus, "capture:$p->id", $actor);
             }
             app(Journal::class)->audit('OrderPaid', Subject::Order, $order->id, $actor, ['status' => $order->payment_status], ['status' => $paymentStatus]);
-            app(Outbox::class)->record('OrderPaid','order',$order->id,['number' => $order->number, 'payment_number' => $p->number]);
+            app(Outbox::class)->record('OrderPaid', 'order', $order->id, ['number' => $order->number, 'payment_number' => $p->number]);
         }
-        PaymentFlow::change($p,'PAID',$recovery ? 'PaymentRecovered' : 'PaymentApproved',$actor,['received_amount' => $amount, 'bank_tx_ref' => $reference, 'reconciliation_id' => $recovery?->id, 'verified_at' => now(), 'verified_by' => $actor, 'claim_by' => null, 'claim_until' => null]);
+        PaymentFlow::change($p, 'PAID', $recovery ? 'PaymentRecovered' : 'PaymentApproved', $actor, ['received_amount' => $amount, 'bank_tx_ref' => $reference, 'reconciliation_id' => $recovery?->id, 'verified_at' => now(), 'verified_by' => $actor, 'claim_by' => null, 'claim_until' => null]);
         PaymentFlow::clearHolds($p);
     }
 }

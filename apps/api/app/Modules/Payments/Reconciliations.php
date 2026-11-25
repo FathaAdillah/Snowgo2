@@ -82,7 +82,7 @@ final class Reconciliations
     private static function record(int $id, ?string $from, string $to, int $actor, string $event): void
     {
         app(Journal::class)->transition(Subject::Reconciliation, $id, 'status', $from, $to, (string) Str::ulid(), $actor);
-        app(Journal::class)->audit($event,Subject::Reconciliation,$id,$actor,$from ? ['status' => $from] : null,['status' => $to]);
-        app(Outbox::class)->record($event,'payment_reconciliation',$id,['status' => $to]);
+        app(Journal::class)->audit($event, Subject::Reconciliation, $id, $actor, $from ? ['status' => $from] : null, ['status' => $to]);
+        app(Outbox::class)->record($event, 'payment_reconciliation', $id, ['status' => $to]);
     }
 }

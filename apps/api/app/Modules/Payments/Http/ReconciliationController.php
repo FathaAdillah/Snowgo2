@@ -6,8 +6,8 @@ use App\Modules\Payments\PaymentData;
 use App\Modules\Payments\Reconciliations;
 use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
-use Dedoc\Scramble\Attributes\Response;
 use Dedoc\Scramble\Attributes\HeaderParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -69,9 +69,9 @@ final class ReconciliationController
         $data = $request->validate(['decision' => 'required|string|in:APPLY,RETURN', 'proof_file_id' => 'required_if:decision,RETURN|string|ulid', 'refund_transfer_ref' => 'required_if:decision,RETURN|string|max:160', 'note' => 'required|string|max:1000']);
 
         return PaymentData::mutate($request, $data, ['payments.reconciliation.view', 'payments.payment.recover'], function () use ($request, $id, $data) {
-            Reconciliations::act($id,$request->user()->id,$data);
+            Reconciliations::act($id, $request->user()->id, $data);
 
-            return $this->show($request,$id);
+            return $this->show($request, $id);
         });
     }
 }

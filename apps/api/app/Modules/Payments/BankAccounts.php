@@ -42,7 +42,7 @@ final class BankAccounts
             DB::table('bank_accounts')->where('id', $id)->update($input);
         }
         $bank = DB::table('bank_accounts')->select(self::FIELDS)->where('id', $id)->firstOrFail();
-        app(Journal::class)->audit('BankAccountChanged', Subject::BankAccount, $id, $actor,  $old ? self::auditFields($old) : null, self::auditFields($bank));
+        app(Journal::class)->audit('BankAccountChanged', Subject::BankAccount, $id, $actor, $old ? self::auditFields($old) : null, self::auditFields($bank));
         app(Outbox::class)->record('BankAccountChanged', 'bank_account', $id, ['code' => $bank->code]);
 
         return $bank;
