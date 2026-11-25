@@ -52,6 +52,9 @@ final class RequestCases
             }
         }
         $reason = self::reason($data['reason_code'] ?? null);
+        if ($to === 'REJECTED') {
+            QuotationLifecycle::closeOpen($case->id, $actor, $reason);
+        }
         DB::table('request_orders')->where('id', $case->id)->update(['assigned_to' => $assignee]);
         if (isset($data['note'])) {
             self::insertMessage($case, $actor, 'STAFF', $data['note']);
@@ -61,11 +64,12 @@ final class RequestCases
 
     public static function cancel(object $case, int $actor, string $reason): void
     {
-        // QUOTED needs atomic withdrawal of its active quotation (TASK-020).
-        if (! in_array($case->status, ['SUBMITTED', 'UNDER_REVIEW', 'NEED_INFORMATION', 'REVISION_REQUESTED', 'EXPIRED'], true)) {
+        if (! in_array($case->status, ['SUBMITTED', 'UNDER_REVIEW', 'NEED_INFORMATION', 'QUOTED', 'REVISION_REQUESTED', 'EXPIRED'], true)) {
             throw self::invalid();
         }
-        self::transition($case, $actor, 'CANCELLED', 'RequestOrderCancelled', self::reason($reason));
+        $reasonId = self::reason($reason);
+        QuotationLifecycle::closeOpen($case->id, $actor, $reasonId);
+        self::transition($case, $actor, 'CANCELLED', 'RequestOrderCancelled', $reasonId);
     }
 
     public static function message(object $case, int $actor, string $visibility, string $body): int
@@ -86,14 +90,14 @@ final class RequestCases
         return $id;
     }
 
-    private static function reason(?string $code): ?int
+    public static function reason(?string $code): ?int
     {
         return $code === null ? null : DB::table('reason_codes')->where(['domain' => 'request_orders', 'code' => $code, 'active' => true])->sharedLock()->value('id')
             ?? throw ValidationException::withMessages(['reason_code' => 'Select an active request order reason.']);
     }
 
     /** @param array<string,mixed> $meta */
-    private static function transition(object $case, int $actor, string $to, string $event, ?int $reason, array $meta = []): void
+    public static function transition(object $case, ?int $actor, string $to, string $event, ?int $reason = null, array $meta = []): void
     {
         DB::table('request_orders')->where('id', $case->id)->update(['status' => $to, 'updated_at' => now()]);
         app(Journal::class)->transition(Subject::RequestOrder, $case->id, 'status', $case->status, $to, (string) Str::ulid(), $actor, $reason);
@@ -101,7 +105,7 @@ final class RequestCases
     }
 
     /** @param array<string,mixed> $meta */
-    private static function event(string $event, int $id, int $actor, array $meta): void
+    private static function event(string $event, int $id, ?int $actor, array $meta): void
     {
         app(Journal::class)->audit($event, Subject::RequestOrder, $id, $actor, null, $meta);
         app(Outbox::class)->record($event, 'request_order', $id, $meta);

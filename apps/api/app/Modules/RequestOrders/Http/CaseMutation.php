@@ -20,12 +20,19 @@ final class CaseMutation
      * @param Closure(?object,int):JsonResponse $write */
     public static function run(Request $request, array $data, ?string $number, ?array $actions, Closure $write): JsonResponse
     {
+        return self::authorized($request, $data, $number, $actions === null ? null : array_map(fn ($a) => 'request_orders.request.'.$a, ['view', 'review', ...$actions]), $write);
+    }
+
+    /** @param array<string,mixed> $data
+     * @param list<string>|null $permissions
+     * @param Closure(?object,int):JsonResponse $write */
+    public static function authorized(Request $request, array $data, ?string $number, ?array $permissions, Closure $write): JsonResponse
+    {
         ApiInput::fields($request, $data);
         $actor = $request->user();
-        $owner = $actions === null ? $actor->id : null;
-        $authorize = function () use ($actions, $actor, $owner, $number) {
-            if ($actions !== null) {
-                $permissions = array_map(fn ($a) => 'request_orders.request.'.$a, ['view', 'review', ...$actions]);
+        $owner = $permissions === null ? $actor->id : null;
+        $authorize = function () use ($permissions, $actor, $owner, $number) {
+            if ($permissions !== null) {
                 abort_unless($actor->fresh()?->can($permissions), 403);
             }
             abort_if($number !== null && ! CaseData::scope($owner)->where('number', $number)->exists(), 404);

@@ -14,11 +14,11 @@ final class CheckoutOrders
     /** @param array<string,mixed> $group
      * @param array<string,mixed> $address
      * @return array{id:int,lines:list<array<string,mixed>>} */
-    public function create(int $checkout, int $owner, array $group, array $address, string $due, ?string $notes): array
+    public function create(?int $checkout, int $owner, array $group, array $address, string $due, ?string $notes, ?int $requestOrder = null): array
     {
         $number = sprintf('ORD-%s-%06d', now()->format('Ymd'), DB::scalar("SELECT nextval('order_number_seq')"));
         $id = DB::table('orders')->insertGetId(Arr::only($group, ['campaign_id', 'term', 'subtotal_amount', 'discount_amount', 'tax_amount', 'shipping_amount', 'total_amount']) +
-            ['number' => $number, 'checkout_id' => $checkout, 'user_id' => $owner, 'selling_method' => $group['method'],
+            ['number' => $number, 'checkout_id' => $checkout, 'request_order_id' => $requestOrder, 'user_id' => $owner, 'selling_method' => $group['method'],
                 'payment_due_at' => $due, 'notes' => $notes, 'campaign_terms' => $group['campaign_terms'] === null ? null : json_encode($group['campaign_terms'], JSON_THROW_ON_ERROR)]);
         $address['region_snapshot'] = json_encode($address['region_snapshot'], JSON_THROW_ON_ERROR);
         DB::table('order_addresses')->insert($address + ['order_id' => $id]);

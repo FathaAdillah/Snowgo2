@@ -22,6 +22,21 @@ for (const name of ['InventoryListTable', 'InventoryWarehouseList', 'InventoryAd
 }
 const wh = { id: 9, code: 'BDG', name: 'Bandung', active: true, is_default: false, district_code: '11.01.01', address: 'Jalan A' }
 
+test('quotation controls follow per-action grants and cannot edit a frozen version', async () => {
+  const quote = { number: 'QUO-1', version: 1, term: 'FULL', total_amount: 100, valid_until: '2027-01-01T00:00:00Z', items: [], terms: 'Goods only' }
+  const show = (status, ...actions) => render('components/RequestQuotations', actions.map(a => `request_orders.quotation.${a}`), {},
+    { record: { number: 'REQ-1', status: 'QUOTED', items: [], quotations: [{ ...quote, status }] } })
+  assert.doesNotMatch((await show('DRAFT', 'view')).html, /Edit draf|Tarik penawaran|Kirim penawaran/)
+  assert.doesNotMatch((await show('DRAFT', 'dispatch')).html, /Kirim penawaran/)
+  const dispatcher = await show('DRAFT', 'manage', 'dispatch')
+  dispatcher.buttons['Kirim penawaran'].onClick()
+  assert.equal(dispatcher.state.action.value.url, '/api/v1/admin/request-orders/REQ-1/quotations/QUO-1/dispatches')
+  const sent = await show('SENT', 'manage', 'update', 'withdraw', 'create')
+  assert.match(sent.html, /Tarik penawaran/)
+  assert.match(sent.html, /Buat penawaran/)
+  assert.doesNotMatch(sent.html, /Edit draf|Kirim penawaran/)
+})
+
 async function render(path, grants, fixture = {}, props = {}) {
   const requests = []
   const buttons = {}

@@ -18,7 +18,7 @@ final class StaffCaseController
     {
         $filters = $request->validate([...CaseData::FILTERS, 'number' => 'sometimes|required|string|max:40', 'from' => 'sometimes|required|date_format:Y-m-d', 'to' => 'sometimes|required|date_format:Y-m-d']);
 
-        return $this->visibleFiles($request, CaseData::page($request, $filters, null));
+        return $this->applyReadGrants($request, CaseData::page($request, $filters, null));
     }
 
     #[Response(200, 'Staff case detail', type: CaseData::STAFF_ONE)]
@@ -27,7 +27,7 @@ final class StaffCaseController
     {
         ApiInput::fields($request, []);
 
-        return $this->visibleFiles($request, CaseData::one($number, null));
+        return $this->applyReadGrants($request, CaseData::one($number, null));
     }
 
     #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
@@ -55,16 +55,23 @@ final class StaffCaseController
             return CaseData::one($number, null);
         });
 
-        return $this->visibleFiles($request, $response);
+        return $this->applyReadGrants($request, $response);
     }
 
     /** Apply current grants to the response, including an idempotent review replay. */
-    private function visibleFiles(Request $request, JsonResponse $response): JsonResponse
+    private function applyReadGrants(Request $request, JsonResponse $response): JsonResponse
     {
-        if ($response->isSuccessful() && ! $request->user()->can('foundation.file.view')) {
+        $files = $request->user()->can('foundation.file.view');
+        $quotes = $request->user()->can('request_orders.quotation.view');
+        if ($response->isSuccessful() && (! $files || ! $quotes)) {
             $body = $response->getData();
             foreach (is_array($body->data) ? $body->data : [$body->data] as $row) {
-                $row->files = [];
+                if (! $files) {
+                    $row->files = [];
+                }
+                if (! $quotes) {
+                    $row->quotations = [];
+                }
             }
             $response->setData($body);
         }

@@ -213,6 +213,8 @@ Status terminal · REJECTED, CANCELLED, CONVERTED_TO_ORDER.
 
 SENT immutable. Versi baru supersede versi SENT lama di transaksi yang sama. Acceptance memeriksa validity dan request.
 
+FULL menagih seluruh nilai barang. DEPOSIT membagi DP secara proporsional terhadap nilai setiap baris menurut urutan item, dengan selisih pembulatan ditentukan dari total kumulatif sehingga tidak ada rupiah hilang. Unit awal di baris menerima sisa pembagian. Estimasi ongkir tidak ditambahkan ke invoice awal. Tidak ada hold stok atau kuota saat konversi.
+
 | Asal | Tujuan diizinkan |
 |---|---|
 | DRAFT | SENT, WITHDRAWN |

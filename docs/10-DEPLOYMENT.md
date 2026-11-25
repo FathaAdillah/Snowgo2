@@ -277,3 +277,16 @@ Setelah login, superadmin dapat membuka **Commerce → Request Order**. Untuk ro
 Antrean kosong sebelum ada pengajuan. Pelanggan terverifikasi mengajukan item melalui API, lalu mengunggah lampiran ke `POST /files` dengan `owner_type=request_order`, `owner_ref` nomor request, dan `collection=request_attachment`. Aktifkan layanan file privat, scanner dan worker seperti pada TASK-003. Lampiran milik pengajuan pelanggan, bukan catatan staf. Staf memerlukan `foundation.file.view` untuk melihat metadata dan `foundation.file.download` untuk mengunduh file yang berstatus `READY`. Tautan bertanda tangan berlaku lima menit.
 
 Rollback migrasi hanya sebelum ada item atau pesan. Sesudah dipakai, rollback aplikasi tanpa menghapus skema. Penawaran dan konversi menunggu TASK-020; halaman pelanggan menunggu TASK-034.
+
+## Mengaktifkan penawaran Request Order (TASK-020)
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose restart scheduler
+docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin
+```
+
+Buka **Commerce → Request Order → detail → Penawaran harga**. Mulai review sebelum membuat draf. Untuk role lama, tambahkan `request_orders.request.view` dan `request_orders.quotation.view`; aksi tulis memerlukan `request_orders.quotation.manage` beserta izin `create`, `update`, `dispatch`, atau `withdraw` sesuai tugas. Penarikan membutuhkan kode alasan aktif domain `request_orders`.
+
+Harga barang dan invoice dalam IDR. Kurs pemasok hanya referensi internal; estimasi ongkir belum ditagih. Pengiriman versi baru menggantikan versi aktif sebelumnya. Scheduler menjalankan `quotations:expire` tiap menit; persetujuan tetap memeriksa waktu database jika scheduler terlambat. Customer memutuskan lewat API; halaman storefront belum termasuk. Sesudah penawaran pertama, rollback aplikasi tanpa menghapus skema atau snapshot.

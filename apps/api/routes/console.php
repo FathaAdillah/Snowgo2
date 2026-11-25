@@ -8,6 +8,7 @@ use App\Modules\Inventory\StockReservations;
 use App\Modules\Orders\OrderExpiry;
 use App\Modules\Preorders\AllocationLifecycle;
 use App\Modules\Preorders\CampaignWindow;
+use App\Modules\RequestOrders\QuotationLifecycle;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Inspiring;
@@ -52,6 +53,10 @@ Artisan::command('preorders:expire-holds', function (AllocationLifecycle $alloca
 });
 Schedule::command('preorders:advance-windows')->everyMinute();
 Schedule::command('preorders:expire-holds')->everyMinute();
+Artisan::command('quotations:expire', function () {
+    $this->info('Expired quotations: '.QuotationLifecycle::expireDue());
+});
+Schedule::command('quotations:expire')->everyMinute();
 Artisan::command('orders:reconcile-expired-stock', function (OrderExpiry $expiry) {
     $this->info('Reconciled expired RTS orders: '.$expiry->reconcileReleased());
 })->purpose('Close unpaid checkouts whose stock expired before order lifecycle tracking was installed');

@@ -155,6 +155,11 @@ async function download(id: string) {
         :record="record"
         @saved="refresh()"
       />
+      <RequestQuotations
+        v-if="can('request_orders.quotation.view')"
+        :record="record"
+        @saved="refresh()"
+      />
     </template>
   </section>
 </template>

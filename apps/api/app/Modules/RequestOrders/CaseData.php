@@ -19,7 +19,7 @@ final class CaseData
 
     private const MSG = 'array{body:string,visibility:string,author_label:string,created_at:string}';
 
-    private const DETAIL = self::FIELDS.',description:string,budget_amount:int|null,items:list<'.self::ITEM.'>,messages:list<'.self::MSG.'>,files:list<array{id:string,mime:string,size_bytes:int,status:string}>,quotations:list<array{number:string,version:int,status:string}>';
+    private const DETAIL = self::FIELDS.',description:string,budget_amount:int|null,items:list<'.self::ITEM.'>,messages:list<'.self::MSG.'>,files:list<array{id:string,mime:string,size_bytes:int,status:string}>,quotations:list<'.QuotationData::SHAPE.'>';
 
     private const STAFF = 'array{'.self::DETAIL.',assigned_to:int|null,review_actions:list<string>,can_message:bool}';
 
@@ -59,7 +59,11 @@ final class CaseData
             $q->addSelect('r.assigned_to');
         }
 
-        return $q->addSelect('r.description', 'r.budget_amount')->selectRaw(<<<'SQL'
+        $versions = QuotationData::projection($owner === null)->whereColumn('q.request_order_id', 'r.id')
+            ->when($owner !== null, fn ($v) => $v->whereNotNull('q.sent_at'))->orderByDesc('q.version');
+
+        return $q->selectSub(DB::query()->fromSub($versions, 'versions')->selectRaw('json_agg(versions)'), 'quotations')
+            ->addSelect('r.description', 'r.budget_amount')->selectRaw(<<<'SQL'
             (SELECT json_agg(json_build_object('id',i.public_id,'name',i.name,'qty',i.qty,'options',i.options,'source_url',i.source_url,'notes',i.notes) ORDER BY i.id)
                 FROM request_order_items i WHERE i.request_order_id=r.id) AS items,
             (SELECT json_agg(json_build_object('body',m.body,'visibility',m.visibility,'author_label',CASE WHEN m.author_id=r.user_id THEN 'Pelanggan' ELSE 'Staf' END,'created_at',m.created_at) ORDER BY m.id)
@@ -73,10 +77,9 @@ final class CaseData
     {
         $row->created_at = Carbon::parse($row->created_at)->toISOString();
         if (property_exists($row, 'messages')) {
-            foreach (['items', 'messages', 'files'] as $field) {
+            foreach (['items', 'messages', 'files', 'quotations'] as $field) {
                 $row->$field = json_decode($row->$field ?? '[]', flags: JSON_THROW_ON_ERROR);
             }
-            $row->quotations = [];
         }
         if (property_exists($row, 'assigned_to')) {
             $row->review_actions = array_keys(RequestCases::REVIEWS[$row->status] ?? []);
