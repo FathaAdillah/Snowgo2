@@ -5,6 +5,7 @@ namespace App\Modules\Payments;
 use App\Modules\Foundation\Idempotency\IdempotentMutation;
 use App\Modules\Identity\Staff\StaffAccess;
 use App\Support\Http\ApiInput;
+use App\Support\Http\ApiProblem;
 use App\Support\Http\ApiResponse;
 use Closure;
 use Illuminate\Database\Query\Builder;
@@ -62,6 +63,9 @@ final class PaymentData
         $authorize = function () use ($request, $abilities) {
             $actor = $request->user();
             if ($abilities) {
+                if (in_array('payments.bank.manage', $abilities, true) && $request->session()->get('staff.step_up', 0) <= now()->subMinutes(10)->timestamp) {
+                    throw new ApiProblem(403, 'STEP_UP_REQUIRED', 'Confirm password and a fresh TOTP code');
+                }
                 abort_unless(! $request->session()->has(StaffAccess::PASSWORD_ONLY_VERSION) && $actor->fresh()?->can($abilities), 403);
             }
 
