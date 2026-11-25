@@ -6,7 +6,7 @@ use App\Modules\Geography\RegionStaging;
 use App\Modules\RequestOrders\RequestAttachmentPolicy;
 
 return [
-    // Domain modules register owner type => FileOwnerPolicy. Missing policies deny access.
+    // Uploadable parents only. Invoice PDFs use their dedicated, owner/permission-scoped download routes.
     'owners' => ['staging' => RegionStaging::class, 'product' => CatalogFileOwner::class,
         'variant' => VariantFileOwner::class, 'request_order' => RequestAttachmentPolicy::class],
     'clamd' => env('CLAMD_ADDRESS', 'tcp://clamav:3310'),

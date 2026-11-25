@@ -39,7 +39,7 @@ TC-CHK-001 menyiapkan 100 keranjang dan quote sebelum melepas worker melalui bar
 | TC-CHK-001 | Concurrency/load | 100 customer authenticated independent, masing-masing qty 1, stok 12, barrier start | Tepat 12 sukses dan 88 conflict stok, order/invoice dan saldo konsisten |
 | TC-CHK-002 | API/database | Checkout campuran, salah satu grup gagal; retry dengan key sama/berbeda | Rollback seluruhnya; replay identik; payload berubah 422 |
 | TC-ORD-001 | Feature/E2E | Cancel sebelum capture, setelah capture, pack sampai completion | Hold lepas sekali, captured membutuhkan kasus refund, completion hanya bila eligible |
-| TC-IVC-001 | Database/queue | Issue bersamaan, void restricted, PDF retry | Satu nomor per source, invoice issued immutable, file tetap private |
+| TC-IVC-001 | PostgreSQL/queue/MinIO | Dua penerbit pengganti, void saat review/applied, revisi jatuh tempo, PDF retry dan replay job | Satu nomor per source; snapshot dan line immutable; URL sementara berfungsi hanya setelah siap, unduh tanpa signature ditolak |
 | TC-PAY-001 | Concurrency | Approve payment dipanggil dua kali dengan key sama/berbeda | Satu capture dan komitmen, audit approval dan allocations tunggal |
 | TC-PAY-002 | Feature/integration | Mismatch dan late exact transfer, dua order atau invoice berbeda dan bank ref sama | Tidak ada double capture; recovery berizin apply atomik atau return dengan proof |
 | TC-SHP-001 | Feature/E2E | Partial shipment, resi, tracking manual FAILED lalu selesai | Dispatch qty dan SALE sekali; order delivered setelah semua paket selesai |

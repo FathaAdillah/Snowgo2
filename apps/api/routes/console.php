@@ -5,6 +5,7 @@ use App\Modules\Foundation\Outbox\Relay;
 use App\Modules\Identity\Staff\StaffInvitations;
 use App\Modules\Inventory\StockExpiry;
 use App\Modules\Inventory\StockReservations;
+use App\Modules\Invoicing\InvoiceDocuments;
 use App\Modules\Orders\OrderExpiry;
 use App\Modules\Preorders\AllocationLifecycle;
 use App\Modules\Preorders\CampaignWindow;
@@ -67,6 +68,10 @@ Artisan::command('files:prune', function (ScanQueue $queue) {
     $this->info('Unreferenced objects removed: '.$queue->prune());
 });
 Schedule::command('files:dispatch-scans')->everyMinute();
+Artisan::command('invoices:dispatch-pdfs', function (Dispatcher $bus) {
+    $this->info('Invoice PDFs queued: '.InvoiceDocuments::dispatchDue($bus));
+});
+Schedule::command('invoices:dispatch-pdfs')->everyMinute();
 Schedule::command('files:prune')->daily()->withoutOverlapping();
 Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=', now())->delete())
     ->name('prune-idempotency-keys')->daily();

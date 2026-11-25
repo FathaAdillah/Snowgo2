@@ -10,6 +10,8 @@ use Symfony\Component\Process\Process;
 
 final class FileRules
 {
+    public const GENERATED_OWNERS = ['invoice_pdf' => 'invoice'];
+
     public const OWNERS = [
         'catalog_media' => ['product', 'variant'], 'payment_proof' => ['payment'],
         'request_attachment' => ['request_order'], 'return_evidence' => ['return'],

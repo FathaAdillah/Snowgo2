@@ -840,6 +840,8 @@ Tagihan immutable. Revision punya source_ref baru; void hanya bila belum settle
 
 **Constraint dan indeks tambahan** · U(order_id,source_ref); U(replaces_invoice_id); I(order_id,status,due_at); C(total_amount=subtotal_amount-discount_amount+tax_amount+shipping_amount).
 
+`invoice_documents` memakai satu baris per invoice (PK/FK), UUID object privat unik, status PENDING/RENDERING/FAILED/READY, token dan batas lease, serta FK unik ke `stored_files` saat siap. Penulisan object bersyarat mencegah retry menimpa bytes yang sudah diterbitkan. PDF hanya dihasilkan server, bukan koleksi upload.
+
 ### DB-IVC-002 — invoice_items
 
 Baris tagihan. Diskon disimpan positif dan dikurangkan; snapshot total divalidasi sebelum Issue

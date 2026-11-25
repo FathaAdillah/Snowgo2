@@ -59,7 +59,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   let pager, retry, state, meta
   Object.assign(globalThis, inventory, procurement, requestOrders, {
     computed, reactive, ref, watch, useTemplateRef, useHead() {}, definePageMeta(value) { meta = value },
-    useRoute: () => ({ query: fixture.route ?? {} }), useAdminAuth: () => ({ can: grant => grants.includes(grant) }),
+    useRoute: () => ({ query: fixture.route ?? {}, params: fixture.params ?? {} }), useAdminAuth: () => ({ can: grant => grants.includes(grant) }),
     useFetch(url, options) {
       requests.push({ url, query: options.query })
       return {
@@ -109,6 +109,24 @@ test('inventory navigation matches page permissions and only offers implemented 
     if (visible) assert.deepEqual((await render(`pages/inventory/${visible}`, [grant])).meta.permission, allowed[0].permission)
   }
   assert.equal(entries.filter(entry => hasPageAccess(entry.permission, () => true)).length, 5)
+})
+
+test('invoice readers cannot void, retry or download with only generic file permissions', async () => {
+  const number = 'INV-ABC'
+  const record = { number, order_number: 'ORD-1', order_status: 'PENDING_PAYMENT', status: 'ISSUED', purpose: 'FULL_PAYMENT', pdf_ready: true, pdf_status: 'READY',
+    items: [], issued_at: '2026-11-01T01:00:00Z', due_at: '2026-11-02T01:00:00Z', subtotal_amount: 90, discount_amount: 0, shipping_amount: 10, tax_amount: 0, total_amount: 100 }
+  const grants = ['invoicing.invoice.view', 'foundation.file.view', 'foundation.file.download']
+  const show = (permissions, row) => render('pages/invoices/[number]', permissions, { rows: row, params: { number } })
+  const reader = await show(grants, record)
+  assert.equal(reader.meta.permission, 'invoicing.invoice.view')
+  assert.doesNotMatch(reader.html, /Batalkan invoice|Unduh PDF privat|Ulangi pembuatan PDF/)
+  const finance = await show([...grants, 'invoicing.invoice.download', 'invoicing.invoice.manage', 'invoicing.invoice.void'], record)
+  assert.match(finance.html, /Unduh PDF privat/)
+  assert.match(finance.html, /Batalkan invoice/)
+  assert.doesNotMatch(finance.html, /Revisi jatuh tempo/)
+  const failed = await show([...grants, 'invoicing.invoice.manage', 'invoicing.invoice.retry_pdf'], { ...record, pdf_status: 'FAILED', pdf_ready: false })
+  failed.buttons['Ulangi pembuatan PDF'].onClick()
+  assert.equal(failed.state.action.value.url, `/api/v1/admin/invoices/${number}/pdf-requests`)
 })
 
 test('warehouse screen separates create-only, view, update and archive', async () => {

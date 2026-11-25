@@ -28,13 +28,13 @@ beforeEach(function () {
     DB::table('preorder_campaigns')->update(['status' => 'IN_PROCUREMENT']);
     DB::table('preorder_campaign_variants')->update(['quota' => 10, 'confirmed_qty' => 4, 'max_qty' => 10]);
     DB::table('reason_codes')->insert(['domain' => 'procurement', 'code' => 'SHORT', 'label' => 'Kekurangan']);
-    $this->newLine = function (int $qty, ?int $request = null, ?int $owner = null) {
+    $this->newLine = function (int $qty, ?int $request = null, ?int $owner = null, string $invoiceStatus = 'PAID') {
         $ref = (string) Str::ulid();
         $order = DB::table('orders')->insertGetId(['number' => 'ORD-'.$ref, 'user_id' => $owner ?? User::factory()->create()->id,
             'selling_method' => $request ? 'REQUEST_ORDER' : 'PREORDER', 'request_order_id' => $request, 'campaign_id' => $request ? null : $this->campaign,
             'status' => 'CONFIRMED', 'payment_status' => 'PARTIALLY_PAID', 'payment_due_at' => now()->addDay()]);
         $line = DB::table('order_items')->insertGetId(['public_id' => $ref, 'order_id' => $order, 'qty' => $qty, 'sku_snapshot' => 'A1']);
-        DB::table('invoices')->insert(['number' => 'INV-'.$ref, 'order_id' => $order, 'purpose' => 'DEPOSIT', 'source_ref' => 'checkout:initial', 'status' => 'PAID',
+        DB::table('invoices')->insert(['number' => 'INV-'.$ref, 'order_id' => $order, 'purpose' => 'DEPOSIT', 'source_ref' => 'checkout:initial', 'status' => $invoiceStatus,
             'subtotal_amount' => 10, 'tax_amount' => 0, 'shipping_amount' => 0, 'total_amount' => 10, 'due_at' => now()]);
         if (! $request) {
             DB::table('preorder_allocations')->insert(['order_item_id' => $line, 'campaign_variant_id' => DB::table('preorder_campaign_variants')->value('id'),
@@ -141,12 +141,11 @@ it('can cancel procurement after total final shortage without settling a paid or
 it('restricts request batches to paid items of one converted request and disallows mixed sources', function () {
     $owner = User::factory()->create()->id;
     $request = DB::table('request_orders')->insertGetId(['number' => 'REQ-1', 'user_id' => $owner, 'title' => 'Album', 'description' => 'A', 'status' => 'CONVERTED_TO_ORDER']);
-    $ref = ($this->newLine)(1, $request, $owner);
+    $ref = ($this->newLine)(1, $request, $owner, 'ISSUED');
     $po = ($this->newLine)(1);
     $items = [['order_item_id' => $ref, 'qty' => 1]];
     ($this->postBatch)('', ['request_number' => 'REQ-1', 'campaign_number' => 'PO-1', 'items' => $items])->assertUnprocessable();
     ($this->postBatch)('', ['request_number' => 'REQ-1', 'items' => [...$items, ['order_item_id' => $po, 'qty' => 1]]])->assertNotFound();
-    DB::table('invoices')->where('number', 'INV-'.$ref)->update(['status' => 'ISSUED']);
     ($this->postBatch)('', ['request_number' => 'REQ-1', 'items' => $items])->assertConflict();
     DB::table('invoices')->where('number', 'INV-'.$ref)->update(['status' => 'PAID']);
     $n = ($this->postBatch)('', ['request_number' => 'REQ-1', 'items' => $items])->assertCreated()->json('data.number');

@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Modules\Cart\CustomerCart;
 use App\Modules\Identity\Sessions\DeviceSessions;
+use App\Modules\Invoicing\InvoiceLifecycle;
 use App\Modules\Preorders\AllocationLifecycle;
 use App\Modules\Preorders\CampaignWindow;
 use App\Support\Http\ApiProblem;
@@ -175,7 +176,7 @@ it('requires a verified customer before reading allocations', function () {
     $this->getJson('/api/v1/preorders/po/allocations')->assertForbidden()->assertJsonPath('code', 'EMAIL_NOT_VERIFIED');
 });
 
-it('confirms only paid initial deposits, only once, without releasing historical quota or touching physical stock', function () {
+it('confirms only paid initial deposits, only once, without releasing historical quota or touching physical stock', function (bool $reissue) {
     $number = ($this->place)();
     $order = DB::table('orders')->where('number', $number)->value('id');
     $this->getJson('/api/v1/preorders/po/allocations')->assertOk()->assertJsonPath('data.0.order_number', $number);
@@ -183,7 +184,15 @@ it('confirms only paid initial deposits, only once, without releasing historical
     $this->getJson('/api/v1/preorders/po/allocations')->assertOk()->assertJsonCount(0, 'data');
     $life = app(AllocationLifecycle::class);
     expect(fn () => $life->confirm($order))->toThrow(ApiProblem::class);
-    DB::table('invoices')->where(['order_id' => $order, 'purpose' => 'DEPOSIT'])->update(['status' => 'PAID']);
+    $initial = DB::table('invoices')->where(['order_id' => $order, 'purpose' => 'DEPOSIT'])->firstOrFail();
+    $invoice = $initial->number;
+    if ($reissue) {
+        DB::table('invoices')->where('id', $initial->id)->update(['status' => 'VOID']);
+        $invoice = DB::transaction(fn () => InvoiceLifecycle::apply('issue', $number, $this->buyer->id, [
+            'replaces_invoice_number' => $initial->number, 'purpose' => 'DEPOSIT', 'due_at' => $initial->due_at,
+        ]));
+    }
+    DB::table('invoices')->where('number', $invoice)->update(['status' => 'PAID']);
     $life->confirm($order);
     $life->confirm($order);
     DB::table('preorder_allocations')->update(['expires_at' => now()->subDay()]);
@@ -205,7 +214,7 @@ it('confirms only paid initial deposits, only once, without releasing historical
     $this->postJson("$this->admin/PO-1/actions/COMPLETE", [], ['Idempotency-Key' => 'before-final'])->assertConflict();
     DB::table('preorder_allocations')->update(['status' => 'FULFILLED']);
     $this->postJson("$this->admin/PO-1/actions/COMPLETE", [], ['Idempotency-Key' => 'after-final'])->assertOk();
-});
+})->with([false, true]);
 
 it('protects proof review, then atomically expires an unpaid order and frees quota exactly once', function () {
     $number = ($this->place)();
