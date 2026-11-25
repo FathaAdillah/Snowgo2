@@ -42,11 +42,13 @@ test('profile puts permitted operator tools directly below settings as full-page
   const settings = ['Setting', '/settings', undefined]
   const logs = ['Log Viewer', '/log-viewerx', true]
   const db = ['OmniDB', '/db/', true]
+  const horizon = ['Horizon', '/horizon', true]
   for (const [grants, expected] of [
     [[], []],
     [['operator.logs.view'], [logs]],
     [['operator.database.open'], [db]],
-    [['operator.logs.view', 'operator.database.open'], [logs, db]]
+    [['operator.logs.view', 'operator.database.open'], [logs, db]],
+    [['operator.logs.view', 'operator.database.open', 'operator.horizon.view'], [logs, db, horizon]]
   ]) {
     assert.deepEqual(await profileLinks(['admin.profile.view', ...grants]), [settings, ...expected])
   }

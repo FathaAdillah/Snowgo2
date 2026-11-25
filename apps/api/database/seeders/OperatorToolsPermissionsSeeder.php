@@ -6,5 +6,5 @@ use App\Modules\Identity\Staff\StaffAccess;
 
 final class OperatorToolsPermissionsSeeder extends FeaturePermissions
 {
-    protected const ACTIONS = [StaffAccess::LOGS, StaffAccess::DB];
+    protected const ACTIONS = StaffAccess::OPERATOR_TOOLS;
 }

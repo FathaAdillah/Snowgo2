@@ -194,7 +194,7 @@ it('manages staff roles with revision checks, protected roles and idempotent wri
     $root = ($this->staff)(StaffAccess::SUPER);
     ($this->login)($root);
     $catalog = ($this->send)('GET', '/api/v1/admin/permissions')->assertOk()->json('data');
-    expect(collect($catalog)->pluck('name'))->toContain('admin.roles.assign_permissions')->not->toContain(StaffAccess::DB, StaffAccess::LOGS);
+    expect(collect($catalog)->pluck('name'))->toContain('admin.roles.assign_permissions')->not->toContain(...StaffAccess::OPERATOR_TOOLS);
     $data = ['name' => 'packing', 'display_name' => 'Packing', 'description' => 'Pengepakan', 'permissions' => ['reporting.dashboard.view']];
     ($this->send)('POST', $roles, $data)->assertForbidden()->assertJsonPath('code', 'STEP_UP_REQUIRED');
     $this->travel(31)->seconds();
@@ -280,7 +280,7 @@ it('combines staff status and search without widening delegation or including cu
 it('advertises operator actions only to a local MFA-authenticated superadmin', function (string $env, string $role) {
     $user = ($this->staff)($role);
     if ($role !== StaffAccess::SUPER) {
-        $user->givePermissionTo(StaffAccess::LOGS, StaffAccess::DB);
+        $user->givePermissionTo(StaffAccess::OPERATOR_TOOLS);
     }
     ($this->login)($user);
     $previousEnv = app()->environment();
@@ -288,7 +288,7 @@ it('advertises operator actions only to a local MFA-authenticated superadmin', f
     try {
         $permissions = ($this->send)('GET', '/api/v1/admin/auth/me')->assertOk()->json('data.permissions');
         expect($permissions)->toContain('admin.profile.view');
-        foreach ([StaffAccess::LOGS, StaffAccess::DB] as $ability) {
+        foreach (StaffAccess::OPERATOR_TOOLS as $ability) {
             expect(in_array($ability, $permissions, true))->toBe($env === 'local' && $role === StaffAccess::SUPER);
         }
     } finally {
@@ -322,6 +322,42 @@ it('guards each operator console even with explicit operator grants or basic cre
     $root->removeRole(StaffAccess::SUPER);
     $console(403);
 })->with([StaffAccess::LOGS, StaffAccess::DB]);
+
+it('serves the real Horizon page and stats only to an active local superadmin session', function () {
+    $read = function (string $path, string $host = 'http://admin.localhost') {
+        app()->detectEnvironment(fn () => 'local');
+        try {
+            return ($this->send)('GET', $path, origin: $host);
+        } finally {
+            app()->detectEnvironment(fn () => 'testing');
+        }
+    };
+    $paths = ['/horizon', '/horizon/api/stats'];
+    foreach ($paths as $path) {
+        $read($path)->assertUnauthorized();
+    }
+    ($this->login)(($this->staff)('admin')->givePermissionTo(StaffAccess::HORIZON));
+    foreach ($paths as $path) {
+        $read($path)->assertForbidden();
+    }
+    $root = ($this->staff)(StaffAccess::SUPER);
+    ($this->login)($root);
+    $page = $read('/horizon')->assertOk()->assertSee('<title>Horizon', false)->assertHeaderContains('Cache-Control', 'no-store');
+    $read('/horizon/api/stats')->assertOk()->assertJsonStructure(['status', 'jobsPerMinute']);
+    foreach ($paths as $path) {
+        $read($path, 'http://localhost')->assertNotFound();
+        ($this->send)('GET', $path)->assertNotFound();
+    }
+    preg_match('/<meta name="csrf-token" content="([^"]+)"/', $page->getContent(), $matches);
+    app()->detectEnvironment(fn () => 'local');
+    try {
+        ($this->send)('POST', '/horizon/api/monitoring', ['tag' => 'example'], headers: ['X-CSRF-TOKEN' => $matches[1]])->assertForbidden();
+    } finally {
+        app()->detectEnvironment(fn () => 'testing');
+    }
+    $root->removeRole(StaffAccess::SUPER);
+    $read('/horizon/api/stats')->assertForbidden();
+});
 
 it('requires every admin business endpoint to have a seeded permission and preserves custom role grants on reseed', function () {
     $role = Role::findByName('admin', 'web');
