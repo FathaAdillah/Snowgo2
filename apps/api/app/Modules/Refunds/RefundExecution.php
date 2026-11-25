@@ -21,10 +21,24 @@ final class RefundExecution
             if (! ($d['bank_checked'] ?? false)) {
                 throw Settlement::conflict();
             }
-            if ($r->cancel_order) {
+            $changes = ['executor_id' => $actor];
+            $allUnitsFailed = DB::table('orders')->where(['id' => $r->order_id, 'status' => 'CONFIRMED'])
+                ->whereIn('selling_method', ['PREORDER', 'REQUEST_ORDER'])->exists()
+                && ! DB::table('order_items')->where('order_id', $r->order_id)->whereColumn('cancelled_qty', '<', 'qty')->exists();
+            if ($allUnitsFailed) {
+                // The final settled transfer closes the unfulfillable order, even across multiple receipts.
+                if (DB::table('refunds')->where('order_id', $r->order_id)->where('id', '!=', $r->id)->whereIn('status', ['PROCESSING', 'FAILED'])->exists()) {
+                    throw Refunds::invalid();
+                }
+                $completed = DB::table('refunds')->where(['order_id' => $r->order_id, 'status' => 'COMPLETED'])->sum('approved_amount');
+                if ($completed + $r->approved_amount === (int) Refunds::captures($r->order_id)->sum('a.amount')) {
+                    $changes['cancel_order'] = true;
+                }
+            }
+            if ($r->cancel_order || isset($changes['cancel_order'])) {
                 RefundOrderCancellation::check($r);
             }
-            Refunds::change($r, 'PROCESSING', $actor, 'RefundProcessing', ['executor_id' => $actor]);
+            Refunds::change($r, 'PROCESSING', $actor, 'RefundProcessing', $changes);
 
             return;
         }
