@@ -69,6 +69,14 @@ final class ShortageController
             $reason = Refunds::reason($data['reason_code']);
             $refund = null;
             if ($startRefund) {
+                $item = DB::table('order_items')->where('public_id', $row->order_item_id)->firstOrFail();
+                // Receipts allocate fulfilled units from the front and final shortages from the back.
+                $earlierFailures = DB::table('procurement_receipt_lines as r')->join('procurement_batch_items as b', 'b.id', '=', 'r.batch_item_id')
+                    ->where('b.order_item_id', $item->id)->where('r.id', '<', $receipt)->sum('r.failed_qty');
+                $end = $item->qty - $earlierFailures;
+                if ($data['requested_amount'] > Refunds::paidForRange($item, $end - $row->failed_qty, $end)) {
+                    throw Refunds::limit();
+                }
                 $refund = Refunds::request($actor, ['order_number' => $row->order_number, 'kind' => 'ITEM',
                     'requested_amount' => $data['requested_amount'], 'items' => [['order_item_id' => $row->order_item_id,
                         'qty' => $row->failed_qty, 'requested_amount' => $data['requested_amount']]]], null, $reason);
