@@ -170,6 +170,11 @@ it('locks later campaign orders before releasing the first shared quota', functi
     $this->assertDatabaseHas('preorder_campaign_variants', ['reserved_qty' => 0]);
 });
 
+it('requires a verified customer before reading allocations', function () {
+    ($this->login)(User::factory()->unverified()->create());
+    $this->getJson('/api/v1/preorders/po/allocations')->assertForbidden()->assertJsonPath('code', 'EMAIL_NOT_VERIFIED');
+});
+
 it('confirms only paid initial deposits, only once, without releasing historical quota or touching physical stock', function () {
     $number = ($this->place)();
     $order = DB::table('orders')->where('number', $number)->value('id');

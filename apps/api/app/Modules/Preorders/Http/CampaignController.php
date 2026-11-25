@@ -32,6 +32,7 @@ final class CampaignController
     }
 
     #[Response(200, 'Your allocations in this campaign', type: Data::ALLOCATIONS)]
+    #[Response(403, 'Verified customer session required', type: ApiResponse::ERROR_SCHEMA)]
     #[Response(404, 'Campaign not found', type: ApiResponse::ERROR_SCHEMA)]
     public function allocations(Request $request, string $slug): JsonResponse
     {
