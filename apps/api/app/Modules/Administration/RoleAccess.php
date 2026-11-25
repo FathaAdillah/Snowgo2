@@ -13,7 +13,7 @@ final class RoleAccess
     /** @return list<string> */
     public static function assignable(User $actor): array
     {
-        return array_values(array_diff(StaffAccess::permissions($actor), [StaffAccess::LOGS, StaffAccess::DB]));
+        return array_values(array_diff(StaffAccess::permissions($actor), StaffAccess::OPERATOR_TOOLS));
     }
 
     /** @param list<string> $available */
@@ -44,7 +44,7 @@ final class RoleAccess
     {
         $available = self::assignable($actor);
 
-        return Permission::query()->where('guard_name', 'web')->whereNotIn('name', [StaffAccess::LOGS, StaffAccess::DB])
+        return Permission::query()->where('guard_name', 'web')->whereNotIn('name', StaffAccess::OPERATOR_TOOLS)
             ->orderBy('name')->pluck('name')->map(static function (string $name) use ($available) {
                 $parts = explode('.', $name);
                 $section = array_shift($parts);

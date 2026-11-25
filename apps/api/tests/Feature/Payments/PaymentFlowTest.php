@@ -3,6 +3,8 @@
 use App\Models\User;
 use App\Modules\Cart\CustomerCart;
 use App\Modules\Identity\Sessions\DeviceSessions;
+use App\Modules\Inventory\StockExpiry;
+use App\Modules\Inventory\StockReservations;
 use App\Modules\Payments\BankAccounts;
 use App\Modules\Payments\PaymentFlow;
 use App\Support\Http\ApiProblem;
@@ -109,3 +111,73 @@ function competingIntentWorker(int $id, string $number): Closure
         }
     };
 }
+
+it('returns a mismatched receipt only with checker approval and private READY transfer evidence', function () {
+    $number = ($this->open)();
+    $maker = ($this->finance)();
+    $url = "admin/payments/$number/reconciliations";
+    $input = ['bank_tx_ref' => 'EXTRA', 'received_amount' => 1, 'reason_code' => 'WRONG'];
+    DB::table('reason_codes')->insert(['code' => 'WRONG', 'label' => 'Wrong amount', 'domain' => 'payments']);
+    ($this->write)($url, $input)->assertForbidden()->assertJsonPath('code', 'STEP_UP_REQUIRED');
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    $id = ($this->write)($url, $input)->assertOk()->json('data.id');
+    ($this->finance)();
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    $case = "admin/payment-reconciliations/$id";
+    ($this->write)("$case/reviews", ['decision' => 'APPROVE', 'note' => 'Receipt verified'])->assertOk();
+    $this->actingAs($maker)->withSession(['staff.version' => $maker->staff_session_version]);
+    ($this->write)("$case/decisions", ['decision' => 'APPLY', 'note' => 'Mismatch'])->assertConflict();
+    $file = (string) Str::ulid();
+    DB::table('stored_files')->insert(['public_id' => $file, 'owner_type' => 'payment_reconciliation', 'owner_id' => $id, 'collection' => 'reconciliation_proof', 'uploaded_by' => $maker->id, 'status' => 'QUARANTINED', 'object_key' => 'returns/'.$file, 'mime' => 'image/png', 'size_bytes' => 10, 'sha256' => str_repeat('a', 64)]);
+    $body = ['decision' => 'RETURN', 'note' => 'Returned', 'refund_transfer_ref' => 'RET1', 'proof_file_id' => $file];
+    ($this->write)("$case/decisions", $body)->assertConflict();
+    DB::table('stored_files')->where('public_id', $file)->update(['status' => 'READY']);
+    ($this->write)("$case/decisions", $body, 'return')->assertOk()->assertJsonPath('data.status', 'RETURNED');
+    ($this->write)("$case/decisions", $body, 'return')->assertOk();
+    $this->assertDatabaseHas('invoices', ['status' => 'ISSUED']);
+    expect(DB::table('payment_allocations')->whereNotNull('applied_at')->count())->toBe(0);
+});
+
+it('posts an exact bank receipt once and never deducts physical stock on capture', function () {
+    $number = ($this->open)();
+    ($this->write)("payments/$number/proofs", ['file_id' => ($this->file)($number)])->assertOk();
+    ($this->finance)();
+    ($this->write)("admin/payments/$number/review-claims", ['action' => 'CLAIM'])->assertOk();
+    $url = "admin/payments/$number/decisions";
+    $body = ['decision' => 'APPROVE', 'bank_tx_ref' => 'bank-ref', 'received_amount' => $this->invoice->total_amount];
+    ($this->write)($url, ['received_amount' => 1] + $body)->assertConflict();
+    $before = DB::table('inventory_levels')->sum('on_hand');
+    ($this->write)($url, $body, 'capture')->assertOk()->assertJsonPath('data.status', 'PAID');
+    ($this->write)($url, $body, 'capture')->assertOk();
+    $this->assertDatabaseHas('orders', ['status' => 'CONFIRMED', 'payment_status' => 'PAID']);
+    $this->assertDatabaseHas('invoices', ['status' => 'PAID']);
+    expect(DB::table('payment_allocations')->whereNotNull('applied_at')->count())->toBe(1)
+        ->and(DB::table('inventory_levels')->sum('on_hand'))->toBe($before);
+    $this->assertDatabaseHas('stock_reservations', ['status' => 'COMMITTED']);
+});
+
+it('requires a separate checker before recovering a late exact receipt', function () {
+    $number = ($this->open)();
+    DB::table('payments')->update(['expires_at' => now()->subHour()]);
+    PaymentFlow::expireDue();
+    DB::table('stock_expiry_work')->update(['due_at' => now()->subHour()]);
+    app(StockExpiry::class)->run(app(StockReservations::class));
+    $this->assertDatabaseHas('orders', ['status' => 'EXPIRED']);
+    $maker = ($this->finance)();
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    DB::table('reason_codes')->insert(['code' => 'LATE', 'label' => 'Late', 'domain' => 'payments']);
+    $input = ['bank_tx_ref' => 'LATE-1', 'received_amount' => $this->invoice->total_amount, 'reason_code' => 'LATE'];
+    $id = ($this->write)("admin/payments/$number/reconciliations", $input)->assertOk()->json('data.id');
+    $url = "admin/payment-reconciliations/$id";
+    $review = ['decision' => 'APPROVE', 'note' => 'Matched bank'];
+    $apply = ['decision' => 'APPLY', 'note' => 'Recover'];
+    ($this->write)("$url/reviews", $review)->assertForbidden();
+    ($this->finance)();
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    ($this->write)("$url/reviews", $review)->assertOk();
+    ($this->write)("$url/decisions", $apply)->assertForbidden();
+    $this->actingAs($maker)->withSession(['staff.version' => $maker->staff_session_version]);
+    ($this->write)("$url/decisions", $apply)->assertOk()->assertJsonPath('data.status', 'APPLIED');
+    ($this->write)("admin/payments/$number/reconciliations", $input)->assertConflict();
+    $this->assertDatabaseHas('payments', ['number' => $number, 'status' => 'PAID', 'reconciliation_id' => $id]);
+});

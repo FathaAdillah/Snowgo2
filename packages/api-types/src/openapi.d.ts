@@ -421,6 +421,70 @@ export interface paths {
         patch: operations["catalog.collections.update"];
         trace?: never;
     };
+    "/admin/courier-services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.service.list"];
+        put?: never;
+        post: operations["shipping.service.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/courier-services/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.service.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["shipping.service.update"];
+        trace?: never;
+    };
+    "/admin/couriers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.courier.list"];
+        put?: never;
+        post: operations["shipping.courier.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/couriers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.courier.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["shipping.courier.update"];
+        trace?: never;
+    };
     "/admin/customers": {
         parameters: {
             query?: never;
@@ -677,6 +741,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/orders/{number}/charge-consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orders.staff.charge.propose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{number}/credit-adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["invoices.staff.correct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/orders/{number}/invoices": {
         parameters: {
             query?: never;
@@ -687,6 +783,86 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["invoices.staff.issue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{number}/packing-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shipping.shipment.pack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.reconciliations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.reconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations/{id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.reconciliation.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations/{id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.reconciliation.review"];
         delete?: never;
         options?: never;
         head?: never;
@@ -735,6 +911,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["payments.staff.decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payments/{number}/reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.reconciliation.open"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1219,6 +1411,118 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["admin.roles.update"];
+        trace?: never;
+    };
+    "/admin/shipments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.shipment.index"];
+        put?: never;
+        post: operations["shipping.shipment.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipments/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.shipment.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipments/{number}/cancellations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shipping.shipment.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipments/{number}/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shipping.shipment.dispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipping-quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shipping.shipment.quote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipping-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.rate.list"];
+        put?: never;
+        post: operations["shipping.rate.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipping-rates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.rate.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["shipping.rate.update"];
         trace?: never;
     };
     "/admin/staff": {
@@ -2095,6 +2399,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/{number}/charge-consents/{id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orders.charge.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orders/{number}/completions": {
         parameters: {
             query?: never;
@@ -2361,6 +2681,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["requests.quotation.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shipments/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["shipping.customer"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5312,6 +5648,350 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "shipping.service.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            courier_id: number;
+                            id: number;
+                            name: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "shipping.service.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    active: boolean;
+                    code: string;
+                    courier_id: number;
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            courier_id: number;
+                            id: number;
+                            name: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.service.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            courier_id: number;
+                            id: number;
+                            name: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "shipping.service.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    active?: boolean;
+                    code?: string;
+                    courier_id?: number;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            courier_id: number;
+                            id: number;
+                            name: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.courier.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            id: number;
+                            name: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "shipping.courier.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    active: boolean;
+                    code: string;
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            id: number;
+                            name: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.courier.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            id: number;
+                            name: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "shipping.courier.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    active?: boolean;
+                    code?: string;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            code: string;
+                            id: number;
+                            name: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "support.customers.index": {
         parameters: {
             query?: {
@@ -5868,7 +6548,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -5950,7 +6632,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -6055,7 +6739,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -6389,7 +7075,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -6952,6 +7640,145 @@ export interface operations {
             };
         };
     };
+    "orders.staff.charge.propose": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    description?: string;
+                    /** Format: date-time */
+                    expires_at: string;
+                    order_item_id?: string;
+                    qty?: number;
+                    quote_id?: string;
+                    /** @enum {string} */
+                    type: "DOMESTIC_SHIPPING" | "IMPORT_TAX" | "INTERNATIONAL_SHIPPING" | "SERVICE_FEE";
+                    unit_amount?: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            expires_at: string;
+                            id: string;
+                            invoice_number?: string;
+                            lines: {
+                                amount: number;
+                                description: string;
+                                order_item_id?: string;
+                                qty: number;
+                                start?: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            revision: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "invoices.staff.correct": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    invoice_number: string;
+                    order_item_id: string;
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                covered_qty: number | null;
+                                description: string;
+                                order_item_id: string | null;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "invoices.staff.issue": {
         parameters: {
             query?: never;
@@ -6990,7 +7817,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -7096,6 +7925,279 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "shipping.shipment.pack": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "PACK_START" | "PACK_FINISH" | "READY_FOR_DISPATCH";
+                    shipment_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliations": {
+        parameters: {
+            query?: {
+                from?: string;
+                page?: number;
+                per_page?: number;
+                status?: "OPEN" | "APPROVED" | "REJECTED" | "APPLIED" | "RETURNED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "payments.staff.reconciliation.decide": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "APPLY" | "RETURN";
+                    note: string;
+                    proof_file_id?: string;
+                    refund_transfer_ref?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliation.review": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "APPROVE" | "REJECT";
+                    note: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "payments.staff.index": {
@@ -7219,9 +8321,11 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    bank_tx_ref?: string;
                     /** @enum {string} */
-                    decision: "REJECT";
-                    reason_code: string;
+                    decision: "APPROVE" | "REJECT";
+                    reason_code?: string;
+                    received_amount?: number;
                 };
             };
         };
@@ -7249,6 +8353,61 @@ export interface operations {
                             status: string;
                             submitted_at: string | null;
                             verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliation.open": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bank_tx_ref: string;
+                    reason_code: string;
+                    received_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
                         };
                         message: string;
                         meta: {
@@ -11423,6 +12582,557 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: null;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                page?: number;
+                per_page?: number;
+                status?: "PENDING" | "PICKED_UP" | "CANCELLED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        order_item_id: string;
+                        qty: number;
+                    }[];
+                    measured_weight_g?: number;
+                    order_number: string;
+                    service_code: string;
+                    service_id?: number;
+                    warehouse_id: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "shipping.shipment.cancel": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.dispatch": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    service_code: string;
+                    tracking_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.quote": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    order_number: string;
+                    shipment_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            carrier_label: string;
+                            expires_at: string;
+                            id: string;
+                            service_code: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.rate.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            amount_per_kg: number;
+                            base_amount: number;
+                            destination_region_id: number;
+                            eta_max_days: number;
+                            eta_min_days: number;
+                            id: number;
+                            origin_region_id: number;
+                            service_id: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "shipping.rate.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    active: boolean;
+                    amount_per_kg: number;
+                    base_amount: number;
+                    destination_region_id: number;
+                    eta_max_days: number;
+                    eta_min_days: number;
+                    origin_region_id: number;
+                    service_id: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            amount_per_kg: number;
+                            base_amount: number;
+                            destination_region_id: number;
+                            eta_max_days: number;
+                            eta_min_days: number;
+                            id: number;
+                            origin_region_id: number;
+                            service_id: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.rate.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            amount_per_kg: number;
+                            base_amount: number;
+                            destination_region_id: number;
+                            eta_max_days: number;
+                            eta_min_days: number;
+                            id: number;
+                            origin_region_id: number;
+                            service_id: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "shipping.rate.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    active?: boolean;
+                    amount_per_kg?: number;
+                    base_amount?: number;
+                    destination_region_id?: number;
+                    eta_max_days?: number;
+                    eta_min_days?: number;
+                    origin_region_id?: number;
+                    service_id?: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            active: boolean;
+                            amount_per_kg: number;
+                            base_amount: number;
+                            destination_region_id: number;
+                            eta_max_days: number;
+                            eta_min_days: number;
+                            id: number;
+                            origin_region_id: number;
+                            service_id: number;
+                        };
                         message: string;
                         meta: {
                             request_id: string;
@@ -16033,7 +17743,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -16115,7 +17827,9 @@ export interface operations {
                             issued_at: string;
                             items: {
                                 amount: number;
+                                covered_qty: number | null;
                                 description: string;
+                                order_item_id: string | null;
                                 qty: number;
                                 type: string;
                                 unit_amount: number;
@@ -16632,6 +18346,64 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "orders.charge.decide": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: string;
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "ACCEPT" | "REJECT";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            expires_at: string;
+                            id: string;
+                            invoice_number?: string;
+                            lines: {
+                                amount: number;
+                                description: string;
+                                order_item_id?: string;
+                                qty: number;
+                                start?: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            revision: number;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "orders.complete": {
@@ -18359,6 +20131,57 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "shipping.customer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
         };
     };
     "customers.wishlist.index": {

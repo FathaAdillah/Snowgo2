@@ -41,7 +41,8 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
   [
     ...(can('admin.profile.view') ? [{ label: 'Setting', icon: 'i-lucide-settings', to: '/settings' }] : []),
     ...(can('operator.logs.view') ? [{ label: 'Log Viewer', icon: 'i-lucide-scroll-text', to: '/log-viewerx', external: true }] : []),
-    ...(can('operator.database.open') ? [{ label: 'OmniDB', icon: 'i-lucide-database', to: '/db/', external: true }] : [])
+    ...(can('operator.database.open') ? [{ label: 'OmniDB', icon: 'i-lucide-database', to: '/db/', external: true }] : []),
+    ...(can('operator.horizon.view') ? [{ label: 'Horizon', icon: 'i-lucide-activity', to: '/horizon', external: true }] : [])
   ],
   [{ label: 'Keluar', icon: 'i-lucide-log-out', color: 'error', onSelect: async () => {
     try {

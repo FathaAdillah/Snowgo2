@@ -12,6 +12,8 @@ const { data, status, refresh } = useFetch<Detail>(url, inventoryFetch)
 const p = computed(() => data.value?.data)
 const { can } = useAdminAuth()
 const reason = ref('')
+const reference = ref('')
+const received = ref<number>()
 const error = ref('')
 const action = ref<{ method: 'POST', url: string, body: Record<string, unknown>, label: string }>()
 function confirm(path: string, body: Record<string, unknown>, label: string) {
@@ -85,6 +87,24 @@ async function saved() {
           />
         </template>
         <template v-if="p.status === 'UNDER_REVIEW' && p.claimed_by_me && can('payments.payment.verify')">
+          <UFormField label="Referensi mutasi bank">
+            <UInput
+              v-model="reference"
+              maxlength="160"
+            />
+          </UFormField>
+          <UFormField label="Jumlah diterima (IDR)">
+            <UInput
+              v-model.number="received"
+              type="number"
+              min="1"
+            />
+          </UFormField>
+          <UButton
+            label="Setujui pembayaran"
+            :disabled="!reference.trim() || received !== p.amount"
+            @click="confirm('decisions', { decision: 'APPROVE', bank_tx_ref: reference, received_amount: received }, `Cocokkan ${reference} sebesar ${invoiceMoney(p.amount)} dan lunasi invoice`)"
+          />
           <UFormField label="Kode alasan penolakan">
             <UInput
               v-model="reason"

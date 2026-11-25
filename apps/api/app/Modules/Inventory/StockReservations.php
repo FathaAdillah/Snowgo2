@@ -76,6 +76,29 @@ final class StockReservations
         return DB::table('stock_expiry_work')->where('order_id', $orderId)->whereNotNull('proof_id')->exists();
     }
 
+    /** Only called inside the checker-approved late capture transaction. */
+    public function recover(int $orderId, int $capture): void
+    {
+        StockOwner::lock($orderId);
+        $holds = $this->holds($orderId);
+        if ($holds->isEmpty()) {
+            throw $this->invalid();
+        }
+        $this->lockLevels($holds);
+        $due = now()->addMinute();
+        foreach ($holds as $hold) {
+            if ($hold->status === 'ACTIVE') {
+                continue;
+            }
+            if ($hold->status !== 'EXPIRED' || DB::table('inventory_levels')->where('id', $hold->level_id)->value('available') < $hold->qty) {
+                throw new ApiProblem(409, 'OUT_OF_STOCK', 'Expired reservation cannot be recovered.');
+            }
+            DB::table('stock_reservations')->where('id', $hold->id)->update(['status' => 'ACTIVE', 'released_qty' => 0, 'expires_at' => $due]);
+            $this->post($hold->id, $hold->level_id, 'RESERVATION', "recover:$capture:$hold->id", 0, $hold->qty, 0, 'EXPIRED', 'ACTIVE');
+        }
+        DB::table('stock_expiry_work')->updateOrInsert(['order_id' => $orderId], ['due_at' => $due, 'lease_until' => null, 'lease_token' => null]);
+    }
+
     public function release(int $orderId): void
     {
         $this->activeCommand($orderId, 'CANCEL');
