@@ -1333,6 +1333,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/refunds/supplier-shortages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.staff.shortage.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/supplier-shortages/{receipt}/dismissals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.shortage.dismiss"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/supplier-shortages/{receipt}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.shortage.refund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/region-imports": {
         parameters: {
             query?: never;
@@ -11851,6 +11899,138 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "refunds.staff.shortage.index": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            failed_qty: number;
+                            id: number;
+                            order_item_id: string;
+                            order_number: string;
+                            reason_code: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.shortage.dismiss": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                receipt: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            receipt_id: number;
+                            refund_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.shortage.refund": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                receipt: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                    requested_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            receipt_id: number;
+                            refund_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "geography.regions.import": {
         parameters: {
             query?: never;
@@ -13348,6 +13528,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -13428,6 +13609,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -13483,6 +13665,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -13554,6 +13737,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -13618,6 +13802,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -13685,6 +13870,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -13752,6 +13938,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -14087,7 +14274,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    revision?: number;
+                    revision: number;
                     value: number;
                 };
             };
@@ -21997,6 +22184,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -22076,6 +22264,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -22130,6 +22319,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;
@@ -22192,6 +22382,7 @@ export interface operations {
                             outcome_note: string | null;
                             reason_code: string;
                             refund_number: string | null;
+                            refund_status: string | null;
                             replacement_number: string | null;
                             resolution: string | null;
                             resolved_at: string | null;

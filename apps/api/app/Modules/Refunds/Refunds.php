@@ -5,6 +5,7 @@ namespace App\Modules\Refunds;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
+use App\Modules\Invoicing\BalanceInvoices;
 use App\Support\Http\ApiProblem;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +38,31 @@ final class Refunds
             ->where('i.order_id', $order)->whereNotNull('a.applied_at');
     }
 
+    /** Captured product and tax only. Initial invoice lines split rounded deposits in unit order. */
+    public static function paidForRange(object $item, int $start, int $end): int
+    {
+        $lines = self::captures($item->order_id)->join('invoice_items as l', 'l.invoice_id', '=', 'i.id')
+            ->where('l.order_item_id', $item->id)->where('l.line_type', 'PRODUCT')->whereIn('i.purpose', ['DEPOSIT', 'FULL_PAYMENT', 'BALANCE'])
+            ->orderBy('i.id')->orderBy('l.id')->get(['i.purpose', 'l.unit_amount', 'l.qty', 'l.coverage_start']);
+        $initialCursor = $amount = 0;
+        foreach ($lines as $line) {
+            $balance = $line->purpose === 'BALANCE';
+            $first = $balance ? $line->coverage_start : $initialCursor;
+            $last = $first + $line->qty;
+            if (! $balance) {
+                $initialCursor = $last;
+            }
+            $from = max($first, $start);
+            $to = min($last, $end);
+            if ($to > $from) {
+                $tax = $balance ? $item->tax_amount - $item->initial_tax : $item->initial_tax;
+                $amount += ($to - $from) * $line->unit_amount + BalanceInvoices::prefix($tax, $item->qty, $to) - BalanceInvoices::prefix($tax, $item->qty, $from);
+            }
+        }
+
+        return $amount;
+    }
+
     public static function available(int $order): int
     {
         return (int) self::captures($order)->sum('a.amount') - (int) DB::table('refunds')->where('order_id', $order)->whereIn('status', self::HELD)->sum('approved_amount');
@@ -64,10 +90,10 @@ final class Refunds
             $item = DB::table('order_items')->where(['public_id' => $line['order_item_id'], 'order_id' => $o->id])->first() ?? abort(404);
             $claims = DB::table('refund_items as ri')->join('refunds as r', 'r.id', '=', 'ri.refund_id')->where('ri.order_item_id', $item->id)
                 ->whereNotIn('r.status', ['REJECTED', 'CANCELLED']);
-            $paid = (int) self::captures($o->id)->join('invoice_items as l', 'l.invoice_id', '=', 'i.id')->where('l.order_item_id', $item->id)->sum('l.amount');
+            $paid = self::paidForRange($item, 0, $item->qty);
             if ($item->qty < $line['qty'] + (clone $claims)->sum('ri.qty')
                 || $paid < $line['requested_amount'] + (clone $claims)->sum(DB::raw('coalesce(ri.approved_amount,ri.requested_amount)'))
-                || $line['requested_amount'] > $line['qty'] * $item->unit_amount + intdiv($item->tax_amount * $line['qty'] + $item->qty - 1, $item->qty)) {
+                || $line['requested_amount'] > $line['qty'] * $item->unit_amount + BalanceInvoices::prefix($item->initial_tax, $item->qty, $line['qty']) + BalanceInvoices::prefix($item->tax_amount - $item->initial_tax, $item->qty, $line['qty'])) {
                 throw self::limit();
             }
             DB::table('refund_items')->insert(['refund_id' => $id, 'order_item_id' => $item->id, 'qty' => $line['qty'], 'requested_amount' => $line['requested_amount']]);

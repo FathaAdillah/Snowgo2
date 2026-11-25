@@ -24,6 +24,10 @@ final class CaseResponses
                 }
             }
 
+            if ($request->routeIs('refunds.staff.*') && $request->session()->get('staff.step_up', 0) <= now()->subMinutes(10)->timestamp) {
+                throw new ApiProblem(403, 'STEP_UP_REQUIRED', 'Confirm password and a fresh TOTP code');
+            }
+
             return 'user:'.$user->id;
         };
 

@@ -4,6 +4,8 @@ use App\Models\User;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Invoicing\InitialInvoices;
 use App\Modules\Orders\CheckoutOrders;
+use App\Modules\Payments\BankAccounts;
+use App\Modules\Refunds\Refunds;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
@@ -161,4 +163,17 @@ it('dispatches units with a voided item fee but not with an unpaid replacement',
     $void($replacement);
     $dispatch()->assertOk();
     $replace($replacement)->assertConflict();
+});
+
+it('attributes a captured deposit and a first-unit balance to the returned unit range', function () {
+    ($this->write)("admin/orders/$this->order/invoices", $this->balance)->assertOk();
+    $bank = DB::transaction(fn () => BankAccounts::save(null, ['code' => 'MAIN', 'bank_code' => 'BANK', 'account_number' => '123456789', 'holder_name' => 'Shop', 'active' => true], $this->staff->id));
+    foreach (DB::table('invoices')->orderBy('id')->get() as $invoice) {
+        $payment = DB::table('payments')->insertGetId(['number' => 'PAY-'.$invoice->id, 'user_id' => $this->buyer->id, 'bank_account_id' => $bank->id, 'amount' => $invoice->total_amount,
+            'status' => 'PAID', 'instruction_snapshot_ciphertext' => 'test', 'expires_at' => now()]);
+        DB::table('payment_allocations')->insert(['payment_id' => $payment, 'invoice_id' => $invoice->id, 'amount' => $invoice->total_amount, 'applied_at' => now()]);
+    }
+    expect(Refunds::paidForRange($this->item, 0, 1))->toBe(100)
+        ->and(Refunds::paidForRange($this->item, 1, 2))->toBe(33)
+        ->and(Refunds::paidForRange($this->item, 0, 3))->toBe(166);
 });

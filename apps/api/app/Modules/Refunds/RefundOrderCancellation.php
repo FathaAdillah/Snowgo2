@@ -11,9 +11,23 @@ use Illuminate\Support\Facades\DB;
 
 final class RefundOrderCancellation
 {
+    public static function check(object $refund): void
+    {
+        $order = DB::table('orders')->where('id', $refund->order_id)->firstOrFail();
+        if ($order->status !== 'CONFIRMED'
+            || DB::table('order_items')->where('order_id', $order->id)->where('shipped_qty', '>', 0)->exists()
+            || DB::table('order_transition_holds')->where(['order_id' => $order->id, 'kind' => 'PROOF_REVIEW'])->exists()
+            || DB::table('refunds')->where(['order_id' => $order->id, 'cancel_order' => true])->where('id', '!=', $refund->id)->whereIn('status', ['PROCESSING', 'FAILED'])->exists()) {
+            throw Refunds::invalid();
+        }
+    }
+
     public static function apply(object $refund, int $actor): void
     {
         $order = DB::table('orders')->where('id', $refund->order_id)->firstOrFail();
+        if ($order->status === 'CANCELLED') {
+            return;
+        }
         $lines = DB::table('order_items')->where('order_id', $order->id)->orderBy('id')->lockForUpdate()->get();
         if ($order->status !== 'CONFIRMED' || $lines->sum('shipped_qty') || DB::table('order_transition_holds')->where(['order_id' => $order->id, 'kind' => 'PROOF_REVIEW'])->exists()) {
             throw Refunds::invalid();
@@ -46,6 +60,6 @@ final class RefundOrderCancellation
         DB::table('orders')->where('id', $order->id)->update(['status' => 'CANCELLED']);
         $journal->transition(Subject::Order, $order->id, 'status', $order->status, 'CANCELLED', 'refund:'.$refund->id, $actor);
         $journal->audit('OrderCancelled', Subject::Order, $order->id, $actor, ['status' => $order->status], ['status' => 'CANCELLED']);
-        app(Outbox::class)->record('OrderCancelled','order',$order->id,['number' => $order->number]);
+        app(Outbox::class)->record('OrderCancelled', 'order', $order->id, ['number' => $order->number]);
     }
 }

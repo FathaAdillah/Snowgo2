@@ -12,6 +12,7 @@ const { action, ask, finish } = useCaseAction(base, refresh)
 const reason = ref('')
 const instructions = ref('')
 const note = ref('')
+const refundDeclined = computed(() => row.value?.resolution === 'REFUND' && ['REJECTED', 'CANCELLED'].includes(row.value.refund_status ?? ''))
 const resolution = ref('REPLACEMENT')
 const outcome = ref('ACCEPT')
 const done = ref(false)
@@ -19,7 +20,7 @@ const lines = ref<{ shipment_item_id: string, accepted_qty: number, disposition:
 watch(row, (value) => {
   if (!value) return
   lines.value = value.items.map(l => ({ shipment_item_id: l.shipment_item_id, accepted_qty: l.qty, disposition: 'NO_RECEIPT' }))
-  resolution.value = value.resolution ?? (value.status === 'INSPECTION_FAILED' ? 'REJECTED' : 'REPLACEMENT')
+  resolution.value = refundDeclined.value ? 'REPLACEMENT' : value.resolution ?? (value.status === 'INSPECTION_FAILED' ? 'REJECTED' : 'REPLACEMENT')
 }, { immediate: true })
 const review = computed(() => can('returns.return.review'))
 const inspect = computed(() => can('returns.return.inspect'))
@@ -149,8 +150,8 @@ const inspect = computed(() => can('returns.return.inspect'))
           <UFormField label="Resolusi">
             <USelect
               v-model="resolution"
-              :disabled="!!row.resolution"
-              :items="row.status === 'INSPECTION_FAILED' ? ['REJECTED'] : ['REPLACEMENT', 'SHIP_MISSING_ITEM', 'REPAIR', 'REFUND']"
+              :disabled="!!row.resolution && !refundDeclined"
+              :items="row.status === 'INSPECTION_FAILED' ? ['REJECTED'] : refundDeclined ? ['REPLACEMENT', 'SHIP_MISSING_ITEM', 'REPAIR'] : ['REPLACEMENT', 'SHIP_MISSING_ITEM', 'REPAIR', 'REFUND']"
             />
           </UFormField>
           <UFormField label="Catatan hasil">

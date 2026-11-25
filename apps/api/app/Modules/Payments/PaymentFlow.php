@@ -91,7 +91,8 @@ final class PaymentFlow
         $newDue = $submitted->copy()->addHours(OperationalSettings::value('payment.verification_hold_hours'))->toISOString();
         $deadline = $newDue;
         foreach ($orders as $order) {
-            if (! in_array($order->status, ['CONFIRMED', 'PENDING_PAYMENT'], true)) {
+            if (DB::table('refunds')->where(['order_id' => $order->id, 'cancel_order' => true])->whereIn('status', ['PROCESSING', 'FAILED'])->exists()
+                || ! in_array($order->status, ['CONFIRMED', 'PENDING_PAYMENT'], true)) {
                 throw self::invalid();
             }
             if ($order->status === 'PENDING_PAYMENT') {
@@ -100,16 +101,18 @@ final class PaymentFlow
                     if (self::due($order->payment_due_at)) {
                         throw self::invalid();
                     }
+                    $holdDue = max($newDue, Carbon::parse($order->payment_due_at)->toISOString());
                     if ($order->selling_method === 'READY_TO_SHIP') {
-                        app(StockReservations::class)->extendForProof($order->id, $proof);
+                        app(StockReservations::class)->extendForProof($order->id, $proof, $holdDue);
                     } elseif ($order->selling_method === 'PREORDER') {
                         $holds = DB::table('preorder_allocations')->whereIn('order_item_id', DB::table('order_items')->where('order_id', $order->id)->select('id'));
                         if (! (clone $holds)->exists() || (clone $holds)->where(fn ($q) => $q->where('status', '!=', 'RESERVED')->orWhereRaw('expires_at <= clock_timestamp()'))->exists()) {
                             throw self::invalid();
                         }
-                        $holds->update(['expires_at' => $newDue]);
+                        $holdDue = max($holdDue, Carbon::parse((clone $holds)->max('expires_at'))->toISOString());
+                        $holds->update(['expires_at' => $holdDue]);
                     }
-                    DB::table('payment_hold_extensions')->insert(['order_id' => $order->id, 'proof_id' => $proof, 'expires_at' => $newDue]);
+                    DB::table('payment_hold_extensions')->insert(['order_id' => $order->id, 'proof_id' => $proof, 'expires_at' => $holdDue]);
                 } else {
                     if (self::due($oldDue)) {
                         throw self::invalid();

@@ -20003,7 +20003,8 @@
                                     }
                                 },
                                 "required": [
-                                    "value"
+                                    "value",
+                                    "revision"
                                 ]
                             }
                         }
@@ -33850,6 +33851,12 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "refund_status": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
                                                     "replacement_number": {
                                                         "type": [
                                                             "string",
@@ -33921,6 +33928,7 @@
                                                     "resolution",
                                                     "outcome_note",
                                                     "refund_number",
+                                                    "refund_status",
                                                     "replacement_number",
                                                     "items",
                                                     "evidence",
@@ -34130,6 +34138,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -34201,6 +34215,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -34311,6 +34326,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -34382,6 +34403,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -34530,6 +34552,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -34601,6 +34629,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -34709,6 +34738,12 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "refund_status": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
                                                     "replacement_number": {
                                                         "type": [
                                                             "string",
@@ -34780,6 +34815,7 @@
                                                     "resolution",
                                                     "outcome_note",
                                                     "refund_number",
+                                                    "refund_status",
                                                     "replacement_number",
                                                     "items",
                                                     "evidence",
@@ -34995,6 +35031,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -35066,6 +35108,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -35176,6 +35219,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -35247,6 +35296,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -35412,6 +35462,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -35483,6 +35539,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -35633,6 +35690,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -35704,6 +35767,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -35899,6 +35963,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -35970,6 +36040,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -36138,6 +36209,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "refund_status": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "replacement_number": {
                                                     "type": [
                                                         "string",
@@ -36209,6 +36286,7 @@
                                                 "resolution",
                                                 "outcome_note",
                                                 "refund_number",
+                                                "refund_status",
                                                 "replacement_number",
                                                 "items",
                                                 "evidence",
@@ -40384,6 +40462,369 @@
                                                 "eta_max_days",
                                                 "service_id",
                                                 "active"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/supplier-shortages": {
+            "get": {
+                "operationId": "refunds.staff.shortage.index",
+                "tags": [
+                    "Shortage"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "order_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "order_item_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "failed_qty": {
+                                                        "type": "integer"
+                                                    },
+                                                    "reason_code": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "order_number",
+                                                    "order_item_id",
+                                                    "failed_qty",
+                                                    "reason_code"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/supplier-shortages/{receipt}/dismissals": {
+            "post": {
+                "operationId": "refunds.staff.shortage.dismiss",
+                "tags": [
+                    "Shortage"
+                ],
+                "parameters": [
+                    {
+                        "name": "receipt",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    }
+                                },
+                                "required": [
+                                    "reason_code"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "receipt_id": {
+                                                    "type": "integer"
+                                                },
+                                                "refund_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "receipt_id",
+                                                "refund_number"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/refunds/supplier-shortages/{receipt}/refunds": {
+            "post": {
+                "operationId": "refunds.staff.shortage.refund",
+                "tags": [
+                    "Shortage"
+                ],
+                "parameters": [
+                    {
+                        "name": "receipt",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason_code": {
+                                        "type": "string",
+                                        "maxLength": 48
+                                    },
+                                    "requested_amount": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 999999999999
+                                    }
+                                },
+                                "required": [
+                                    "reason_code",
+                                    "requested_amount"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "receipt_id": {
+                                                    "type": "integer"
+                                                },
+                                                "refund_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "receipt_id",
+                                                "refund_number"
                                             ]
                                         },
                                         "meta": {

@@ -47,6 +47,7 @@ final class OperationalController
             $rows->where('occurred_at', '<', $to->addDay()->toISOString());
         }
         $page = $rows->orderByDesc('id')->cursorPaginate($d['per_page'] ?? 20, cursor: $cursor);
+        DB::transaction(fn () => app(Journal::class)->audit('AuditLogViewed', Subject::AuditLog, null, $request->user()->id));
         foreach ($page->items() as $row) {
             $row->occurred_at = Carbon::parse($row->occurred_at)->toISOString();
         }
@@ -77,14 +78,14 @@ final class OperationalController
     #[Response(200, type: self::ONE)]
     public function update(Request $request, string $key): JsonResponse
     {
-        $d = $request->validate(['value' => 'required|integer', 'revision' => 'sometimes|integer|min:0']);
+        $d = $request->validate(['value' => 'required|integer', 'revision' => 'required|integer|min:0']);
 
         return CaseResponses::write($request, $d, function () use ($key, $d, $request) {
             $r = DB::table('settings')->where('key', $key)->lockForUpdate()->first() ?? abort(404);
             if ($d['value'] < $r->minimum || $d['value'] > $r->maximum) {
                 throw ValidationException::withMessages(['value' => "Value must be between $r->minimum and $r->maximum."]);
             }
-            if (isset($d['revision']) && $r->revision !== (int) $d['revision']) {
+            if ($r->revision !== (int) $d['revision']) {
                 throw new ApiProblem(409, 'STALE_VERSION', 'Reload this setting before editing.');
             }
             DB::table('settings')->where('id', $r->id)->update(['value' => $d['value'], 'revision' => $r->revision + 1]);

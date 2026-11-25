@@ -197,6 +197,8 @@ it('holds refund caps, separates approval from transfer and replays a confirmed 
     $other = ($this->write)('refunds', $request)->assertCreated()->json('data.number');
     $case = "admin/refunds/$refund";
     ($this->finance)();
+    ($this->write)("$case/reviews", ['decision' => 'START', 'note' => 'Review'])->assertForbidden()->assertJsonPath('code', 'STEP_UP_REQUIRED');
+    $this->withSession(['staff.step_up' => now()->timestamp]);
     foreach ([$refund, $other] as $number) {
         ($this->write)("admin/refunds/$number/reviews", ['decision' => 'START', 'note' => 'Review'])->assertOk();
     }
@@ -221,6 +223,7 @@ it('holds refund caps, separates approval from transfer and replays a confirmed 
     ($this->write)("$case/transfers", $transfer, 'out')->assertOk();
     ($this->write)("$case/transfers", $transfer)->assertConflict();
     $this->assertDatabaseCount('refund_transactions', 1);
+    $this->assertDatabaseHas('payments', ['number' => $payment, 'status' => 'REFUNDED']);
     $this->assertDatabaseHas('orders', ['status' => 'CANCELLED', 'payment_status' => 'REFUNDED']);
     $this->assertDatabaseHas('stock_reservations', ['status' => 'RELEASED']);
     $date = now('Asia/Jakarta')->toDateString();
@@ -246,8 +249,40 @@ it('isolates store settings and audit access, and refuses stale configuration up
     $write(96)->assertOk()->assertJsonPath('data.value', 96);
     $write(72)->assertConflict();
     $this->getJson('/api/v1/admin/audit-logs?action=SettingChanged&per_page=1')->assertOk()->assertJsonPath('data.0.actor_id', $staff->id)->assertJsonMissingPath('data.0.ip');
+    $this->assertDatabaseHas('audit_logs', ['action' => 'AuditLogViewed', 'actor_id' => $staff->id]);
     $this->getJson('/api/v1/admin/audit-logs?cursor=invalid')->assertUnprocessable();
     $staff->syncRoles(['warehouse']);
     $this->getJson('/api/v1/admin/audit-logs')->assertForbidden();
     $this->getJson($url)->assertForbidden();
+});
+
+it('serializes cancellation-bearing bank attempts before an executor sends funds', function () {
+    $o = DB::table('orders')->sole();
+    DB::table('orders')->where('id', $o->id)->update(['status' => 'CONFIRMED']);
+    $reason = DB::table('reason_codes')->insertGetId(['domain' => 'refunds', 'code' => 'CANCEL', 'label' => 'Cancel order']);
+    $reviewer = ($this->finance)();
+    ($this->finance)();
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    foreach (['FIRST', 'SECOND'] as $number) {
+        DB::table('refunds')->insert(['number' => $number, 'order_id' => $o->id, 'requested_by' => $this->buyer->id, 'reason_id' => $reason, 'kind' => 'PARTIAL',
+            'requested_amount' => 10, 'approved_amount' => 10, 'cancel_order' => true, 'status' => 'APPROVED', 'reviewed_by' => $reviewer->id]);
+    }
+    $start = ['action' => 'START', 'bank_checked' => true];
+    ($this->write)('admin/refunds/FIRST/execution-attempts', $start)->assertOk();
+    ($this->write)('admin/refunds/SECOND/execution-attempts', $start)->assertConflict();
+    ($this->write)('admin/refunds/FIRST/execution-attempts', ['action' => 'FAIL', 'reason_code' => 'CANCEL'])->assertOk();
+    ($this->write)('admin/refunds/SECOND/execution-attempts', $start)->assertConflict();
+});
+
+it('uses the review timeout without shortening the original order and stock deadlines', function () {
+    DB::table('settings')->where('key', 'payment.verification_hold_hours')->update(['value' => 1]);
+    $original = now()->addHours(3)->toISOString();
+    DB::table('orders')->update(['payment_due_at' => $original]);
+    DB::table('stock_expiry_work')->update(['due_at' => $original]);
+    DB::table('stock_reservations')->update(['expires_at' => $original]);
+    $number = ($this->open)();
+    ($this->write)("payments/$number/proofs", ['file_id' => ($this->file)($number)])->assertOk();
+    expect(strtotime(DB::table('payment_hold_extensions')->value('expires_at')))->toBe(strtotime($original))
+        ->and(strtotime(DB::table('stock_expiry_work')->value('due_at')))->toBe(strtotime($original))
+        ->and(strtotime(DB::table('payments')->value('expires_at')))->toBeLessThan(strtotime($original));
 });

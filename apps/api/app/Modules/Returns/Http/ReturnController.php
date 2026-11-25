@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 final class ReturnController
 {
-    private const ROW = 'array{number:string,order_number:string,shipment_number:string,status:string,reason_code:string,instructions:string|null,customer_tracking_number:string|null,resolution:string|null,outcome_note:string|null,refund_number:string|null,replacement_number:string|null,items:list<array{shipment_item_id:string,qty:int,accepted_qty:int,disposition:string|null}>,evidence:list<array{id:string,status:string}>,resolved_at:string|null}';
+    private const ROW = 'array{number:string,order_number:string,shipment_number:string,status:string,reason_code:string,instructions:string|null,customer_tracking_number:string|null,resolution:string|null,outcome_note:string|null,refund_number:string|null,refund_status:string|null,replacement_number:string|null,items:list<array{shipment_item_id:string,qty:int,accepted_qty:int,disposition:string|null}>,evidence:list<array{id:string,status:string}>,resolved_at:string|null}';
 
     private const ONE = 'array{success:bool,message:string,data:'.self::ROW.',meta:array{request_id:string}}';
 
@@ -27,7 +27,7 @@ final class ReturnController
         return DB::table('returns as c')->join('orders as o', 'o.id', '=', 'c.order_id')->join('shipments as s', 's.id', '=', 'c.shipment_id')->join('reason_codes as rc', 'rc.id', '=', 'c.reason_id')
             ->when(! $request->routeIs('returns.staff.*'), fn ($q) => $q->where('o.user_id', $request->user()->id))
             ->select('c.number', 'o.number as order_number', 's.number as shipment_number', 'c.status', 'rc.code as reason_code', 'c.instructions', 'c.customer_tracking_number', 'c.resolution', 'c.outcome_note', 'c.resolved_at')
-            ->selectRaw("(SELECT number FROM refunds WHERE return_id=c.id) AS refund_number,
+            ->selectRaw("(SELECT number FROM refunds WHERE return_id=c.id) AS refund_number, (SELECT status FROM refunds WHERE return_id=c.id) AS refund_status,
                 (SELECT number FROM shipments WHERE replacement_return_id=c.id ORDER BY id DESC LIMIT 1) AS replacement_number,
                 (SELECT json_agg(json_build_object('shipment_item_id',si.public_id,'qty',ri.qty,'accepted_qty',ri.accepted_qty,'disposition',ri.disposition) ORDER BY ri.id)
                 FROM return_items ri JOIN shipment_items si ON si.id=ri.shipment_item_id WHERE ri.return_id=c.id) AS items,
@@ -157,12 +157,12 @@ final class ReturnController
     {
         $d = $request->validate(['resolution' => 'required|string|in:REFUND,REPLACEMENT,REPAIR,SHIP_MISSING_ITEM,REJECTED', 'note' => 'required|string|max:1000', 'work_completed' => 'sometimes|boolean']);
 
-        return CaseResponses::write($request,$d,function () use ($request,$d,$number) {
+        return CaseResponses::write($request, $d, function () use ($request, $d, $number) {
             $actor = $request->user()->id;
-            $r = ReturnClaims::lock($number,null);
-            ReturnResolution::apply($r,$actor,$d);
+            $r = ReturnClaims::lock($number, null);
+            ReturnResolution::apply($r, $actor, $d);
 
-            return $this->detail($request,$number);
-        },200);
+            return $this->detail($request, $number);
+        }, 200);
     }
 }

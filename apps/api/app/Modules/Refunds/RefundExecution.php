@@ -21,6 +21,9 @@ final class RefundExecution
             if (! ($d['bank_checked'] ?? false)) {
                 throw Settlement::conflict();
             }
+            if ($r->cancel_order) {
+                RefundOrderCancellation::check($r);
+            }
             Refunds::change($r, 'PROCESSING', $actor, 'RefundProcessing', ['executor_id' => $actor]);
 
             return;
@@ -59,7 +62,7 @@ final class RefundExecution
             DB::table('refund_transactions')->insert(['transfer_id' => $transfer, 'payment_allocation_id' => $allocation->id, 'amount' => $row['amount']]);
         }
         foreach ($payments as $payment) {
-            $total = DB::table('refund_transactions as t')->join('payment_allocations as a', 'a.id', '=', 't.payment_allocation_id')->where('a.payment_id', $payment->id)->sum('t.amount');
+            $total = (int) DB::table('refund_transactions as t')->join('payment_allocations as a', 'a.id', '=', 't.payment_allocation_id')->where('a.payment_id', $payment->id)->sum('t.amount');
             $state = $total === $payment->amount ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
             if ($payment->status !== $state) {
                 PaymentFlow::change($payment, $state, 'PaymentRefunded', $actor);

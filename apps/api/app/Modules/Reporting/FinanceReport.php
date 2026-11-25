@@ -58,7 +58,7 @@ final class FinanceReport
             'pending_payments' => $pending, 'shipment_failures' => DB::table('shipments')->whereIn('order_id', $scope)->where('status', 'FAILED')->count(),
             'open_returns' => DB::table('returns')->whereIn('order_id', $scope)->whereNotIn('status', ['RESOLVED', 'CANCELLED', 'REJECTED'])->count(),
             'open_refunds' => DB::table('refunds')->whereIn('order_id', $scope)->whereNotIn('status', ['COMPLETED', 'CANCELLED', 'REJECTED'])->count(),
-            'low_stock_count' => DB::table('inventory_levels as l')->join('warehouses as w','w.id','=','l.warehouse_id')->where('w.active',true)->whereColumn('l.available','<=','l.reorder_point')->count(),
+            'low_stock_count' => DB::table('inventory_levels as l')->join('warehouses as w', 'w.id', '=', 'l.warehouse_id')->where('w.active', true)->whereColumn('l.available', '<=', 'l.reorder_point')->count(),
             'trend' => $trend];
     }
 }

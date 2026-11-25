@@ -235,3 +235,25 @@ it('assigns the last unit to only one of two independent database transactions',
     $this->assertDatabaseCount('procurement_batches', 1);
     $this->assertDatabaseCount('procurement_batch_items', 1);
 });
+
+it('requires a finance decision for each shortage and releases only its own hold on replay', function () {
+    $line = ($this->newLine)(2);
+    $batch = ($this->postBatch)('', ($this->assign)($line, 2))->assertCreated()->json('data.number');
+    ($this->postBatch)("/$batch/stage-events", ['stage' => 'PURCHASED'])->assertOk();
+    ($this->postBatch)("/$batch/receipts", ['reason_code' => 'SHORT', 'items' => [['order_item_id' => $line, 'received_qty' => 1, 'failed_qty' => 1]]])->assertOk();
+    $base = '/api/v1/admin/refunds/supplier-shortages';
+    $this->getJson($base)->assertForbidden();
+    $this->staff->assignRole('finance');
+    $this->withSession(['staff.step_up' => now()->timestamp]);
+    $receipt = $this->getJson($base)->assertOk()->assertJsonPath('data.0.failed_qty', 1)->json('data.0.id');
+    DB::table('reason_codes')->insert(['domain' => 'refunds', 'code' => 'NOCAP', 'label' => 'No captured funds']);
+    $hold = DB::table('order_transition_holds')->sole();
+    DB::table('order_transition_holds')->insert(['order_id' => $hold->order_id, 'kind' => 'DISPUTE', 'source_ref' => 'other-case']);
+    $this->postJson("$base/$receipt/refunds", ['reason_code' => 'NOCAP', 'requested_amount' => 1], ['Idempotency-Key' => 'uncaptured'])->assertConflict();
+    foreach ([1, 2] as $_) {
+        $this->postJson("$base/$receipt/dismissals", ['reason_code' => 'NOCAP'], ['Idempotency-Key' => 'shortage-decision'])->assertOk();
+    }
+    $this->getJson($base)->assertOk()->assertJsonCount(0, 'data');
+    expect(DB::table('order_transition_holds')->sole()->source_ref)->toBe('other-case')
+        ->and(DB::table('outbox_events')->where('event_type', 'SupplierShortageReviewed')->count())->toBe(1);
+});

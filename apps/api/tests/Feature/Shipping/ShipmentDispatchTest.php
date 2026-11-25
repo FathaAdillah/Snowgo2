@@ -226,7 +226,9 @@ it('limits claims to delivered shipment units, restocks once and waits for a del
         DB::table('invoices')->update(['status' => 'PAID']);
     });
     ($this->staffSession)();
-    $n = ($this->write)('admin/shipments', ($this->plan)())->assertOk()->json('data.number');
+    $plan = ($this->plan)();
+    $plan['items'][0]['qty'] = 2;
+    $n = ($this->write)('admin/shipments', $plan)->assertOk()->json('data.number');
     ($this->pack)($n, $o->number);
     ($this->write)("admin/shipments/$n/dispatches", ['service_code' => 'REG', 'tracking_number' => 'ORIGINAL'])->assertOk();
     $this->travel(1)->minutes();
@@ -235,6 +237,7 @@ it('limits claims to delivered shipment units, restocks once and waits for a del
     $item = DB::table('shipment_items')->sole()->public_id;
     $claim = ['order_number' => $o->number, 'shipment_number' => $n, 'reason_code' => 'DAMAGED', 'items' => [['shipment_item_id' => $item, 'qty' => 1]]];
     $number = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
+    $secondNumber = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
     ($this->write)('returns', $claim)->assertConflict()->assertJsonPath('code', 'QUANTITY_CONFLICT');
     $this->travel(49)->hours();
     ($this->login)($this->buyer);
@@ -247,7 +250,7 @@ it('limits claims to delivered shipment units, restocks once and waits for a del
     ($this->write)("$case/reviews", ['decision' => 'APPROVE'])->assertConflict();
     foreach (['a', 'b'] as $digest) {
         $ref = (string) Str::ulid();
-        DB::table('stored_files')->insert(['public_id' => $ref, 'owner_type' => 'return', 'owner_id' => DB::table('returns')->sole()->id, 'collection' => 'return_evidence', 'uploaded_by' => $this->buyer->id, 'status' => 'READY', 'object_key' => 'return/'.$ref, 'mime' => 'image/png', 'size_bytes' => 10, 'sha256' => str_repeat($digest, 64)]);
+        DB::table('stored_files')->insert(['public_id' => $ref, 'owner_type' => 'return', 'owner_id' => DB::table('returns')->where('number', $number)->sole()->id, 'collection' => 'return_evidence', 'uploaded_by' => $this->buyer->id, 'status' => 'READY', 'object_key' => 'return/'.$ref, 'mime' => 'image/png', 'size_bytes' => 10, 'sha256' => str_repeat($digest, 64)]);
     }
     ($this->write)("$case/reviews", ['decision' => 'APPROVE'])->assertOk();
     ($this->write)("$case/reviews", ['decision' => 'GIVE_INSTRUCTIONS', 'instructions' => 'Return to warehouse within 7 days'])->assertOk();
@@ -262,15 +265,37 @@ it('limits claims to delivered shipment units, restocks once and waits for a del
     ($this->write)("$case/inspections", $inspect, 'inspect')->assertOk();
     ($this->write)("$case/inspections", $inspect)->assertConflict();
     expect(DB::table('inventory_movements')->where('type', 'RETURN')->sum('on_hand_delta'))->toEqual(1);
+    // A declined financial resolution still permits CS to arrange a replacement.
+    $return = DB::table('returns')->where('number', $number)->sole();
+    DB::table('returns')->where('id', $return->id)->update(['resolution' => 'REFUND']);
+    $refundId = DB::table('refunds')->insertGetId(['number' => 'RFD-DECLINED', 'return_id' => $return->id, 'order_id' => $o->id,
+        'requested_by' => $this->staff->id, 'reason_id' => $return->reason_id, 'kind' => 'ITEM', 'requested_amount' => 1, 'cancel_order' => false, 'status' => 'UNDER_REVIEW']);
+    ($this->write)("$case/resolutions", ['resolution' => 'REPLACEMENT', 'note' => 'Exchange'])->assertConflict();
+    DB::table('refunds')->where('id', $refundId)->update(['status' => 'REJECTED']);
     $decision = ['resolution' => 'REPLACEMENT', 'note' => 'Exchange'];
     $replacement = ($this->write)("$case/resolutions", $decision)->assertOk()->assertJsonPath('data.status', 'ACCEPTED')->json('data.replacement_number');
     ($this->write)("$case/resolutions", $decision)->assertOk()->assertJsonPath('data.replacement_number', $replacement);
     ($this->pack)($replacement, $o->number);
+    $dispatch = fn ($shipment, $tracking) => ($this->write)("admin/shipments/$shipment/dispatches", ['service_code' => 'REG', 'tracking_number' => $tracking]);
+    $dispatch($replacement, 'REPL')->assertConflict();
+    $secondCase = "admin/returns/$secondNumber";
+    // Start with a second independently accepted claim on the same delivery.
+    $secondReturn = DB::table('returns')->where('number', $secondNumber)->sole();
+    DB::table('returns')->where('id', $secondReturn->id)->update(['status' => 'ACCEPTED']);
+    DB::table('return_items')->where('return_id', $secondReturn->id)->update(['accepted_qty' => 1, 'disposition' => 'NO_RECEIPT']);
+    $secondPackage = ($this->write)("$secondCase/resolutions", $decision)->assertOk()->json('data.replacement_number');
+    ($this->pack)($secondPackage, $o->number);
+    DB::table('order_transition_holds')->insert(['order_id' => $o->id, 'kind' => 'PROOF_REVIEW', 'source_ref' => 'another-payment']);
+    $dispatch($replacement, 'REPL')->assertConflict();
+    DB::table('order_transition_holds')->where('source_ref', 'another-payment')->delete();
+    $dispatch($secondPackage, 'REPL2')->assertOk();
     ($this->write)("admin/shipments/$replacement/dispatches", ['service_code' => 'REG', 'tracking_number' => 'REPL'])->assertOk();
     $this->travel(1)->minutes();
     ($this->write)("admin/shipments/$replacement/tracking-events", ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()])->assertOk();
     ($this->write)("$case/resolutions", $decision)->assertOk()->assertJsonPath('data.status', 'RESOLVED');
-    expect(DB::table('order_items')->sole()->delivered_qty)->toBe(1)
-        ->and(DB::table('inventory_movements')->where('type', 'REPLACEMENT')->sum('on_hand_delta'))->toEqual(-1)
+    ($this->write)("admin/shipments/$secondPackage/tracking-events", ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()])->assertOk();
+    ($this->write)("$secondCase/resolutions", $decision)->assertOk()->assertJsonPath('data.status', 'RESOLVED');
+    expect(DB::table('order_items')->sole()->delivered_qty)->toBe(2)
+        ->and(DB::table('inventory_movements')->where('type', 'REPLACEMENT')->sum('on_hand_delta'))->toEqual(-2)
         ->and(DB::table('order_transition_holds')->exists())->toBeFalse();
 });

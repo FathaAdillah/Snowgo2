@@ -21,6 +21,7 @@ const allocations = ref([{ payment_number: '', invoice_number: '', amount: 0 }])
 const items = ref<{ order_item_id: string, approved_amount: number }[]>([])
 watch(row, (value) => {
   if (!value) return
+  checked.value = false
   amount.value = value.approved_amount ?? value.requested_amount
   items.value = value.items.map(l => ({ order_item_id: l.order_item_id, approved_amount: l.approved_amount ?? l.requested_amount }))
 }, { immediate: true })

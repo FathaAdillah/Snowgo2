@@ -24,6 +24,10 @@ const columns = [{ accessorKey: 'number', header: 'Nomor' }, { accessorKey: 'ord
         @click="creating = true"
       />
     </header>
+    <RefundShortages
+      v-if="can('refunds.shortage.review')"
+      @decided="refresh()"
+    />
     <CaseCreate
       v-if="creating && can('refunds.refund.create')"
       mode="refund"

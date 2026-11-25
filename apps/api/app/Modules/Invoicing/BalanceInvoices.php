@@ -81,7 +81,7 @@ final class BalanceInvoices
         return app(InvoiceIssuer::class)->issue($order->id, $actor, 'balance:'.Str::ulid(), 'BALANCE', $due, ['subtotal_amount' => $subtotal, 'tax_amount' => $tax, 'shipping_amount' => 0, 'total_amount' => $subtotal + $tax], $lines, $original?->id);
     }
 
-    private static function prefix(int $sum, int $qty, int $n): int
+    public static function prefix(int $sum, int $qty, int $n): int
     {
         return $n * intdiv($sum, $qty) + min($n, $sum % $qty);
     }

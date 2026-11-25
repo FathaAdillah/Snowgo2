@@ -15,8 +15,10 @@ final class ReturnResolution
     public static function apply(object $r, int $actor, array $d): void
     {
         $kind = $d['resolution'];
+        $abandonedRefund = $r->resolution === 'REFUND' && DB::table('refunds')->where('return_id', $r->id)
+            ->whereIn('status', ['REJECTED', 'CANCELLED'])->exists();
         if (($kind === 'REJECTED' ? $r->status !== 'INSPECTION_FAILED' : $r->status !== 'ACCEPTED')
-            || ($r->resolution && $r->resolution !== $kind)) {
+            || ($abandonedRefund ? $kind === 'REFUND' : ($r->resolution && $r->resolution !== $kind))) {
             throw ReturnClaims::invalid();
         }
         $done = match ($kind) {
@@ -28,7 +30,7 @@ final class ReturnResolution
         };
         if ($done) {
             ReturnClaims::change($r, 'RESOLVED', $actor, 'ReturnResolved', ['resolution' => $kind, 'resolved_at' => now(), 'outcome_note' => $d['note']]);
-        } elseif (! $r->resolution) {
+        } elseif (! $r->resolution || $abandonedRefund) {
             DB::table('returns')->where('id', $r->id)->update(['resolution' => $kind, 'outcome_note' => $d['note']]);
             app(Journal::class)->audit('ReturnResolutionStarted', Subject::ReturnCase, $r->id, $actor);
             app(Outbox::class)->record('ReturnResolutionStarted', 'return', $r->id, ['resolution' => $kind]);
@@ -44,9 +46,12 @@ final class ReturnResolution
         $items = [];
         foreach (DB::table('return_items as ri')->join('shipment_items as s', 's.id', '=', 'ri.shipment_item_id')
             ->join('order_items as i', 'i.id', '=', 's.order_item_id')->where('ri.return_id', $r->id)->where('ri.accepted_qty', '>', 0)
-            ->get(['i.id', 'i.public_id', 'i.qty', 'ri.accepted_qty']) as $item) {
-            $paid = (int) Refunds::captures($r->order_id)->join('invoice_items as l', 'l.invoice_id', '=', 'i.id')->where('l.order_item_id', $item->id)->sum('l.amount');
-            $amount = intdiv($paid, $item->qty) * $item->accepted_qty + intdiv(($paid % $item->qty) * $item->accepted_qty, $item->qty);
+            ->get(['i.*', 'ri.id as claim_line', 'ri.shipment_item_id', 's.coverage_start', 'ri.accepted_qty']) as $item) {
+            $preceding = DB::table('return_items as ri')->join('returns as r', 'r.id', '=', 'ri.return_id')
+                ->where('ri.shipment_item_id', $item->shipment_item_id)->where('ri.id', '<', $item->claim_line)
+                ->whereNotIn('r.status', ['CANCELLED', 'REJECTED'])->where(fn ($q) => $q->whereNull('r.resolution')->orWhere('r.resolution', '!=', 'REJECTED'))->sum('ri.qty');
+            $start = $item->coverage_start + $preceding;
+            $amount = Refunds::paidForRange($item, $start, $start + $item->accepted_qty);
             if ($amount > 0) {
                 $items[] = ['order_item_id' => $item->public_id, 'qty' => $item->accepted_qty, 'requested_amount' => $amount];
             }
@@ -72,7 +77,7 @@ final class ReturnResolution
             DB::table('shipment_items')->insert(['shipment_id' => $id, 'order_item_id' => $line->order_item_id, 'coverage_start' => $line->coverage_start, 'qty' => $line->accepted_qty, 'public_id' => (string) Str::ulid()]);
         }
         app(Journal::class)->transition(Subject::Shipment, $id, 'status', null, 'PENDING', 'replacement:'.$r->id, $actor);
-        app(Outbox::class)->record('ShipmentCreated','shipment',$id,['number' => $number, 'return_number' => $r->number]);
+        app(Outbox::class)->record('ShipmentCreated', 'shipment', $id, ['number' => $number, 'return_number' => $r->number]);
 
         return false;
     }

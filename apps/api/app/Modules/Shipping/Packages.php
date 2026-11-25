@@ -177,7 +177,8 @@ final class Packages
             return $number;
         }
         if ($s->packing_status !== 'READY_FOR_DISPATCH' || DB::table('order_transition_holds')->where('order_id', $o->id)
-            ->when($s->replacement_return_id, fn ($q) => $q->where('source_ref', '!=', DB::table('returns')->where('id', $s->replacement_return_id)->value('number')))->exists() || ! DB::table('invoices')->where(['order_id' => $o->id, 'status' => 'PAID'])->whereIn('purpose', ['FULL_PAYMENT', 'DEPOSIT'])->exists()) {
+            ->when($s->replacement_return_id, fn ($q) => $q->where(fn ($hold) => $hold->where('kind', '!=', 'DISPUTE')
+                ->orWhereNotIn('source_ref', DB::table('returns')->where(['order_id' => $o->id, 'status' => 'ACCEPTED'])->whereIn('resolution', ['REPLACEMENT', 'SHIP_MISSING_ITEM'])->select('number'))))->exists() || ! DB::table('invoices')->where(['order_id' => $o->id, 'status' => 'PAID'])->whereIn('purpose', ['FULL_PAYMENT', 'DEPOSIT'])->exists()) {
             throw self::invalid();
         }
         $rts = $o->selling_method === 'READY_TO_SHIP';

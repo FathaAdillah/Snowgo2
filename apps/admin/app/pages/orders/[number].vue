@@ -49,16 +49,14 @@ function change(next: 'CANCEL' | 'COMPLETE') {
         </p>
         <div class="flex flex-wrap gap-2">
           <UButton
-            v-for="invoice in row.invoice_numbers"
-            v-show="can('invoicing.invoice.view')"
+            v-for="invoice in can('invoicing.invoice.view') ? row.invoice_numbers : []"
             :key="invoice"
             :label="invoice"
             variant="link"
             :to="'/invoices/' + invoice"
           />
           <UButton
-            v-for="payment in row.payment_numbers"
-            v-show="can('payments.payment.view')"
+            v-for="payment in can('payments.payment.view') ? row.payment_numbers : []"
             :key="payment"
             :label="payment"
             variant="link"

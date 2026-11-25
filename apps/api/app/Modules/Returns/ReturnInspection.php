@@ -53,6 +53,6 @@ final class ReturnInspection
         $type = $delta > 0 ? 'RETURN' : 'REPLACEMENT';
         $id = DB::table('inventory_movements')->insertGetId(['level_id' => $level->id, 'actor_id' => $actor, 'reason_id' => $reason, 'reason_code' => DB::table('reason_codes')->where('id', $reason)->value('code'), 'type' => $type, 'source_key' => $source, 'on_hand_delta' => $delta]);
         app(Journal::class)->audit('ReturnStockMoved', Subject::Inventory, $level->id, $actor, null, ['quantity' => $delta]);
-        app(Outbox::class)->record('ReturnStockMoved','inventory',$level->id,['movement_id' => $id, 'quantity' => $delta]);
+        app(Outbox::class)->record('ReturnStockMoved', 'inventory', $level->id, ['movement_id' => $id, 'quantity' => $delta]);
     }
 }

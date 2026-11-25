@@ -110,9 +110,9 @@ final class StockReservations
         return $this->activeCommand($orderId, 'EXPIRE', lease: $lease);
     }
 
-    public function extendForProof(int $orderId, int $proofId): void
+    public function extendForProof(int $orderId, int $proofId, ?string $deadline = null): void
     {
-        DB::transaction(function () use ($orderId, $proofId) {
+        DB::transaction(function () use ($orderId, $proofId, $deadline) {
             StockOwner::lock($orderId);
             $work = DB::table('stock_expiry_work')->where('order_id', $orderId);
             $current = $work->lockForUpdate()->first();
@@ -122,7 +122,7 @@ final class StockReservations
             if ($current->proof_id !== null) {
                 return;
             }
-            $deadline = DB::scalar('SELECT clock_timestamp()+make_interval(hours=>?)', [OperationalSettings::value('payment.verification_hold_hours')]);
+            $deadline = DB::scalar('SELECT greatest(?::timestamptz, coalesce(?::timestamptz, clock_timestamp()+make_interval(hours=>?)))', [$current->due_at, $deadline, OperationalSettings::value('payment.verification_hold_hours')]);
             $work->update(['proof_id' => $proofId, 'due_at' => $deadline, 'lease_token' => null, 'lease_until' => null]);
             foreach ($this->holds($orderId) as $hold) {
                 if ($hold->status !== 'ACTIVE') {

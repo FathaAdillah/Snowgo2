@@ -37,6 +37,7 @@ enum Subject: string
     case Attribute = 'attribute';
     case AttributeValue = 'attribute_value';
     case ProductMedia = 'product_media';
+    case AuditLog = 'audit_log';
     case Setting = 'setting';
     case File = 'stored_file';
     case Region = 'region';
