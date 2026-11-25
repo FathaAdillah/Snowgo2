@@ -31,7 +31,7 @@ final class PaymentFlow
             $due = $invoice->due_at;
             if ($order->status === 'PENDING_PAYMENT') {
                 $extended = DB::table('payment_hold_extensions')->where('order_id', $order->id)->value('expires_at');
-                $due = $extended ?? min($due, $order->payment_due_at);
+                $due = $extended && $invoice->replaces_invoice_id === null ? $extended : min($due, $extended ?? $order->payment_due_at);
             }
             if ($invoice->status !== 'ISSUED' || $invoice->currency !== 'IDR' || ! in_array($order->status, ['PENDING_PAYMENT', 'CONFIRMED'], true)
                 || self::due($due) || DB::table('payment_allocations as a')->join('payments as p', 'p.id', '=', 'a.payment_id')
