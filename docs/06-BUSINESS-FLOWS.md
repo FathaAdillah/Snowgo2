@@ -151,6 +151,8 @@ Scheduler membuka/tutup sesuai window. OPEN boleh diperpanjang sebelum ends_at, 
 
 Status terminal · CANCELLED, COMPLETED.
 
+Jika tidak ada unit yang pernah diterima dan seluruh unit pesanan berbayar sudah gagal final, staf dapat membatalkan *kampanye* dari IN_PROCUREMENT. Pesanan berbayar, invoice dan hold tetap menunggu keputusan refund; pembatalan kampanye tidak mencatat penerimaan atau mengembalikan dana. Satu unit berbayar yang masih bisa dipenuhi tetap memblokir pembatalan.
+
 ### PreorderAllocation
 
 RESERVED mengikuti hold. CONFIRMED sesudah initial invoice PAID; FAILED bila seluruh sisa pemasok gagal, CANCELLED bila pembeli/operator membatalkan seluruh alokasi. Partial failure dicatat via failed_qty dan jadikan FULFILLED saat sisa sukses final.

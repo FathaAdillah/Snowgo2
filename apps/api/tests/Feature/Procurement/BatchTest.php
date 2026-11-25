@@ -117,6 +117,27 @@ it('permits a pristine rollback but preserves procurement evidence after first u
     $this->assertDatabaseCount('order_transition_holds', 1);
 });
 
+it('can cancel procurement after total final shortage without settling a paid order or inventing a receipt', function () {
+    $first = ($this->newLine)(2);
+    $second = ($this->newLine)(1);
+    $payload = ($this->assign)($first, 2);
+    $payload['items'][] = ['order_item_id' => $second, 'qty' => 1];
+    $n = ($this->postBatch)('', $payload)->assertCreated()->json('data.number');
+    ($this->postBatch)("/$n/stage-events", ['stage' => 'PURCHASED'])->assertOk();
+    $cancel = '/api/v1/admin/preorder-campaigns/PO-1/actions/CANCEL';
+    foreach ([$first, $second, $first] as $index => $ref) {
+        $this->postJson($cancel, [], ['Idempotency-Key' => 'incomplete-'.$index])->assertConflict();
+        ($this->postBatch)("/$n/receipts", ['reason_code' => 'SHORT', 'items' => [['order_item_id' => $ref, 'received_qty' => 0, 'failed_qty' => 1]]])->assertOk();
+    }
+    ($this->postBatch)("/$n/closures", ['reason_code' => 'SHORT'])->assertOk();
+    $this->postJson($cancel, ['note' => 'Supplier could not fulfill any units'], ['Idempotency-Key' => 'total-shortage'])
+        ->assertOk()->assertJsonPath('data.status', 'CANCELLED');
+    $this->assertDatabaseHas('preorder_campaigns', ['status' => 'CANCELLED', 'first_received_at' => null]);
+    expect(DB::table('orders')->where(['status' => 'CONFIRMED', 'payment_status' => 'PARTIALLY_PAID'])->count())->toBe(2);
+    $this->assertDatabaseCount('order_transition_holds', 3);
+    expect(DB::table('invoices')->where('status', 'PAID')->count())->toBe(2);
+});
+
 it('restricts request batches to paid items of one converted request and disallows mixed sources', function () {
     $owner = User::factory()->create()->id;
     $request = DB::table('request_orders')->insertGetId(['number' => 'REQ-1', 'user_id' => $owner, 'title' => 'Album', 'description' => 'A', 'status' => 'CONVERTED_TO_ORDER']);
