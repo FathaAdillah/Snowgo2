@@ -28,3 +28,14 @@ api.POST('/files', { body })
 api.POST('/files', { params, body: { ...body, file: 'evidence.mp4' } })
 // @ts-expect-error Readiness is not a public API operation.
 api.GET('/internal/readiness')
+
+const orderNumber = { number: 'ORD-20261125-000001' }
+api.POST('/orders/{number}/cancellations', { params: { ...params, path: orderNumber }, body: { reason_code: 'BUYER' } })
+// @ts-expect-error Cancellation requires an active order reason.
+api.POST('/orders/{number}/cancellations', { params: { ...params, path: orderNumber }, body: {} })
+declare const order: paths['/orders/{number}']['get']['responses'][200]['content']['application/json']
+order.data.items[0]!.qty satisfies number
+order.data.address?.regions.district.code satisfies string | undefined
+type OrderWrite = '/orders/{number}/cancellations' | '/orders/{number}/completions' | '/admin/orders/{number}/actions/{action}'
+declare const invalidOrder: paths[OrderWrite]['post']['responses'][422]['content']['application/json']
+invalidOrder.errors?.reason_code satisfies string[] | undefined

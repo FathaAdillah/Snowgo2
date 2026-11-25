@@ -4,66 +4,18 @@ use App\Models\User;
 use App\Modules\Cart\CustomerCart;
 use App\Modules\Checkout\CheckoutPricing;
 use App\Modules\Checkout\ConfirmCheckout;
-use App\Modules\Customers\Profiles\CustomerProfiles;
-use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Inventory\StockLedger;
 use App\Support\Http\ApiProblem;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Feature\Checkout\PreparesCheckout;
 
-uses(DatabaseTruncation::class);
-
-function checkoutAddress(int $owner, int $district): string
-{
-    app(CustomerProfiles::class)->open($owner, 'Buyer');
-    $public = (string) Str::ulid();
-    DB::table('addresses')->insert(['public_id' => $public, 'user_id' => $owner, 'district_id' => $district, 'line1' => 'Old address',
-        'phone' => '+628123456789', 'recipient' => 'Buyer', 'postal_code' => '12345']);
-
-    return $public;
-}
+uses(DatabaseTruncation::class, PreparesCheckout::class);
 
 beforeEach(function () {
-    config(['sanctum.stateful' => ['localhost']]);
-    $this->buyer = User::factory()->create();
-    $this->login = fn (User $user) => $this->actingAs($user)->withSession([DeviceSessions::SURFACE_KEY => 'CUSTOMER'])->withHeader('Origin', 'http://localhost');
-    $parent = null;
-    foreach (['COUNTRY' => 'ID', 'PROVINCE' => '11', 'CITY' => '11.01', 'DISTRICT' => '11.01.01'] as $kind => $code) {
-        $parent = DB::table('regions')->insertGetId(['kind' => $kind, 'code' => $code, 'name' => $kind, 'parent_id' => $parent]);
-    }
-    $this->district = $parent;
-    $this->body = ['cart_version' => 1, 'address_id' => checkoutAddress($this->buyer->id, $parent)];
-    $this->rts = ['cart_version' => 0, 'sku' => 'A1', 'term' => 'FULL', 'qty' => 2];
-    $this->po = ['term' => 'DEPOSIT', 'campaign_slug' => 'po', 'qty' => 1] + $this->rts;
-    $unit = DB::table('units')->insertGetId(['code' => 'pcs', 'name' => 'Piece']);
-    $tax = DB::table('tax_classes')->insertGetId(['code' => 'T', 'name' => 'Test tax', 'rate_bps' => 1000]);
-    $p = DB::table('products')->insertGetId(['slug' => 'album', 'name' => 'Album', 'status' => 'PUBLISHED', 'tax_class_id' => $tax, 'published_at' => now()]);
-    $v = DB::table('product_variants')->insertGetId(['product_id' => $p, 'unit_id' => $unit, 'sku' => 'A1', 'name' => 'Album A', 'option_key' => 'a',
-        'weight_g' => 501, 'rts_enabled' => true, 'rts_price_amount' => 1005]);
-    $w = DB::table('warehouses')->insertGetId(['code' => 'JKT', 'name' => 'JKT', 'district_id' => $parent, 'address' => 'Origin', 'is_default' => true]);
-    DB::table('reason_codes')->insert(['domain' => 'inventory', 'code' => 'INITIAL', 'label' => 'Initial stock']);
-    app(StockLedger::class)->receive(['warehouse_id' => $w, 'sku' => 'A1', 'qty' => 12, 'type' => 'INITIAL', 'reason_code' => 'INITIAL'], $this->buyer->id, 'opening');
-    $c = DB::table('couriers')->insertGetId(['code' => 'LOCAL', 'name' => 'Local Courier']);
-    $service = DB::table('courier_services')->insertGetId(['courier_id' => $c, 'code' => 'REG', 'name' => 'Regular']);
-    DB::table('shipping_rates')->insert(['service_id' => $service, 'origin_region_id' => $parent, 'destination_region_id' => $parent,
-        'base_amount' => 100, 'amount_per_kg' => 50, 'eta_min_days' => 1, 'eta_max_days' => 3]);
-    $campaign = DB::table('preorder_campaigns')->insertGetId(['number' => 'PO-1', 'slug' => 'po', 'name' => 'PO', 'status' => 'OPEN',
-        'starts_at' => now()->subDay(), 'ends_at' => now()->addDay(), 'ready_eta_from' => today(), 'ready_eta_to' => today(), 'ship_eta_from' => today(),
-        'ship_eta_to' => today(), 'origin' => 'KR', 'transport_mode' => 'AIR', 'payment_scheme' => 'FULL_OR_DEPOSIT', 'terms' => 'Terms 1']);
-    DB::table('preorder_campaign_variants')->insert(['campaign_id' => $campaign, 'variant_id' => $v, 'quota' => 1, 'max_qty' => 1, 'unit_amount' => 1505, 'deposit_unit_amount' => 555]);
-    $this->preview = fn (array $data) => $this->postJson('/api/v1/checkout/previews', $data);
-    $this->confirm = fn (array $data, string $key = 'first') => $this->postJson('/api/v1/checkout', $data, ['Idempotency-Key' => $key]);
-    $this->finalQuote = function (array $body) {
-        $options = ($this->preview)($body)->assertOk()->json('data.shipping_quotes');
-        if ($options) {
-            $body['shipping_quote_id'] = $options[0]['id'];
-        }
-        $result = ($this->preview)($body)->assertOk()->json('data');
-
-        return [$body + ['quote_hash' => $result['quote_hash']], $result];
-    };
+    $this->prepareCheckout();
 });
 
 it('rejects guests, unverified buyers, empty carts, foreign addresses, inactive districts, coupons and missing rates', function () {
@@ -75,7 +27,7 @@ it('rejects guests, unverified buyers, empty carts, foreign addresses, inactive 
     app(CustomerCart::class)->set($this->buyer->id, $this->rts);
     ($this->preview)(['coupon' => 'PROMO'] + $this->body)->assertUnprocessable();
     ($this->confirm)(['coupon' => 'PROMO', 'quote_hash' => str_repeat('0', 64)] + $this->body)->assertUnprocessable()->assertJsonPath('code', 'VALIDATION_FAILED');
-    ($this->preview)(['address_id' => checkoutAddress(User::factory()->create()->id, $this->district)] + $this->body)->assertNotFound();
+    ($this->preview)(['address_id' => $this->checkoutAddress(User::factory()->create()->id, $this->district)] + $this->body)->assertNotFound();
     DB::table('regions')->where('id', $this->district)->update(['active' => false]);
     ($this->preview)($this->body)->assertUnprocessable();
     DB::table('regions')->where('id', $this->district)->update(['active' => true]);
@@ -127,7 +79,7 @@ it('does not accept another buyers shipping option even for the same route and w
     $other = User::factory()->create();
     ($this->login)($other);
     app(CustomerCart::class)->set($other->id, $this->rts);
-    ($this->preview)(['address_id' => checkoutAddress($other->id, $this->district), 'shipping_quote_id' => $quote] + $this->body)->assertNotFound();
+    ($this->preview)(['address_id' => $this->checkoutAddress($other->id, $this->district), 'shipping_quote_id' => $quote] + $this->body)->assertNotFound();
 });
 
 it('does not exceed the per-account preorder maximum across two converted carts', function () {
@@ -254,7 +206,7 @@ it('reserves exactly the available units when independent buyers confirm competi
     $intents = [];
     for ($i = 0; $i < $count; $i++) {
         $owner = User::factory()->create()->id;
-        $data = ['address_id' => checkoutAddress($owner, $this->district), 'cart_version' => 1];
+        $data = ['address_id' => $this->checkoutAddress($owner, $this->district), 'cart_version' => 1];
         app(CustomerCart::class)->set($owner, ['qty' => 1] + ($po ? $this->po : $this->rts));
         $pricing = app(CheckoutPricing::class);
         $preview = $pricing->preview($owner, $data);

@@ -63,7 +63,7 @@ test('the file client sends a multipart File and the required headers', async ()
 })
 
 test('customer account endpoints reject guests with the documented error envelope', async () => {
-  for (const path of ['/profile', '/addresses', '/wishlist', '/cart']) {
+  for (const path of ['/profile', '/addresses', '/wishlist', '/cart', '/orders']) {
     const result = await client.GET(path)
     assert.equal(result.response.status, 401)
     validateResponse(path, 401, result.error)
@@ -103,8 +103,8 @@ test('checkout data and mutations reject unauthenticated API callers', async () 
   }
 })
 
-test('inventory reads are staff-only and use the documented error envelope', async () => {
-  for (const path of ['/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
+test('order and inventory reads are staff-only and use the documented error envelope', async () => {
+  for (const path of ['/admin/orders', '/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
     const result = await client.GET(path)
     assert.ok([401, 403].includes(result.response.status))
     validateResponse(path, result.response.status, result.error)

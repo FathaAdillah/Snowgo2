@@ -556,6 +556,8 @@ Aggregate order. RTS: checkout; PO: checkout+campaign; RO: request tanpa checkou
 
 **Constraint dan indeks tambahan** · U(request_order_id); I(user_id,created_at); I(status,payment_due_at); C(total_amount=subtotal_amount-discount_amount+tax_amount+shipping_amount).
 
+**Kontrak lifecycle (TASK-015)** · Penulis domain harus mengunci baris `orders` terlebih dahulu, sebelum invoice, item, supply, atau perubahan hold. `order_transition_holds(order_id,kind,source_ref)` memproyeksikan proof review/dispute aktif; Payments/Returns harus menambah atau melepas hanya hold sumbernya dalam transaksi yang sama dengan kasus terkait. Tracking memperbarui `order_items.delivered_qty` di bawah lock order; penutupan order memeriksa qty setiap baris, bukan hanya label DELIVERED. `order_action_records` menyimpan kode alasan dan catatan transisi terminal; append-only, terpisah dari payload audit/outbox. Snapshot checkout (identitas, nilai awal dan terms) tidak dapat ditulis ulang; histori refund/pengiriman dan revisi invoice terpisah.
+
 ### DB-ORD-002 — order_items
 
 Snapshot barang dan kuantitas. Qty shipped tidak melebihi units eligible; replacement terpisah
@@ -574,6 +576,7 @@ Snapshot barang dan kuantitas. Qty shipped tidak melebihi units eligible; replac
 | tax_amount | bigint IDR | Tidak | 0 |
 | weight_g | integer | Ya | — |
 | received_qty | integer | Tidak | 0 |
+| delivered_qty | integer | Tidak | 0; 0..shipped_qty, dari tracking, bukan received_qty pengadaan |
 | cancelled_qty | integer | Tidak | 0 |
 | shipped_qty | integer | Tidak | 0 |
 | public_id | char(26) | Tidak | Unique |

@@ -8,7 +8,7 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 |---|---|---|---|---|---|---|---|---|---|
 | Reporting | Dashboard | Overview dan antrean | Penjualan, revenue, RTS/PO/RO, pending payment, shipping, refund, return, low stock | Super Admin, Admin, Product Manager, Inventory Staff, Order Staff, Finance, Customer Service, Warehouse, Content Manager | reporting.dashboard.view | API-RPT-001 | orders, payments, refunds, shipments, inventory_levels | P1 | MVP |
 | Reporting | Finance | Transaction reports | Rekonsiliasi capture, invoice dan refund | Super Admin, Admin, Finance | reporting.transaction.view | API-RPT-002 | payments, refund_transactions, invoices | P1 | MVP |
-| Orders | Commerce | Orders dan RTS | Cara beli, packing, cancellation, completion dan persetujuan biaya | Super Admin, Admin, Order Staff, Customer Service, Warehouse | orders.order.view, orders.order.manage, orders.packing.manage | API-ORD-006, API-ORD-007, API-ORD-008, API-ORD-009, API-ORD-010 | orders, order_items, order_addresses, status_histories, order_charge_consents, shipping_quotes, shipments | P0 | MVP |
+| Orders | Commerce | Orders dan RTS | Cara beli, packing, cancellation, completion dan persetujuan biaya | Super Admin, Admin, Order Staff, Customer Service, Warehouse | orders.order.view, orders.order.manage, orders.order.cancel, orders.order.complete, orders.packing.manage | API-ORD-006, API-ORD-007, API-ORD-008, API-ORD-009, API-ORD-010 | orders, order_items, order_addresses, status_histories, order_charge_consents, shipping_quotes, shipments | P0 | MVP |
 | Preorders | Commerce | Kampanye PO, kuota dan ETA | Window, kapasitas, jadwal, allocation | Super Admin, Admin, Product Manager, Order Staff, Customer Service | preorders.campaign.view, preorders.campaign.manage | API-PRE-003, API-PRE-004, API-PRE-005, API-PRE-006, API-PRE-007 | preorder_campaigns, preorder_campaign_variants, preorder_allocations | P0 | MVP |
 | Procurement | Commerce | Batch PO dan request | Pengadaan, ETA, receipt dan supplier failure | Super Admin, Admin, Order Staff, Warehouse | procurement.batch.view, procurement.batch.manage | API-PRC-001, API-PRC-002, API-PRC-003, API-PRC-004, API-PRC-005, API-PRC-006 | procurement_batches, procurement_batch_items, procurement_stage_events, order_items, preorder_allocations | P0 | MVP |
 | RequestOrders | Commerce | Request dan quotations | Review diskusi, penawaran berversi, withdraw dan expiry | Super Admin, Admin, Order Staff, Customer Service | request_orders.request.view, request_orders.request.review, request_orders.quotation.manage | API-REQ-007, API-REQ-008, API-REQ-009, API-REQ-010, API-REQ-011, API-REQ-012, API-REQ-013, API-REQ-014 | request_orders, request_order_items, request_order_messages, quotations, status_histories, quotation_items | P0 | MVP |
@@ -101,7 +101,7 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | inventory.warehouse.view | Admin, Inventory Staff, Warehouse |
 | invoicing.invoice.manage | Admin, Finance |
 | invoicing.invoice.view | Admin, Order Staff, Finance, Customer Service |
-| orders.order.manage | Admin, Order Staff |
+| orders.order.manage, orders.order.cancel, orders.order.complete | Admin, Order Staff (aksi memerlukan view + manage + izin aksi tersebut) |
 | orders.order.view | Admin, Order Staff, Customer Service, Warehouse |
 | payments.bank.manage | Admin, Finance |
 | payments.bank.view | Admin, Finance |
