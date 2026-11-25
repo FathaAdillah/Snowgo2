@@ -2,6 +2,8 @@
 
 namespace App\Modules\Preorders;
 
+use App\Modules\Foundation\Audit\Journal;
+use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Collection;
@@ -33,16 +35,29 @@ final class CheckoutAllocations
      * @param list<int> $items */
     public function release(array $items): void
     {
+        $this->finishReserved($items, 'RELEASED');
+    }
+
+    /** @param list<int> $items
+     * @param 'RELEASED'|'EXPIRED'|'CONFIRMED' $target */
+    public function finishReserved(array $items, string $target): void
+    {
+        $event = match ($target) {
+            'RELEASED', 'EXPIRED' => 'PreorderAllocationReleased',
+            'CONFIRMED' => 'PreorderAllocationConfirmed',
+        };
         $rows = DB::table('preorder_allocations')->whereIn('order_item_id', $items)->orderBy('campaign_variant_id')->orderBy('id')->lockForUpdate()->get();
-        if ($rows->count() !== count($items) || $rows->contains(fn ($a) => $a->status !== 'RESERVED')) {
+        if ($rows->isEmpty() || $rows->count() !== count($items) || $rows->contains(fn ($a) => $a->status !== 'RESERVED')) {
             throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Only reserved preorder units can be released.');
         }
         foreach ($rows as $row) {
-            if (! DB::table('preorder_campaign_variants')->where('id', $row->campaign_variant_id)->where('reserved_qty', '>=', $row->qty)->decrement('reserved_qty', $row->qty)) {
+            if (! DB::table('preorder_campaign_variants')->where('id', $row->campaign_variant_id)->where('reserved_qty', '>=', $row->qty)
+                ->decrement('reserved_qty', $row->qty, $target === 'CONFIRMED' ? ['confirmed_qty' => DB::raw('confirmed_qty+'.(int) $row->qty)] : [])) {
                 throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Preorder quota no longer matches the allocation.');
             }
-            DB::table('preorder_allocations')->where('id', $row->id)->update(['status' => 'RELEASED']);
-            app(Outbox::class)->record('PreorderAllocationReleased', 'preorder_allocation', $row->id, ['quantity' => $row->qty]);
+            DB::table('preorder_allocations')->where('id', $row->id)->update(['status' => $target]);
+            app(Journal::class)->transition(Subject::Allocation, $row->id, 'status', 'RESERVED', $target, 'allocation:'.$target);
+            app(Outbox::class)->record($event, 'preorder_allocation', $row->id, ['quantity' => $row->qty, 'status' => $target]);
         }
     }
 
@@ -60,6 +75,7 @@ final class CheckoutAllocations
         }
         $id = DB::table('preorder_allocations')->insertGetId(['campaign_variant_id' => $offer, 'order_item_id' => $item,
             'qty' => $qty, 'status' => 'RESERVED', 'expires_at' => $due]);
+        app(Journal::class)->transition(Subject::Allocation, $id, 'status', null, 'RESERVED', 'allocation:RESERVED');
         app(Outbox::class)->record('PreorderAllocationReserved', 'preorder_allocation', $id, ['quantity' => $qty]);
     }
 }

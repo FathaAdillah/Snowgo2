@@ -235,3 +235,17 @@ Belum ada pemrosesan pembayaran, refund, dispatch, atau konfirmasi delivery dari
 ## Mengaktifkan checkout siap kirim (TASK-016)
 
 Setelah pull, jalankan `docker compose exec api php artisan migrate --force` sebelum melayani checkout dengan kode baru. Tidak ada izin, seeder, atau build frontend baru. Pada detail pesanan, `checkout_shipping` menunjukkan ongkir dan ETA saat pembelian; nama kurir dan kode layanan tersedia untuk checkout baru, bukan hasil rekonstruksi dari master untuk order lama. Belum ada pembayaran atau dispatch. Setelah transaksi nyata, jangan rollback migrasi ini: rollback menghapus nama kurir dan kode layanan historis.
+
+## Mengaktifkan kampanye preorder (TASK-017)
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose restart scheduler
+```
+
+Tidak perlu build frontend: ini API, belum ada menu kampanye. Seeder tidak mengubah grant role yang sudah ada. Melalui **Role & Izin**, berikan `preorders.campaign.view` untuk membaca dan `preorders.campaign.manage` beserta izin aksi yang diperlukan untuk menulis ([matriks](07-ADMIN-MENU-MATRIX.md)).
+
+Scheduler membuka/menutup kampanye menurut jam PostgreSQL dan melepas alokasi kedaluwarsa milik pesanan yang belum dibayar serta tidak ditahan untuk review. Kedua perintah `preorders:advance-windows` dan `preorders:expire-holds` aman dijalankan ulang. Checkout tetap memeriksa waktu meskipun scheduler terlambat.
+
+Penambahan kuota tidak menambah stok gudang. Perubahan SKU penawaran di PATCH adalah upsert; SKU yang tidak dikirim tetap ada. Gunakan kuota nol untuk menutup penawaran yang belum dialokasikan. Alokasi terkonfirmasi tetap memakai kuota historis. Jangan mengubah invoice lewat SQL: konfirmasi alokasi adalah port internal settlement, bukan endpoint untuk mengakui transfer. Penerimaan/shortage pemasok, pelunasan dan refund belum termasuk.

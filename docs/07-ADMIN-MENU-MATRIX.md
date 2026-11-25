@@ -110,7 +110,8 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | payments.payment.verify | Admin, Finance |
 | payments.payment.view | Admin, Finance, Customer Service |
 | payments.reconciliation.view | Admin, Finance |
-| preorders.campaign.manage | Admin, Order Staff |
+| preorders.campaign.manage | Admin, Order Staff (mutasi juga memerlukan `view` dan izin aksi) |
+| preorders.campaign.create, preorders.campaign.update, preorders.campaign.schedule, preorders.campaign.open, preorders.campaign.close, preorders.campaign.start_procurement, preorders.campaign.fulfill, preorders.campaign.complete, preorders.campaign.cancel | Admin, Order Staff |
 | preorders.campaign.view | Admin, Product Manager, Order Staff, Customer Service |
 | procurement.batch.manage | Admin, Order Staff |
 | procurement.batch.view | Admin, Order Staff, Warehouse |

@@ -3,6 +3,7 @@
 namespace App\Modules\Catalog;
 
 use App\Modules\Inventory\StockAvailability;
+use App\Modules\Preorders\CampaignOffers;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -68,12 +69,19 @@ final class ProductDirectory
             ->selectRaw('product_id, COALESCE(min(rts_price_amount) FILTER (WHERE stock.variant_id IS NOT NULL),min(rts_price_amount)) AS price,
                 bool_or(stock.variant_id IS NOT NULL) AS available')->groupBy('product_id')->get()->keyBy('product_id');
 
+        $po = DB::query()->fromSub(CampaignOffers::open()->addSelect('product_variants.product_id')->whereIntegerInRaw('product_variants.product_id', $ids), 'po')
+            ->selectRaw('product_id,campaign_slug,coalesce(min(unit_amount) FILTER (WHERE max_qty>=min_qty),min(unit_amount)) AS price,bool_or(max_qty>=min_qty) AS available')
+            ->groupBy('product_id', 'campaign_slug')->orderBy('campaign_slug')->get()->groupBy('product_id');
         $cards = [];
         foreach ($products as $p) {
+            $offers = isset($prices[$p->id]) ? [['method' => 'RTS', 'from_amount' => $prices[$p->id]->price, 'available' => $prices[$p->id]->available]] : [];
+            foreach ($po[$p->id] ?? [] as $offer) {
+                $offers[] = ['method' => 'PO', 'campaign_slug' => $offer->campaign_slug, 'from_amount' => $offer->price, 'available' => $offer->available];
+            }
             $cards[] = ['slug' => $p->slug, 'name' => $p->name, 'brand_slug' => $brands[$p->brand_id] ?? null,
                 'category_slugs' => isset($categories[$p->id]) ? $categories[$p->id]->pluck('slug')->all() : [],
                 'cover_url' => isset($covers[$p->id]) ? Storage::disk('catalog')->url($covers[$p->id]->published_key) : null,
-                'offers' => isset($prices[$p->id]) ? [['method' => 'RTS', 'from_amount' => $prices[$p->id]->price, 'available' => $prices[$p->id]->available]] : [],
+                'offers' => $offers,
             ];
         }
 
@@ -92,12 +100,14 @@ final class ProductDirectory
         $media = self::media()->where('m.product_id', $p->id)->get(['m.published_key', 'm.alt', 'm.position', 'v.sku']);
 
         $card = self::cards(collect([$p]))[0];
+        $po = CampaignOffers::open()->where('product_variants.product_id', $p->id)->orderBy('c.slug')->get()->groupBy('variant_id');
 
         return $card + ['description' => $p->description, 'seo_title' => $p->seo_title, 'seo_description' => $p->seo_description,
             'media' => $media->map(fn ($m) => ['url' => Storage::disk('catalog')->url($m->published_key), 'alt' => $m->alt, 'position' => $m->position, 'sku' => $m->sku])->all(),
             'variants' => $variants->map(fn ($v) => ['sku' => $v->sku, 'name' => $v->name, 'weight_g' => $v->weight_g,
                 'options' => ($options[$v->id] ?? collect())->map(fn ($o) => ['code' => $o->code, 'label' => $o->label])->all(),
-                'offers' => $v->rts_enabled && $card['offers'] ? [['method' => 'RTS', 'unit_amount' => $v->rts_price_amount, 'available' => $v->available]] : [],
+                'offers' => [...($v->rts_enabled && $card['offers'] ? [['method' => 'RTS', 'unit_amount' => $v->rts_price_amount, 'available' => $v->available]] : []),
+                    ...($po[$v->id] ?? collect())->map(fn ($o) => ['method' => 'PO', 'campaign_slug' => $o->campaign_slug, 'unit_amount' => $o->unit_amount, 'available' => $o->max_qty >= $o->min_qty])->all()],
             ])->all()];
     }
 }

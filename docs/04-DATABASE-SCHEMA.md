@@ -640,6 +640,9 @@ Jendela, ETA dan kebijakan PO. Catat perubahan ETA dan tenggat di histori/audit
 | transport_mode | CHECK (AIR,SEA,OTHER) | Tidak | — |
 | payment_scheme | CHECK (FULL_ONLY,DEPOSIT_ONLY,FULL_OR_DEPOSIT) | Tidak | — |
 | terms | text | Tidak | — |
+| first_received_at | timestamptz | Ya | Milestone internal dari transaksi receipt positif pertama; bukan input staf. |
+
+Catatan opsional aksi staf disimpan secara append-only di `preorder_transition_notes` (PK/FK `history_id` ke `status_histories`, `note varchar(1000)`). Tidak disertakan dalam respons publik atau payload notifikasi.
 
 **Constraint dan indeks tambahan** · I(status,ends_at); C(starts_at<ends_at AND ready_eta_from<=ready_eta_to AND ship_eta_from<=ship_eta_to).
 

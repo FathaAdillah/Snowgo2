@@ -20,7 +20,8 @@ final class OrderExpiry
         }
         DB::table('orders')->where('id', $order->id)->update(['status' => 'EXPIRED']);
         $journal = app(Journal::class);
-        $journal->transition(Subject::Order, $order->id, 'status', 'PENDING_PAYMENT', 'EXPIRED', "stock-expired:$order->id");
+        $supply = $order->selling_method === 'PREORDER' ? 'quota' : 'stock';
+        $journal->transition(Subject::Order, $order->id, 'status', 'PENDING_PAYMENT', 'EXPIRED', "$supply-expired:$order->id");
         $journal->audit('OrderExpired', Subject::Order, $order->id, null, ['status' => 'PENDING_PAYMENT'], ['status' => 'EXPIRED']);
         app(Outbox::class)->record('OrderExpired', 'order', $order->id, ['number' => $order->number]);
 

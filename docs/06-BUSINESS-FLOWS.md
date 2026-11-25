@@ -143,7 +143,7 @@ Scheduler membuka/tutup sesuai window. OPEN boleh diperpanjang sebelum ends_at, 
 | Asal | Tujuan diizinkan |
 |---|---|
 | DRAFT | SCHEDULED, CANCELLED |
-| SCHEDULED | OPEN, CANCELLED |
+| SCHEDULED | OPEN, CANCELLED; khusus scheduler: langsung CLOSED jika seluruh window sudah terlewat tanpa pernah dibuka |
 | OPEN | CLOSED, CANCELLED |
 | CLOSED | IN_PROCUREMENT, CANCELLED |
 | IN_PROCUREMENT | FULFILLING, CANCELLED |

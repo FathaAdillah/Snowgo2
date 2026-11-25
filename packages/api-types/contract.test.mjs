@@ -107,8 +107,20 @@ test('checkout data and mutations reject unauthenticated API callers', async () 
   }
 })
 
-test('order and inventory reads are staff-only and use the documented error envelope', async () => {
-  for (const path of ['/admin/orders', '/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
+test('public preorder campaigns and customer allocation reads use distinct boundaries', async () => {
+  const page = await client.GET('/preorders', { params: { query: { per_page: 1 } } })
+  assert.equal(page.response.status, 200)
+  validateResponse('/preorders', 200, page.data)
+  const params = { path: { slug: 'ci-missing-5b025cdf' } }
+  for (const [path, status] of [['/preorders/{slug}', 404], ['/preorders/{slug}/allocations', 401]]) {
+    const result = await client.GET(path, { params })
+    assert.equal(result.response.status, status)
+    validateResponse(path, status, result.error)
+  }
+})
+
+test('order, campaign and inventory reads are staff-only and use the documented error envelope', async () => {
+  for (const path of ['/admin/preorder-campaigns', '/admin/orders', '/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
     const result = await client.GET(path)
     assert.ok([401, 403].includes(result.response.status))
     validateResponse(path, result.response.status, result.error)

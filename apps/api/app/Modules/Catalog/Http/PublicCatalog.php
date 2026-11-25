@@ -5,6 +5,7 @@ namespace App\Modules\Catalog\Http;
 use App\Modules\Catalog\CatalogAdmin;
 use App\Modules\Catalog\CatalogEditor;
 use App\Modules\Catalog\ProductDirectory;
+use App\Modules\Preorders\CampaignOffers;
 use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
 use Dedoc\Scramble\Attributes\Response;
@@ -17,9 +18,9 @@ final class PublicCatalog
 {
     private const META = 'array{request_id:string,page:int,per_page:int,last_page:int,total:int}';
 
-    private const CARD = 'slug:string,name:string,brand_slug:string|null,category_slugs:list<string>,cover_url:string|null,offers:list<array{method:string,from_amount:int,available:bool}>';
+    private const CARD = 'slug:string,name:string,brand_slug:string|null,category_slugs:list<string>,cover_url:string|null,offers:list<array{method:string,from_amount:int,campaign_slug?:string,available:bool}>';
 
-    private const DETAIL = 'array{'.self::CARD.',description:string,seo_title:string|null,seo_description:string|null,variants:list<array{sku:string,name:string,weight_g:int,options:list<array{code:string,label:string}>,offers:list<array{method:string,unit_amount:int,available:bool}>}>,media:list<array{url:string,alt:string,position:int,sku:string|null}>}';
+    private const DETAIL = 'array{'.self::CARD.',description:string,seo_title:string|null,seo_description:string|null,variants:list<array{sku:string,name:string,weight_g:int,options:list<array{code:string,label:string}>,offers:list<array{method:string,unit_amount:int,campaign_slug?:string,available:bool}>}>,media:list<array{url:string,alt:string,position:int,sku:string|null}>}';
 
     #[Response(200, 'Published catalog', type: 'array{success:bool,message:string,data:list<array{'.self::CARD.'}>,meta:'.self::META.'}')]
     public function products(Request $request): JsonResponse
@@ -44,7 +45,8 @@ final class PublicCatalog
             $q->whereIn('products.brand_id', DB::table('brands')->where(['slug' => $filters['brand'], 'active' => true])->select('id'));
         }
         if (isset($filters['method'])) {
-            $filters['method'] === 'RTS' ? $q->whereIn('products.id', ProductDirectory::offerableVariants()->where('rts_enabled', true)->select('product_id')) : $q->whereRaw('false');
+            $offers = $filters['method'] === 'RTS' ? ProductDirectory::offerableVariants()->where('rts_enabled', true) : CampaignOffers::open();
+            $q->whereIn('products.id', $offers->select('product_variants.product_id'));
         }
         ($filters['sort'] ?? null) === 'name' ? $q->orderBy('name') : $q->orderByDesc('published_at');
         $page = $q->orderByDesc('id')->paginate((int) ($filters['per_page'] ?? 20), ['id', 'slug', 'name', 'brand_id']);

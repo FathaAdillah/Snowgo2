@@ -4085,6 +4085,566 @@
                 }
             }
         },
+        "/preorders": {
+            "get": {
+                "operationId": "preorders.index",
+                "tags": [
+                    "Campaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "SCHEDULED",
+                                "OPEN",
+                                "CLOSED",
+                                "IN_PROCUREMENT",
+                                "FULFILLING",
+                                "COMPLETED"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Public campaigns",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "starts_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "ends_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "ready_eta_from": {
+                                                        "type": "string"
+                                                    },
+                                                    "ready_eta_to": {
+                                                        "type": "string"
+                                                    },
+                                                    "ship_eta_from": {
+                                                        "type": "string"
+                                                    },
+                                                    "ship_eta_to": {
+                                                        "type": "string"
+                                                    },
+                                                    "payment_scheme": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "number",
+                                                    "slug",
+                                                    "name",
+                                                    "status",
+                                                    "starts_at",
+                                                    "ends_at",
+                                                    "ready_eta_from",
+                                                    "ready_eta_to",
+                                                    "ship_eta_from",
+                                                    "ship_eta_to",
+                                                    "payment_scheme"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/preorders/{slug}": {
+            "get": {
+                "operationId": "preorders.show",
+                "tags": [
+                    "Campaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Campaign terms and variants",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "payment_scheme": {
+                                                    "type": "string"
+                                                },
+                                                "origin": {
+                                                    "type": "string"
+                                                },
+                                                "transport_mode": {
+                                                    "type": "string"
+                                                },
+                                                "terms": {
+                                                    "type": "string"
+                                                },
+                                                "variants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "sku": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "deposit_unit_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "available_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "min_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "max_qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "sku",
+                                                            "unit_amount",
+                                                            "deposit_unit_amount",
+                                                            "available_qty",
+                                                            "min_qty",
+                                                            "max_qty"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "slug",
+                                                "name",
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "ready_eta_from",
+                                                "ready_eta_to",
+                                                "ship_eta_from",
+                                                "ship_eta_to",
+                                                "payment_scheme",
+                                                "origin",
+                                                "transport_mode",
+                                                "terms",
+                                                "variants"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Campaign not published",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/preorders/{slug}/allocations": {
+            "get": {
+                "operationId": "preorders.allocations",
+                "tags": [
+                    "Campaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Your allocations in this campaign",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "order_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "qty": {
+                                                        "type": "integer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "failed_qty": {
+                                                        "type": "integer"
+                                                    },
+                                                    "expires_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "order_number",
+                                                    "sku",
+                                                    "qty",
+                                                    "status",
+                                                    "failed_qty",
+                                                    "expires_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "description": "Campaign not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "description": "Verified customer session required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/cart": {
             "get": {
                 "operationId": "cart.show",
@@ -4305,7 +4865,7 @@
                                     "campaign_slug": {
                                         "type": "string",
                                         "pattern": "^[A-Za-z0-9_.-]+$",
-                                        "maxLength": 80
+                                        "maxLength": 160
                                     },
                                     "qty": {
                                         "type": "integer",
@@ -14466,6 +15026,9 @@
                                                                 "from_amount": {
                                                                     "type": "integer"
                                                                 },
+                                                                "campaign_slug": {
+                                                                    "type": "string"
+                                                                },
                                                                 "available": {
                                                                     "type": "boolean"
                                                                 }
@@ -14602,6 +15165,9 @@
                                                             "from_amount": {
                                                                 "type": "integer"
                                                             },
+                                                            "campaign_slug": {
+                                                                "type": "string"
+                                                            },
                                                             "available": {
                                                                 "type": "boolean"
                                                             }
@@ -14670,6 +15236,9 @@
                                                                         },
                                                                         "unit_amount": {
                                                                             "type": "integer"
+                                                                        },
+                                                                        "campaign_slug": {
+                                                                            "type": "string"
                                                                         },
                                                                         "available": {
                                                                             "type": "boolean"
@@ -19051,6 +19620,1821 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/preorder-campaigns": {
+            "get": {
+                "operationId": "preorders.staff.index",
+                "tags": [
+                    "StaffCampaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 2147483647
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DRAFT",
+                                "SCHEDULED",
+                                "OPEN",
+                                "CLOSED",
+                                "IN_PROCUREMENT",
+                                "FULFILLING",
+                                "COMPLETED",
+                                "CANCELLED"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Campaigns and quota counters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "starts_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "ends_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "ready_eta_from": {
+                                                        "type": "string"
+                                                    },
+                                                    "ready_eta_to": {
+                                                        "type": "string"
+                                                    },
+                                                    "ship_eta_from": {
+                                                        "type": "string"
+                                                    },
+                                                    "ship_eta_to": {
+                                                        "type": "string"
+                                                    },
+                                                    "payment_scheme": {
+                                                        "type": "string"
+                                                    },
+                                                    "origin": {
+                                                        "type": "string"
+                                                    },
+                                                    "transport_mode": {
+                                                        "type": "string"
+                                                    },
+                                                    "terms": {
+                                                        "type": "string"
+                                                    },
+                                                    "variants": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "sku": {
+                                                                    "type": "string"
+                                                                },
+                                                                "unit_amount": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "deposit_unit_amount": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "available_qty": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "min_qty": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "max_qty": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "quota": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "reserved_qty": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "confirmed_qty": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "sku",
+                                                                "unit_amount",
+                                                                "deposit_unit_amount",
+                                                                "available_qty",
+                                                                "min_qty",
+                                                                "max_qty",
+                                                                "quota",
+                                                                "reserved_qty",
+                                                                "confirmed_qty"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "number",
+                                                    "slug",
+                                                    "name",
+                                                    "status",
+                                                    "starts_at",
+                                                    "ends_at",
+                                                    "ready_eta_from",
+                                                    "ready_eta_to",
+                                                    "ship_eta_from",
+                                                    "ship_eta_to",
+                                                    "payment_scheme",
+                                                    "origin",
+                                                    "transport_mode",
+                                                    "terms",
+                                                    "variants"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id",
+                                                "page",
+                                                "per_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "preorders.staff.create",
+                "tags": [
+                    "StaffCampaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "slug": {
+                                        "type": "string",
+                                        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                                        "maxLength": 160
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "starts_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,6})?(?:Z|[+-]\\d\\d:\\d\\d)$"
+                                    },
+                                    "ends_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,6})?(?:Z|[+-]\\d\\d:\\d\\d)$"
+                                    },
+                                    "ready_eta_from": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "ready_eta_to": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "ship_eta_from": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "ship_eta_to": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "origin": {
+                                        "type": "string",
+                                        "maxLength": 80
+                                    },
+                                    "transport_mode": {
+                                        "type": "string",
+                                        "enum": [
+                                            "AIR",
+                                            "SEA",
+                                            "OTHER"
+                                        ]
+                                    },
+                                    "payment_scheme": {
+                                        "type": "string",
+                                        "enum": [
+                                            "FULL_ONLY",
+                                            "DEPOSIT_ONLY",
+                                            "FULL_OR_DEPOSIT"
+                                        ]
+                                    },
+                                    "terms": {
+                                        "type": "string",
+                                        "maxLength": 5000
+                                    },
+                                    "variants": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sku": {
+                                                    "type": "string",
+                                                    "maxLength": 80
+                                                },
+                                                "unit_amount": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 1000000000000
+                                                },
+                                                "deposit_unit_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1,
+                                                    "maximum": 1000000000000
+                                                },
+                                                "quota": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "maximum": 2147483647
+                                                },
+                                                "min_qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 2147483647
+                                                },
+                                                "max_qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 2147483647
+                                                }
+                                            },
+                                            "required": [
+                                                "sku",
+                                                "unit_amount",
+                                                "quota",
+                                                "min_qty",
+                                                "max_qty"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 200,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "slug",
+                                    "name",
+                                    "starts_at",
+                                    "ends_at",
+                                    "ready_eta_from",
+                                    "ready_eta_to",
+                                    "ship_eta_from",
+                                    "ship_eta_to",
+                                    "origin",
+                                    "transport_mode",
+                                    "payment_scheme",
+                                    "terms",
+                                    "variants"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "422": {
+                        "description": "Invalid input or key reused",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "code",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "201": {
+                        "description": "Draft created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "payment_scheme": {
+                                                    "type": "string"
+                                                },
+                                                "origin": {
+                                                    "type": "string"
+                                                },
+                                                "transport_mode": {
+                                                    "type": "string"
+                                                },
+                                                "terms": {
+                                                    "type": "string"
+                                                },
+                                                "variants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "sku": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "deposit_unit_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "available_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "min_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "max_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "quota": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reserved_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "confirmed_qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "sku",
+                                                            "unit_amount",
+                                                            "deposit_unit_amount",
+                                                            "available_qty",
+                                                            "min_qty",
+                                                            "max_qty",
+                                                            "quota",
+                                                            "reserved_qty",
+                                                            "confirmed_qty"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "slug",
+                                                "name",
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "ready_eta_from",
+                                                "ready_eta_to",
+                                                "ship_eta_from",
+                                                "ship_eta_to",
+                                                "payment_scheme",
+                                                "origin",
+                                                "transport_mode",
+                                                "terms",
+                                                "variants"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SKU not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Duplicate or request in progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/preorder-campaigns/{number}": {
+            "get": {
+                "operationId": "preorders.staff.show",
+                "tags": [
+                    "StaffCampaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Campaign with quota counters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "payment_scheme": {
+                                                    "type": "string"
+                                                },
+                                                "origin": {
+                                                    "type": "string"
+                                                },
+                                                "transport_mode": {
+                                                    "type": "string"
+                                                },
+                                                "terms": {
+                                                    "type": "string"
+                                                },
+                                                "variants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "sku": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "deposit_unit_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "available_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "min_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "max_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "quota": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reserved_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "confirmed_qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "sku",
+                                                            "unit_amount",
+                                                            "deposit_unit_amount",
+                                                            "available_qty",
+                                                            "min_qty",
+                                                            "max_qty",
+                                                            "quota",
+                                                            "reserved_qty",
+                                                            "confirmed_qty"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "slug",
+                                                "name",
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "ready_eta_from",
+                                                "ready_eta_to",
+                                                "ship_eta_from",
+                                                "ship_eta_to",
+                                                "payment_scheme",
+                                                "origin",
+                                                "transport_mode",
+                                                "terms",
+                                                "variants"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Campaign not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "preorders.staff.update",
+                "tags": [
+                    "StaffCampaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "slug": {
+                                        "type": "string",
+                                        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                                        "maxLength": 160
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 160
+                                    },
+                                    "starts_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,6})?(?:Z|[+-]\\d\\d:\\d\\d)$"
+                                    },
+                                    "ends_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,6})?(?:Z|[+-]\\d\\d:\\d\\d)$"
+                                    },
+                                    "ready_eta_from": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "ready_eta_to": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "ship_eta_from": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "ship_eta_to": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "origin": {
+                                        "type": "string",
+                                        "maxLength": 80
+                                    },
+                                    "transport_mode": {
+                                        "type": "string",
+                                        "enum": [
+                                            "AIR",
+                                            "SEA",
+                                            "OTHER"
+                                        ]
+                                    },
+                                    "payment_scheme": {
+                                        "type": "string",
+                                        "enum": [
+                                            "FULL_ONLY",
+                                            "DEPOSIT_ONLY",
+                                            "FULL_OR_DEPOSIT"
+                                        ]
+                                    },
+                                    "terms": {
+                                        "type": "string",
+                                        "maxLength": 5000
+                                    },
+                                    "variants": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sku": {
+                                                    "type": "string",
+                                                    "maxLength": 80
+                                                },
+                                                "unit_amount": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 1000000000000
+                                                },
+                                                "deposit_unit_amount": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1,
+                                                    "maximum": 1000000000000
+                                                },
+                                                "quota": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "maximum": 2147483647
+                                                },
+                                                "min_qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 2147483647
+                                                },
+                                                "max_qty": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 2147483647
+                                                }
+                                            },
+                                            "required": [
+                                                "sku",
+                                                "unit_amount",
+                                                "quota",
+                                                "min_qty",
+                                                "max_qty"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 200,
+                                        "uniqueItems": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Campaign updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "payment_scheme": {
+                                                    "type": "string"
+                                                },
+                                                "origin": {
+                                                    "type": "string"
+                                                },
+                                                "transport_mode": {
+                                                    "type": "string"
+                                                },
+                                                "terms": {
+                                                    "type": "string"
+                                                },
+                                                "variants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "sku": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "deposit_unit_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "available_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "min_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "max_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "quota": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reserved_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "confirmed_qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "sku",
+                                                            "unit_amount",
+                                                            "deposit_unit_amount",
+                                                            "available_qty",
+                                                            "min_qty",
+                                                            "max_qty",
+                                                            "quota",
+                                                            "reserved_qty",
+                                                            "confirmed_qty"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "slug",
+                                                "name",
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "ready_eta_from",
+                                                "ready_eta_to",
+                                                "ship_eta_from",
+                                                "ship_eta_to",
+                                                "payment_scheme",
+                                                "origin",
+                                                "transport_mode",
+                                                "terms",
+                                                "variants"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input or key reused",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "code",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Campaign or SKU not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Quota, slug, state or request conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/preorder-campaigns/{number}/actions/{action}": {
+            "post": {
+                "operationId": "preorders.staff.action",
+                "tags": [
+                    "StaffCampaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-XSRF-TOKEN",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "SCHEDULE",
+                                "OPEN",
+                                "CLOSE",
+                                "START_PROCUREMENT",
+                                "FULFILL",
+                                "COMPLETE",
+                                "CANCEL"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason_code": {
+                                        "type": "string",
+                                        "pattern": "^[A-Za-z0-9_.-]+$",
+                                        "maxLength": 48
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Campaign transition",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ready_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_from": {
+                                                    "type": "string"
+                                                },
+                                                "ship_eta_to": {
+                                                    "type": "string"
+                                                },
+                                                "payment_scheme": {
+                                                    "type": "string"
+                                                },
+                                                "origin": {
+                                                    "type": "string"
+                                                },
+                                                "transport_mode": {
+                                                    "type": "string"
+                                                },
+                                                "terms": {
+                                                    "type": "string"
+                                                },
+                                                "variants": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "sku": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit_amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "deposit_unit_amount": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "available_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "min_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "max_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "quota": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reserved_qty": {
+                                                                "type": "integer"
+                                                            },
+                                                            "confirmed_qty": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "sku",
+                                                            "unit_amount",
+                                                            "deposit_unit_amount",
+                                                            "available_qty",
+                                                            "min_qty",
+                                                            "max_qty",
+                                                            "quota",
+                                                            "reserved_qty",
+                                                            "confirmed_qty"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "number",
+                                                "slug",
+                                                "name",
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "ready_eta_from",
+                                                "ready_eta_to",
+                                                "ship_eta_from",
+                                                "ship_eta_to",
+                                                "payment_scheme",
+                                                "origin",
+                                                "transport_mode",
+                                                "terms",
+                                                "variants"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "description": "Invalid input or key reused",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "string",
+                                            "enum": [
+                                                "VALIDATION_FAILED",
+                                                "IDEMPOTENCY_KEY_REUSED"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "code",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Campaign or action not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Invalid transition or request in progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "CSRF mismatch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "code",
+                                        "message",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -24,10 +24,11 @@ final class Journal
         ]);
     }
 
-    public function transition(Subject $subject, int $id, string $dimension, ?string $from, string $to, string $eventKey, ?int $actorId = null, ?int $reasonId = null): void
+    public function transition(Subject $subject, int $id, string $dimension, ?string $from, string $to, string $eventKey, ?int $actorId = null, ?int $reasonId = null): int
     {
         $this->requireTransaction();
-        DB::table('status_histories')->insert([
+
+        return DB::table('status_histories')->insertGetId([
             'subject_type' => $subject->value, 'subject_id' => $id, 'dimension' => $dimension,
             'from_status' => $from, 'to_status' => $to, 'event_key' => $eventKey,
             'actor_id' => $actorId, 'reason_id' => $reasonId,
@@ -41,6 +42,12 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::Campaign) {
+            $fields = [...$fields, 'slug', 'name', 'starts_at', 'ends_at', 'ready_eta_from', 'ready_eta_to', 'ship_eta_from', 'ship_eta_to', 'payment_scheme'];
+        }
+        if ($subject === Subject::CampaignVariant) {
+            $fields = [...$fields, 'quota', 'unit_amount', 'deposit_unit_amount', 'min_qty', 'max_qty'];
+        }
         if ($subject === Subject::Cart) {
             $fields[] = 'version';
         }
