@@ -41,6 +41,12 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::Campaign) {
+            $fields = [...$fields, 'slug', 'name', 'starts_at', 'ends_at', 'ready_eta_from', 'ready_eta_to', 'ship_eta_from', 'ship_eta_to', 'payment_scheme'];
+        }
+        if ($subject === Subject::CampaignVariant) {
+            $fields = [...$fields, 'quota', 'unit_amount', 'deposit_unit_amount', 'min_qty', 'max_qty'];
+        }
         if ($subject === Subject::Cart) {
             $fields[] = 'version';
         }

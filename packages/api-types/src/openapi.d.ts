@@ -565,6 +565,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/preorder-campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preorders.staff.index"];
+        put?: never;
+        post: operations["preorders.staff.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/preorder-campaigns/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preorders.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["preorders.staff.update"];
+        trace?: never;
+    };
+    "/admin/preorder-campaigns/{number}/actions/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preorders.staff.action"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/product-media": {
         parameters: {
             query?: never;
@@ -1561,6 +1609,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["orders.complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/preorders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preorders.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/preorders/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preorders.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/preorders/{slug}/allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preorders.allocations"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5362,6 +5458,619 @@ export interface operations {
             };
             401: components["responses"]["AuthenticationException"];
             403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "preorders.staff.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                page?: number;
+                per_page?: number;
+                status?: "DRAFT" | "SCHEDULED" | "OPEN" | "CLOSED" | "IN_PROCUREMENT" | "FULFILLING" | "COMPLETED" | "CANCELLED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaigns and quota counters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            origin: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                            terms: string;
+                            transport_mode: string;
+                            variants: {
+                                available_qty: number;
+                                confirmed_qty: number;
+                                deposit_unit_amount: number | null;
+                                max_qty: number;
+                                min_qty: number;
+                                quota: number;
+                                reserved_qty: number;
+                                sku: string;
+                                unit_amount: number;
+                            }[];
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "preorders.staff.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    ends_at: string;
+                    name: string;
+                    origin: string;
+                    /** @enum {string} */
+                    payment_scheme: "FULL_ONLY" | "DEPOSIT_ONLY" | "FULL_OR_DEPOSIT";
+                    /** Format: date */
+                    ready_eta_from: string;
+                    /** Format: date */
+                    ready_eta_to: string;
+                    /** Format: date */
+                    ship_eta_from: string;
+                    /** Format: date */
+                    ship_eta_to: string;
+                    slug: string;
+                    /** Format: date-time */
+                    starts_at: string;
+                    terms: string;
+                    /** @enum {string} */
+                    transport_mode: "AIR" | "SEA" | "OTHER";
+                    variants: {
+                        deposit_unit_amount?: number | null;
+                        max_qty: number;
+                        min_qty: number;
+                        quota: number;
+                        sku: string;
+                        unit_amount: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Draft created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            origin: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                            terms: string;
+                            transport_mode: string;
+                            variants: {
+                                available_qty: number;
+                                confirmed_qty: number;
+                                deposit_unit_amount: number | null;
+                                max_qty: number;
+                                min_qty: number;
+                                quota: number;
+                                reserved_qty: number;
+                                sku: string;
+                                unit_amount: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description SKU not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Duplicate or request in progress */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or key reused */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "preorders.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign with quota counters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            origin: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                            terms: string;
+                            transport_mode: string;
+                            variants: {
+                                available_qty: number;
+                                confirmed_qty: number;
+                                deposit_unit_amount: number | null;
+                                max_qty: number;
+                                min_qty: number;
+                                quota: number;
+                                reserved_qty: number;
+                                sku: string;
+                                unit_amount: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "preorders.staff.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    ends_at?: string;
+                    name?: string;
+                    origin?: string;
+                    /** @enum {string} */
+                    payment_scheme?: "FULL_ONLY" | "DEPOSIT_ONLY" | "FULL_OR_DEPOSIT";
+                    /** Format: date */
+                    ready_eta_from?: string;
+                    /** Format: date */
+                    ready_eta_to?: string;
+                    /** Format: date */
+                    ship_eta_from?: string;
+                    /** Format: date */
+                    ship_eta_to?: string;
+                    slug?: string;
+                    /** Format: date-time */
+                    starts_at?: string;
+                    terms?: string;
+                    /** @enum {string} */
+                    transport_mode?: "AIR" | "SEA" | "OTHER";
+                    variants?: {
+                        deposit_unit_amount?: number | null;
+                        max_qty: number;
+                        min_qty: number;
+                        quota: number;
+                        sku: string;
+                        unit_amount: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Campaign updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            origin: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                            terms: string;
+                            transport_mode: string;
+                            variants: {
+                                available_qty: number;
+                                confirmed_qty: number;
+                                deposit_unit_amount: number | null;
+                                max_qty: number;
+                                min_qty: number;
+                                quota: number;
+                                reserved_qty: number;
+                                sku: string;
+                                unit_amount: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Campaign or SKU not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Quota, slug, state or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or key reused */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "preorders.staff.action": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                action: "SCHEDULE" | "OPEN" | "CLOSE" | "START_PROCUREMENT" | "FULFILL" | "COMPLETE" | "CANCEL";
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    note?: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Campaign transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            origin: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                            terms: string;
+                            transport_mode: string;
+                            variants: {
+                                available_qty: number;
+                                confirmed_qty: number;
+                                deposit_unit_amount: number | null;
+                                max_qty: number;
+                                min_qty: number;
+                                quota: number;
+                                reserved_qty: number;
+                                sku: string;
+                                unit_amount: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Campaign or action not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid transition or request in progress */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or key reused */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
         };
     };
     "catalog.product-media.index": {
@@ -11995,6 +12704,188 @@ export interface operations {
             };
         };
     };
+    "preorders.index": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+                status?: "SCHEDULED" | "OPEN" | "CLOSED" | "IN_PROCUREMENT" | "FULFILLING" | "COMPLETED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public campaigns */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "preorders.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign terms and variants */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ends_at: string;
+                            name: string;
+                            number: string;
+                            origin: string;
+                            payment_scheme: string;
+                            ready_eta_from: string;
+                            ready_eta_to: string;
+                            ship_eta_from: string;
+                            ship_eta_to: string;
+                            slug: string;
+                            starts_at: string;
+                            status: string;
+                            terms: string;
+                            transport_mode: string;
+                            variants: {
+                                available_qty: number;
+                                deposit_unit_amount: number | null;
+                                max_qty: number;
+                                min_qty: number;
+                                sku: string;
+                                unit_amount: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            /** @description Campaign not published */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "preorders.allocations": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Your allocations in this campaign */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            expires_at: string;
+                            failed_qty: number;
+                            order_number: string;
+                            qty: number;
+                            sku: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "public.products": {
         parameters: {
             query?: {
@@ -12028,6 +12919,7 @@ export interface operations {
                             name: string;
                             offers: {
                                 available: boolean;
+                                campaign_slug?: string;
                                 from_amount: number;
                                 method: string;
                             }[];
@@ -12081,6 +12973,7 @@ export interface operations {
                             name: string;
                             offers: {
                                 available: boolean;
+                                campaign_slug?: string;
                                 from_amount: number;
                                 method: string;
                             }[];
@@ -12091,6 +12984,7 @@ export interface operations {
                                 name: string;
                                 offers: {
                                     available: boolean;
+                                    campaign_slug?: string;
                                     method: string;
                                     unit_amount: number;
                                 }[];

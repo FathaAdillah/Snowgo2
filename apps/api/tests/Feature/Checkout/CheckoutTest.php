@@ -278,7 +278,11 @@ it('reserves exactly the available units when independent buyers confirm competi
     $this->assertDatabaseCount($po ? 'preorder_allocations' : 'stock_reservations', $units);
     $this->assertDatabaseHas('inventory_levels', ['reserved' => $po ? 0 : $units]);
     $this->assertDatabaseHas('preorder_campaign_variants', ['reserved_qty' => $po ? $units : 0]);
-    if (! $po) {
+    if ($po) {
+        $this->assertDatabaseCount('inventory_movements', 1);
+        $this->assertDatabaseHas('inventory_levels', ['on_hand' => 12, 'reserved' => 0, 'available' => 12, 'committed' => 0]);
+        $this->assertDatabaseHas('preorder_campaign_variants', ['quota' => 1, 'reserved_qty' => 1, 'confirmed_qty' => 0]);
+    } else {
         expect(DB::table('orders')->where(['status' => 'PENDING_PAYMENT', 'payment_status' => 'UNPAID'])->count())->toBe($units)
             ->and(DB::table('stock_reservations')->where('status', 'ACTIVE')->count())->toBe($units)
             ->and(DB::table('shipping_quotes')->whereNotNull('used_at')->count())->toBe($units)

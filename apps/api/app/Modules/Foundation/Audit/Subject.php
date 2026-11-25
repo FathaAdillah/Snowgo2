@@ -8,6 +8,9 @@ enum Subject: string
     case Role = 'role';
     case Order = 'order';
     case Cart = 'cart';
+    case Campaign = 'preorder_campaign';
+    case CampaignVariant = 'preorder_campaign_variant';
+    case Allocation = 'preorder_allocation';
     case Payment = 'payment';
     case Invoice = 'invoice';
     case Refund = 'refund';

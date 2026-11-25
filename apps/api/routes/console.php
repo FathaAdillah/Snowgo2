@@ -6,6 +6,8 @@ use App\Modules\Identity\Staff\StaffInvitations;
 use App\Modules\Inventory\StockExpiry;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Orders\OrderExpiry;
+use App\Modules\Preorders\AllocationLifecycle;
+use App\Modules\Preorders\CampaignWindow;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Inspiring;
@@ -42,6 +44,14 @@ Artisan::command('inventory:expire-holds', function (StockExpiry $expiry, StockR
     $this->info('Expired RTS orders: '.$expiry->run($stock));
 })->purpose('Release expired ACTIVE RTS stock holds once per order');
 Schedule::command('inventory:expire-holds')->everyMinute();
+Artisan::command('preorders:advance-windows', function (CampaignWindow $window) {
+    $this->info('Campaign windows advanced: '.$window->advanceDue());
+});
+Artisan::command('preorders:expire-holds', function (AllocationLifecycle $allocations) {
+    $this->info('Expired preorder orders: '.$allocations->expireDue());
+});
+Schedule::command('preorders:advance-windows')->everyMinute();
+Schedule::command('preorders:expire-holds')->everyMinute();
 Artisan::command('orders:reconcile-expired-stock', function (OrderExpiry $expiry) {
     $this->info('Reconciled expired RTS orders: '.$expiry->reconcileReleased());
 })->purpose('Close unpaid checkouts whose stock expired before order lifecycle tracking was installed');

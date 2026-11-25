@@ -41,3 +41,9 @@ order.data.checkout_shipping?.amount satisfies number | undefined
 type OrderWrite = '/orders/{number}/cancellations' | '/orders/{number}/completions' | '/admin/orders/{number}/actions/{action}'
 declare const invalidOrder: paths[OrderWrite]['post']['responses'][422]['content']['application/json']
 invalidOrder.errors?.reason_code satisfies string[] | undefined
+
+declare const campaign: paths['/preorders/{slug}']['get']['responses'][200]['content']['application/json']
+campaign.data.variants[0]!.deposit_unit_amount satisfies number | null
+// @ts-expect-error Staff-only allocation counters are absent from the public detail.
+campaign.data.variants[0]!.reserved_qty
+api.POST('/admin/preorder-campaigns/{number}/actions/{action}', { params: { ...params, path: { number: 'PO-1', action: 'CLOSE' } } })
