@@ -17,6 +17,9 @@ final class BankAccounts
     public static function save(?int $id, array $input, int $actor): object
     {
         $old = $id === null ? null : (DB::table('bank_accounts')->where('id', $id)->lockForUpdate()->first() ?? abort(404));
+        if ($old && isset($input['bank_code']) && $old->bank_code !== $input['bank_code'] && ! isset($input['account_number'])) {
+            throw new ApiProblem(409, 'TRANSFER_CONFLICT', 'Changing the bank requires confirming the destination number.');
+        }
         if (isset($input['account_number'])) {
             $number = $input['account_number'];
             unset($input['account_number']);
