@@ -26,6 +26,10 @@ final class InvoiceLifecycle
         }
         $order = $orders->lockForUpdate()->first() ?? abort(404);
         if ($action === 'issue' && $input['purpose'] === 'BALANCE' && ! isset($input['replaces_invoice_number'])) {
+            if (DB::table('order_transition_holds')->where('order_id', $order->id)->exists() || app(StockReservations::class)->underProofReview($order->id)) {
+                throw new ApiProblem(409, 'TRANSFER_CONFLICT', 'Resolve the outstanding review first.');
+            }
+
             return BalanceInvoices::issue($order, $actor, $input['due_at']);
         }
         if ($action === 'issue' && ! isset($input['replaces_invoice_number'])) {
@@ -69,6 +73,11 @@ final class InvoiceLifecycle
             app(Outbox::class)->record('InvoiceVoided', 'invoice', $invoice->id, ['number' => $invoice->number]);
         }
         if ($action === 'void') {
+            if ($order->payment_status === 'PARTIALLY_PAID' && app(OrderInvoices::class)->fullyPaid($order)) {
+                DB::table('orders')->where('id', $order->id)->update(['payment_status' => 'PAID']);
+                app(Journal::class)->transition(Subject::Order, $order->id, 'payment_status', 'PARTIALLY_PAID', 'PAID', 'void:'.$invoice->number, $actor);
+            }
+
             return $invoice->number;
         }
         $due = Carbon::parse($input['due_at']);

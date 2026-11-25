@@ -115,8 +115,7 @@ final class Settlement
                 }
                 app(Journal::class)->transition(Subject::Order, $order->id, 'status', $order->status, 'CONFIRMED', "capture:$p->id", $actor);
             }
-            $paid = DB::table('invoices')->where(['order_id' => $order->id, 'status' => 'PAID'])->where('purpose', '!=', 'ADDITIONAL_CHARGE')->sum('total_amount');
-            $paymentStatus = $paid >= $order->total_amount && app(OrderInvoices::class)->settled($order->id) ? 'PAID' : 'PARTIALLY_PAID';
+            $paymentStatus = app(OrderInvoices::class)->fullyPaid($order) ? 'PAID' : 'PARTIALLY_PAID';
             DB::table('orders')->where('id', $order->id)->update(['payment_status' => $paymentStatus]);
             if ($order->payment_status !== $paymentStatus) {
                 app(Journal::class)->transition(Subject::Order, $order->id, 'payment_status', $order->payment_status, $paymentStatus, "capture:$p->id", $actor);

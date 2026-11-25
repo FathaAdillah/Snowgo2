@@ -5,7 +5,7 @@ import { invoiceMoney } from '~/composables/useInvoices'
 type Page = paths['/admin/payment-reconciliations']['get']['responses'][200]['content']['application/json']
 type Receipt = Page['data'][number]
 definePageMeta({ permission: 'payments.reconciliation.view' })
-const { can, csrf } = useAdminAuth()
+const { can, csrf, stepUp } = useAdminAuth()
 const { params, changePage } = useInventoryPaging(() => ({}))
 const base = '/api/v1/admin/payment-reconciliations'
 const { data, status, refresh } = useFetch<Page>(base, { ...inventoryFetch, query: params })
@@ -17,6 +17,8 @@ const reason = ref('')
 const note = ref('')
 const proof = ref('')
 const uploadError = ref('')
+const password = ref('')
+const totp = ref('')
 async function upload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!selected.value || !file) return
@@ -27,10 +29,11 @@ async function upload(event: Event) {
   form.set('collection', 'reconciliation_proof')
   const id = selected.value.id
   try {
+    await stepUp(password.value, totp.value)
     const result = await $fetch<{ data: { id: string } }>('/api/v1/admin/files', { method: 'POST', body: form, headers: { 'X-XSRF-TOKEN': await csrf(), 'Idempotency-Key': crypto.randomUUID() } })
     if (selected.value?.id === id) proof.value = result.data.id
     uploadError.value = ''
-  } catch (e) { uploadError.value = authErrorMessage(e) }
+  } catch (e) { uploadError.value = authErrorMessage(e) } finally { password.value = totp.value = ''; (event.target as HTMLInputElement).value = '' }
 }
 const action = ref<{ url: string, method: 'POST', body: Record<string, unknown>, label: string }>()
 function ask(url: string, body: Record<string, unknown>, label: string) {
@@ -102,11 +105,16 @@ async function saved() {
           <UFormField label="Referensi transfer balik">
             <UInput v-model="reference" />
           </UFormField>
+          <template v-if="can('foundation.file.create')">
+            <UFormField label="Password untuk konfirmasi unggah"><UInput v-model="password" type="password" autocomplete="current-password" /></UFormField>
+            <UFormField label="Kode authenticator"><UInput v-model="totp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" /></UFormField>
+          </template>
           <UFormField
             v-if="can('foundation.file.create')"
             label="Unggah bukti, tunggu pemindaian sebelum mencatat transfer"
           >
             <input
+              :disabled="!password || totp.length !== 6"
               type="file"
               accept="image/png,image/jpeg,application/pdf"
               @change="upload"
