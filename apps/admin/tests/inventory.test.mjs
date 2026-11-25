@@ -129,6 +129,15 @@ test('invoice readers cannot void, retry or download with only generic file perm
   assert.equal(failed.state.action.value.url, `/api/v1/admin/invoices/${number}/pdf-requests`)
 })
 
+test('finance payment actions require their own grant and a claim belonging to the reviewer', async () => {
+  const number = 'PAY-1'
+  const rows = { number, amount: 10000, status: 'UNDER_REVIEW', invoice_numbers: ['INV-1'], proof_ids: ['file-1'], expires_at: '2027-01-01T00:00:00Z', claimed_by_me: true }
+  const show = (row, ...grants) => render('pages/finance/payments/[number]', ['payments.payment.view', ...grants], { rows: row, params: { number } })
+  assert.doesNotMatch((await show(rows)).html, /Unduh bukti|Lepas review|Tolak/)
+  assert.doesNotMatch((await show({ ...rows, claimed_by_me: false }, 'payments.payment.verify')).html, /Tolak/)
+  assert.match((await show(rows, 'payments.payment.verify')).html, /Tolak/)
+})
+
 test('warehouse screen separates create-only, view, update and archive', async () => {
   const show = (...permissions) => render('pages/inventory/warehouses', permissions.map(p => `inventory.warehouse.${p}`))
   const createOnly = await show('create')

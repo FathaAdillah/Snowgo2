@@ -6,6 +6,15 @@ use Illuminate\Support\Facades\DB;
 
 final class InvoicePaymentGuard
 {
+    /** The caller holds the invoice lock; intents spanning other invoices terminate together. */
+    public static function voidIntents(int $invoice, ?int $actor): void
+    {
+        foreach (DB::table('payments')->whereIn('id', DB::table('payment_allocations')->where('invoice_id', $invoice)->select('payment_id'))->where('status', 'UNPAID')->orderBy('id')->lockForUpdate()->get() as $payment) {
+            $expired = now()->gte($payment->expires_at);
+            PaymentFlow::change($payment, $expired ? 'EXPIRED' : 'CANCELLED', $expired ? 'PaymentExpired' : 'PaymentInvoiceVoided', $actor);
+        }
+    }
+
     /** Called with the order and invoice locked; allocations are introduced by the payment module. */
     public static function applied(int $invoice): bool
     {

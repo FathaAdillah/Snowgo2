@@ -7,6 +7,7 @@ use App\Modules\Inventory\StockExpiry;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InvoiceDocuments;
 use App\Modules\Orders\OrderExpiry;
+use App\Modules\Payments\PaymentFlow;
 use App\Modules\Preorders\AllocationLifecycle;
 use App\Modules\Preorders\CampaignWindow;
 use App\Modules\RequestOrders\QuotationLifecycle;
@@ -46,6 +47,7 @@ Artisan::command('inventory:expire-holds', function (StockExpiry $expiry, StockR
     $this->info('Expired RTS orders: '.$expiry->run($stock));
 })->purpose('Release expired ACTIVE RTS stock holds once per order');
 Schedule::command('inventory:expire-holds')->everyMinute();
+Schedule::call(fn () => PaymentFlow::expireDue())->name('payments:expire')->everyMinute()->withoutOverlapping();
 Artisan::command('preorders:advance-windows', function (CampaignWindow $window) {
     $this->info('Campaign windows advanced: '.$window->advanceDue());
 });
