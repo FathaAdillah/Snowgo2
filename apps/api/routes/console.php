@@ -44,6 +44,7 @@ Artisan::command('outbox:reconcile', function (Relay $relay) {
 })->purpose('Recover pending deliveries after queue loss');
 
 Schedule::command('outbox:relay')->everyMinute();
+Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('outbox:reconcile')->everyMinute();
 Artisan::command('inventory:expire-holds', function (StockExpiry $expiry, StockReservations $stock) {
     $this->info('Expired RTS orders: '.$expiry->run($stock));
