@@ -319,3 +319,13 @@ Pelanggan memilih invoice miliknya dan rekening aktif, mengunggah bukti melalui 
 ## Settlement dan rekonsiliasi (TASK-023)
 
 Migrasikan, seed PermissionSeeder, restart scheduler dan build admin. Finance mencocokkan nominal dan referensi mutasi rekening sebelum melunasi invoice; stok RTS berpindah dari reserved ke committed, bukan terjual. Untuk role lama, grant `payments.reconciliation.view`, `payments.payment.recover` dan `payments.reconciliation.review` sesuai tugas. Pembuat kasus dan pemeriksa harus berbeda; pemeriksa tidak dapat mengeksekusi keputusan sendiri. APPLY hanya untuk transfer tepat dalam jendela pemulihan tujuh hari dengan seluruh stok/kuota tersedia. RETURN membutuhkan referensi transfer balik serta bukti privat READY dan tidak mencatat pendapatan.
+
+## Mengaktifkan termin dan persetujuan biaya (TASK-024)
+
+Jalankan `php artisan migrate --force` dan `php artisan db:seed --class=PermissionSeeder --force` di kontainer API, restart scheduler, lalu build ulang admin. Untuk role lama, berikan `orders.charge.propose` bersama izin lihat/kelola pesanan, dan `invoicing.invoice.credit_adjust` bersama izin lihat/kelola invoice hanya kepada petugas terkait. **Commerce → Invoice → detail** menyediakan penerbitan saldo berdasarkan receipt, usulan biaya dan koreksi shortage. Pelanggan menerima/menolak melalui API pesanan sendiri. Tidak ada debit otomatis; penerimaan biaya menghasilkan invoice terpisah. Sumber quote domestik per paket disediakan TASK-025.
+
+### Mengaktifkan paket dan pengiriman (TASK-025)
+
+Setelah TASK-022–024, jalankan `docker compose exec api php artisan migrate --force` dan `docker compose exec api php artisan db:seed --class=ShippingPermissionsSeeder --force`, lalu build ulang admin. Seeder mendaftarkan izin; role yang sudah ada perlu diberi izin tiap aksi. Master tidak dihapus: arsipkan tarif atau layanan agar tidak bisa dipilih pada paket baru.
+
+Di **Pengiriman**, isi kurir, layanan, dan tarif per pasangan kecamatan. Untuk RTS gunakan layanan checkout dan gudang reservasi. Untuk PO/RO gunakan jumlah yang sudah diterima, input berat terukur jika snapshot berat tidak tersedia, lalu ajukan quote paket melalui **Commerce → Invoice**. Paket dengan ongkir nol tidak perlu invoice ongkir; paket berbayar membutuhkan persetujuan pelanggan dan pelunasan. Packing bertahap tidak memotong stok. Dispatch membuat event awal dan SALE hanya untuk RTS; timeline setelah serah ke kurir masuk TASK-026. Replacement dari return menunggu TASK-028.

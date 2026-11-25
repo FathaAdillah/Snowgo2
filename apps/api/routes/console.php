@@ -6,6 +6,7 @@ use App\Modules\Identity\Staff\StaffInvitations;
 use App\Modules\Inventory\StockExpiry;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InvoiceDocuments;
+use App\Modules\Orders\ChargeConsents;
 use App\Modules\Orders\OrderExpiry;
 use App\Modules\Payments\PaymentFlow;
 use App\Modules\Payments\Settlement;
@@ -82,7 +83,8 @@ Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=',
 Schedule::command('auth:clear-resets')->hourly();
 Schedule::call(function () {
     DB::table('checkout_previews')->where('expires_at', '<', now()->subDay())->delete();
-    DB::table('shipping_quotes')->whereNull('used_at')->where('expires_at', '<', now()->subDay())->delete();
+    DB::table('shipping_quotes')->whereNull('used_at')->where('expires_at', '<', now()->subDay())
+        ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('order_charge_consents')->whereColumn('quote_id', 'shipping_quotes.id'))->delete();
 })->name('prune-checkout-quotes')->hourly();
 Schedule::call(fn () => DB::table('staff_email_changes')->where('expires_at', '<=', now())->delete())
     ->name('prune-staff-email-changes')->hourly();
@@ -92,3 +94,5 @@ Schedule::call(fn () => DB::table('oauth_link_requests')->where('expires_at', '<
     ->name('prune-google-link-requests')->hourly();
 Schedule::call(fn () => DB::table('email_verification_tokens')->where('expires_at', '<=', now())->delete())
     ->name('prune-email-verification-tokens')->hourly();
+
+Schedule::call(fn () => ChargeConsents::expire())->name('orders:expire-charges')->everyMinute()->withoutOverlapping();

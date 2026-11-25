@@ -27,6 +27,7 @@ final class OrderDirectory
                 FROM order_items i WHERE i.order_id=o.id) AS items,
             (SELECT json_agg(json_build_object('dimension',h.dimension,'to_status',h.to_status,'occurred_at',h.occurred_at) ORDER BY h.id)
                 FROM status_histories h WHERE h.subject_type='order' AND h.subject_id=o.id) AS history,
+            (SELECT json_agg(jsonb_strip_nulls(jsonb_build_object('id',c.public_id,'status',c.status,'revision',c.revision,'expires_at',c.expires_at,'lines',c.lines,'amount',c.amount,'invoice_number',v.number)) ORDER BY c.revision) FROM order_charge_consents c LEFT JOIN invoices v ON v.id=c.invoice_id WHERE c.order_id=o.id) AS charge_consents,
             (SELECT json_agg(x.number ORDER BY x.number) FROM (SELECT DISTINCT p.number FROM payments p JOIN payment_allocations a ON a.payment_id=p.id JOIN invoices i ON i.id=a.invoice_id WHERE i.order_id=o.id) x) AS payment_numbers,
             (SELECT json_agg(v.number ORDER BY v.id) FROM invoices v WHERE v.order_id=o.id) AS invoice_numbers,
             (SELECT json_build_object('quote_id',q.public_id,'carrier_label',q.carrier_label_snapshot,'service_code',q.service_code_snapshot,
@@ -34,6 +35,9 @@ final class OrderDirectory
                 FROM checkouts c JOIN shipping_quotes q ON q.cart_id=c.cart_id AND q.used_at IS NOT NULL
                 WHERE o.selling_method='READY_TO_SHIP' AND c.id=o.checkout_id) AS checkout_shipping
             SQL);
+        if ($owner !== null || request()->user()?->can('shipping.shipment.view')) {
+            $rows->selectRaw('(SELECT json_agg(s.number ORDER BY s.id) FROM shipments s WHERE s.order_id=o.id) AS shipment_numbers');
+        }
         if ($address) {
             $rows->selectRaw("(SELECT json_build_object('recipient',a.recipient,'phone',a.phone,'line1',a.line1,'line2',a.line2,'postal_code',a.postal_code,'regions',a.region_snapshot) FROM order_addresses a WHERE a.order_id=o.id) AS address");
         }
@@ -54,7 +58,7 @@ final class OrderDirectory
         if (! array_key_exists('items', $data)) {
             return $data;
         }
-        foreach (['items', 'history', 'invoice_numbers', 'payment_numbers'] as $field) {
+        foreach (['items', 'history', 'invoice_numbers', 'payment_numbers', 'charge_consents', 'shipment_numbers'] as $field) {
             $data[$field] = json_decode($data[$field] ?? '[]', false, flags: JSON_THROW_ON_ERROR);
         }
         $data['address'] = json_decode($data['address'] ?? 'null', false, flags: JSON_THROW_ON_ERROR);

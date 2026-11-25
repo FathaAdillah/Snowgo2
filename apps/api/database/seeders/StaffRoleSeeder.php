@@ -27,6 +27,8 @@ class StaffRoleSeeder extends Seeder
                 $role->givePermissionTo(ProcurementPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(RequestOrderPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(InvoicePermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(ShippingPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(BillingTermsPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(SettlementPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(PaymentPermissionsSeeder::initialGrants($name));
                 if ($name !== 'inventory_staff') {
