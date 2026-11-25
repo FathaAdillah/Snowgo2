@@ -38,12 +38,21 @@ final class ReturnClaims
             'status' => 'REQUESTED', 'note' => $d['note'] ?? null]);
         foreach ($d['items'] as $line) {
             $item = DB::table('shipment_items')->where(['public_id' => $line['shipment_item_id'], 'shipment_id' => $s->id])->first() ?? abort(404);
-            $used = DB::table('return_items as l')->join('returns as r', 'r.id', '=', 'l.return_id')->where('l.shipment_item_id', $item->id)
-                ->whereNotIn('r.status', ['CANCELLED', 'REJECTED'])->where(fn ($q) => $q->whereNull('r.resolution')->orWhere('r.resolution', '!=', 'REJECTED'))->sum('l.qty');
-            if ($used + $line['qty'] > $item->qty) {
+            $coverage = DB::scalar(<<<'SQL'
+                WITH available AS (
+                    SELECT coalesce(s.replacement_coverage, int8multirange(int8range(s.coverage_start::bigint,s.coverage_start::bigint+s.qty)))
+                        - coalesce((SELECT range_agg(l.unit_coverage) FROM return_items l JOIN returns r ON r.id=l.return_id
+                            WHERE l.shipment_item_id=s.id AND r.status NOT IN ('CANCELLED','REJECTED')
+                              AND r.resolution IS DISTINCT FROM 'REJECTED'), '{}'::int8multirange) AS units
+                    FROM shipment_items s WHERE s.id=?
+                )
+                SELECT return_first_units(units,?) FROM available
+                WHERE (SELECT sum(upper(r)-lower(r)) FROM unnest(units) r)>=?
+                SQL, [$item->id, $line['qty'], $line['qty']]);
+            if ($coverage === null) {
                 throw new ApiProblem(409, 'QUANTITY_CONFLICT', 'Return quantity exceeds delivered units available for claim.');
             }
-            DB::table('return_items')->insert(['return_id' => $id, 'shipment_item_id' => $item->id, 'qty' => $line['qty']]);
+            DB::table('return_items')->insert(['return_id' => $id, 'shipment_item_id' => $item->id, 'qty' => $line['qty'], 'unit_coverage' => $coverage]);
         }
         DB::table('order_transition_holds')->insert(['order_id' => $o->id, 'kind' => 'DISPUTE', 'source_ref' => $number]);
         self::record($id, null, 'REQUESTED', $actor, 'ReturnRequested');

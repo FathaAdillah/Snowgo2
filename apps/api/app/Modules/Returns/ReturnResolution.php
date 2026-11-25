@@ -46,12 +46,11 @@ final class ReturnResolution
         $items = [];
         foreach (DB::table('return_items as ri')->join('shipment_items as s', 's.id', '=', 'ri.shipment_item_id')
             ->join('order_items as i', 'i.id', '=', 's.order_item_id')->where('ri.return_id', $r->id)->where('ri.accepted_qty', '>', 0)
-            ->get(['i.*', 'ri.id as claim_line', 'ri.shipment_item_id', 's.coverage_start', 'ri.accepted_qty']) as $item) {
-            $preceding = DB::table('return_items as ri')->join('returns as r', 'r.id', '=', 'ri.return_id')
-                ->where('ri.shipment_item_id', $item->shipment_item_id)->where('ri.id', '<', $item->claim_line)
-                ->whereNotIn('r.status', ['CANCELLED', 'REJECTED'])->where(fn ($q) => $q->whereNull('r.resolution')->orWhere('r.resolution', '!=', 'REJECTED'))->sum('ri.qty');
-            $start = $item->coverage_start + $preceding;
-            $amount = Refunds::paidForRange($item, $start, $start + $item->accepted_qty);
+            ->select('i.*', 'ri.accepted_qty')->selectRaw('return_first_units(ri.unit_coverage,ri.accepted_qty) as accepted_coverage')->get() as $item) {
+            $amount = 0;
+            foreach (DB::select('SELECT lower(r) AS start, upper(r) AS stop FROM unnest(?::int8multirange) r', [$item->accepted_coverage]) as $span) {
+                $amount += Refunds::paidForRange($item, $span->start, $span->stop);
+            }
             if ($amount > 0) {
                 $items[] = ['order_item_id' => $item->public_id, 'qty' => $item->accepted_qty, 'requested_amount' => $amount];
             }

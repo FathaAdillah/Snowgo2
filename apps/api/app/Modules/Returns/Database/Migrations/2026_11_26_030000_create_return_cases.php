@@ -18,9 +18,20 @@ return new class extends Migration
                 outcome_note varchar(1000), resolved_at timestamptz, created_at timestamptz NOT NULL DEFAULT now()
             );
             CREATE INDEX ON returns(shipment_id,status); CREATE INDEX ON returns(order_id,status);
+            -- Select the first n units across potentially disjoint ranges, without enumerating units.
+            CREATE FUNCTION return_first_units(coverage int8multirange, n bigint) RETURNS int8multirange
+            LANGUAGE sql IMMUTABLE STRICT AS $$
+                SELECT coalesce(range_agg(int8range(lo,least(hi,lo+n-consumed))), '{}'::int8multirange)
+                FROM (
+                    SELECT lower(r) lo, upper(r) hi, coalesce(sum(upper(r)-lower(r)) OVER (
+                        ORDER BY lower(r) ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),0)::bigint consumed
+                    FROM unnest(coverage) r
+                ) spans WHERE consumed<n
+            $$;
+            ALTER TABLE shipment_items ADD replacement_coverage int8multirange;
             CREATE TABLE return_items (id bigserial PRIMARY KEY, return_id bigint NOT NULL REFERENCES returns,
                 shipment_item_id bigint NOT NULL REFERENCES shipment_items, qty integer NOT NULL CHECK(qty>0),
-                accepted_qty integer NOT NULL DEFAULT 0 CHECK(accepted_qty BETWEEN 0 AND qty),
+                unit_coverage int8multirange NOT NULL, accepted_qty integer NOT NULL DEFAULT 0 CHECK(accepted_qty BETWEEN 0 AND qty),
                 disposition varchar(16) CHECK(disposition IN ('RESTOCK','DAMAGE','NO_RECEIPT')), UNIQUE(return_id,shipment_item_id));
             ALTER TABLE refunds ADD return_id bigint UNIQUE REFERENCES returns;
             ALTER TABLE shipments ADD replacement_return_id bigint REFERENCES returns;
@@ -49,7 +60,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::unprepared("LOCK TABLE returns IN ACCESS EXCLUSIVE MODE; DO $$ BEGIN IF EXISTS(SELECT FROM returns) THEN RAISE EXCEPTION 'Cannot discard return history'; END IF; END $$;
-            ALTER TABLE shipments DROP replacement_return_id; ALTER TABLE refunds DROP return_id; DROP TABLE return_items,returns");
+            ALTER TABLE shipments DROP replacement_return_id; ALTER TABLE refunds DROP return_id; ALTER TABLE shipment_items DROP replacement_coverage; DROP TABLE return_items,returns; DROP FUNCTION return_first_units(int8multirange,bigint)");
         $this->movementTypes(false);
     }
 };
