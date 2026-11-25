@@ -52,7 +52,7 @@ final class StockController
     public function movements(Request $request): JsonResponse
     {
         $data = $request->validate(['per_page' => ApiInput::PAGE['per_page'], 'cursor' => 'sometimes|required|string|max:128',
-            'level_id' => 'sometimes|required|'.Data::ID, 'type' => 'sometimes|required|string|in:INITIAL,PURCHASE,ADJUSTMENT_IN,ADJUSTMENT_OUT,RESERVATION,RESERVATION_RELEASE,COMMIT,COMMIT_RELEASE,SALE', ...Data::DATES]);
+            'level_id' => 'sometimes|required|'.Data::ID, 'type' => 'sometimes|required|string|in:INITIAL,PURCHASE,ADJUSTMENT_IN,ADJUSTMENT_OUT,RESERVATION,RESERVATION_RELEASE,COMMIT,COMMIT_RELEASE,SALE,RETURN,REPLACEMENT', ...Data::DATES]);
         ApiInput::fields($request, $data);
         $q = Data::movements();
         foreach (['level_id', 'type'] as $field) {

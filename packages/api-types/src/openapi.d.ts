@@ -100,6 +100,22 @@ export interface paths {
         patch: operations["catalog.attributes.update"];
         trace?: never;
     };
+    "/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin.audit.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/auth/login": {
         parameters: {
             query?: never;
@@ -541,6 +557,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["support.customers.addresses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporting.dashboard"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1205,6 +1237,150 @@ export interface paths {
         patch: operations["geography.reason-codes.update"];
         trace?: never;
     };
+    "/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.staff.index"];
+        put?: never;
+        post: operations["refunds.staff.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/cancellations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/execution-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.attempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/{number}/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/supplier-shortages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.staff.shortage.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/supplier-shortages/{receipt}/dismissals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.shortage.dismiss"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/refunds/supplier-shortages/{receipt}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refunds.staff.shortage.refund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/region-imports": {
         parameters: {
             query?: never;
@@ -1381,6 +1557,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.staff.index"];
+        put?: never;
+        post: operations["returns.staff.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/inspections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.inspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.receive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/resolutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/returns/{number}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.staff.review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/roles": {
         parameters: {
             query?: never;
@@ -1411,6 +1683,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["admin.roles.update"];
+        trace?: never;
+    };
+    "/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin.settings.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin.settings.show"];
+        put: operations["admin.settings.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/shipments": {
@@ -1471,6 +1775,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["shipping.shipment.dispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/shipments/{number}/tracking-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shipping.shipment.track"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1795,6 +2115,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["geography.tax-classes.update"];
+        trace?: never;
+    };
+    "/admin/transaction-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reporting.transactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/units": {
@@ -2591,6 +2927,38 @@ export interface paths {
         patch: operations["customers.profile.update"];
         trace?: never;
     };
+    "/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.customer.index"];
+        put?: never;
+        post: operations["refunds.customer.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/refunds/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refunds.customer.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/regions": {
         parameters: {
             query?: never;
@@ -2681,6 +3049,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["requests.quotation.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.customer.index"];
+        put?: never;
+        post: operations["returns.customer.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["returns.customer.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/returns/{number}/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returns.customer.dispatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3808,6 +4224,53 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "admin.audit.index": {
+        parameters: {
+            query?: {
+                action?: string;
+                actor_id?: number;
+                cursor?: string;
+                from?: string;
+                per_page?: number;
+                subject_type?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            action: string;
+                            actor_id: number | null;
+                            id: number;
+                            occurred_at: string;
+                            request_id: string;
+                            subject_ref: number | null;
+                            subject_type: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            next_cursor: string | null;
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -6221,6 +6684,60 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporting.dashboard": {
+        parameters: {
+            query?: {
+                from?: string;
+                method?: "ready_stock" | "preorder" | "request_order";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            by_method: {
+                                method: string;
+                                orders_count: number;
+                                paid_amount: number;
+                            }[];
+                            low_stock_count: number;
+                            net_amount: number;
+                            open_refunds: number;
+                            open_returns: number;
+                            orders_count: number;
+                            paid_amount: number;
+                            pending_payments: number;
+                            refund_amount: number;
+                            shipment_failures: number;
+                            trend: {
+                                amount: number;
+                                date: string;
+                                orders: number;
+                            }[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -10914,6 +11431,606 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "refunds.staff.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "refunds.staff.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    cancel_order?: boolean;
+                    items?: {
+                        order_item_id: string;
+                        qty: number;
+                        requested_amount: number;
+                    }[];
+                    /** @enum {string} */
+                    kind: "FULL" | "PARTIAL" | "ITEM";
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    requested_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "refunds.staff.cancel": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bank_checked?: boolean;
+                    note: string;
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.attempt": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "START" | "FAIL" | "RETRY";
+                    bank_checked?: boolean;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.review": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    approved_amount?: number;
+                    /** @enum {string} */
+                    decision: "START" | "APPROVE" | "REJECT";
+                    items?: {
+                        approved_amount: number;
+                        order_item_id: string;
+                    }[];
+                    note: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.transfer": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    allocations: {
+                        amount: number;
+                        invoice_number: string;
+                        payment_number: string;
+                    }[];
+                    proof_file_id: string;
+                    transfer_ref: string;
+                    /** Format: date-time */
+                    transferred_at: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.shortage.index": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            failed_qty: number;
+                            id: number;
+                            order_item_id: string;
+                            order_number: string;
+                            reason_code: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.shortage.dismiss": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                receipt: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            receipt_id: number;
+                            refund_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.staff.shortage.refund": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                receipt: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                    requested_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            receipt_id: number;
+                            refund_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "geography.regions.import": {
         parameters: {
             query?: never;
@@ -12378,6 +13495,470 @@ export interface operations {
             };
         };
     };
+    "returns.staff.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "returns.staff.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        qty: number;
+                        shipment_item_id: string;
+                    }[];
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    shipment_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+        };
+    };
+    "returns.staff.inspect": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        accepted_qty: number;
+                        /** @enum {string} */
+                        disposition: "RESTOCK" | "DAMAGE" | "NO_RECEIPT";
+                        shipment_item_id: string;
+                    }[];
+                    note: string;
+                    /** @enum {string} */
+                    result: "ACCEPT" | "FAIL";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.receive": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.resolve": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    note: string;
+                    /** @enum {string} */
+                    resolution: "REFUND" | "REPLACEMENT" | "REPAIR" | "SHIP_MISSING_ITEM" | "REJECTED";
+                    work_completed?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.staff.review": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "START" | "APPROVE" | "REJECT" | "GIVE_INSTRUCTIONS" | "WAIVE_SHIPMENT";
+                    instructions?: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "admin.roles.index": {
         parameters: {
             query?: never;
@@ -12596,13 +14177,143 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "admin.settings.index": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            maximum: number;
+                            minimum: number;
+                            revision: number;
+                            value: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "admin.settings.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            maximum: number;
+                            minimum: number;
+                            revision: number;
+                            value: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "admin.settings.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    revision: number;
+                    value: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            maximum: number;
+                            minimum: number;
+                            revision: number;
+                            value: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "shipping.shipment.index": {
         parameters: {
             query?: {
                 from?: string;
                 page?: number;
                 per_page?: number;
-                status?: "PENDING" | "PICKED_UP" | "CANCELLED";
+                status?: "PENDING" | "PICKED_UP" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "FAILED" | "RETURNED" | "DELIVERED" | "CANCELLED";
                 to?: string;
             };
             header?: never;
@@ -12856,6 +14567,72 @@ export interface operations {
                 "application/json": {
                     service_code: string;
                     tracking_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            carrier_label: string;
+                            items: {
+                                id: string;
+                                name: string;
+                                order_item_id: string;
+                                qty: number;
+                            }[];
+                            method: string;
+                            number: string;
+                            order_number: string;
+                            packing_status: string;
+                            service_code: string;
+                            shipped_at: string | null;
+                            shipping_amount: number;
+                            status: string;
+                            tracking: {
+                                occurred_at: string;
+                                status: string;
+                            }[];
+                            tracking_number: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "shipping.shipment.track": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    note?: string | null;
+                    /** Format: date-time */
+                    occurred_at: string;
+                    /** @enum {string} */
+                    status: "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "FAILED" | "RETURNED";
                 };
             };
         };
@@ -13697,7 +15474,7 @@ export interface operations {
                 level_id?: number;
                 per_page?: number;
                 to?: string;
-                type?: "INITIAL" | "PURCHASE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "RESERVATION" | "RESERVATION_RELEASE" | "COMMIT" | "COMMIT_RELEASE" | "SALE";
+                type?: "INITIAL" | "PURCHASE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "RESERVATION" | "RESERVATION_RELEASE" | "COMMIT" | "COMMIT_RELEASE" | "SALE" | "RETURN" | "REPLACEMENT";
             };
             header?: never;
             path?: never;
@@ -14639,6 +16416,59 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "reporting.transactions": {
+        parameters: {
+            query: {
+                from: string;
+                method?: "ready_stock" | "preorder" | "request_order";
+                page?: number;
+                per_page?: number;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            invoice_number: string;
+                            kind: string;
+                            method: string;
+                            occurred_at: string;
+                            order_number: string;
+                            order_numbers: string[];
+                            payment_number: string;
+                            posted_at: string;
+                            reference: string;
+                            refund_number: string | null;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
             422: components["responses"]["ValidationException"];
         };
     };
@@ -19277,6 +21107,194 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "refunds.customer.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "refunds.customer.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    cancel_order?: boolean;
+                    items?: {
+                        order_item_id: string;
+                        qty: number;
+                        requested_amount: number;
+                    }[];
+                    /** @enum {string} */
+                    kind: "FULL" | "PARTIAL" | "ITEM";
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    requested_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "refunds.customer.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_amount: number | null;
+                            cancel_order: boolean;
+                            completed_at: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            executor_is_me: boolean;
+                            items: {
+                                approved_amount: number | null;
+                                order_item_id: string;
+                                qty: number;
+                                requested_amount: number;
+                            }[];
+                            kind: string;
+                            number: string;
+                            order_number: string;
+                            reason_code: string;
+                            requested_amount: number;
+                            requested_by_me: boolean;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
     "public.regions": {
         parameters: {
             query?: {
@@ -20131,6 +22149,257 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "returns.customer.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "returns.customer.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        qty: number;
+                        shipment_item_id: string;
+                    }[];
+                    note?: string;
+                    order_number: string;
+                    reason_code: string;
+                    shipment_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "returns.customer.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "returns.customer.dispatch": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tracking_number: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            customer_tracking_number: string | null;
+                            evidence: {
+                                id: string;
+                                status: string;
+                            }[];
+                            instructions: string | null;
+                            items: {
+                                accepted_qty: number;
+                                disposition: string | null;
+                                qty: number;
+                                shipment_item_id: string;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            outcome_note: string | null;
+                            reason_code: string;
+                            refund_number: string | null;
+                            refund_status: string | null;
+                            replacement_number: string | null;
+                            resolution: string | null;
+                            resolved_at: string | null;
+                            shipment_number: string;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "shipping.customer": {

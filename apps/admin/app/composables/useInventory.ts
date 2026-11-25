@@ -10,7 +10,7 @@ export const inventoryApi = '/api/v1/admin'
 export const inventoryFetch = { cache: 'no-store' as const, lazy: true, deep: false, headers: { Accept: 'application/json' } }
 export const movementLabels: Record<string, string> = {
   INITIAL: 'Saldo pembuka', PURCHASE: 'Penerimaan', ADJUSTMENT_IN: 'Koreksi masuk', ADJUSTMENT_OUT: 'Koreksi keluar',
-  RESERVATION: 'Reservasi', RESERVATION_RELEASE: 'Pelepasan reservasi', COMMIT: 'Alokasi lunas', COMMIT_RELEASE: 'Pelepasan alokasi', SALE: 'Pengiriman'
+  RESERVATION: 'Reservasi', RESERVATION_RELEASE: 'Pelepasan reservasi', COMMIT: 'Alokasi lunas', COMMIT_RELEASE: 'Pelepasan alokasi', SALE: 'Pengiriman', RETURN: 'Restock retur', REPLACEMENT: 'Pengiriman pengganti'
 }
 const dateFormatter = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' })
 export function inventoryTime(value: string) {

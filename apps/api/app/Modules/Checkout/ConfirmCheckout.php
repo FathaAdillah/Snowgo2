@@ -2,6 +2,7 @@
 
 namespace App\Modules\Checkout;
 
+use App\Modules\Administration\OperationalSettings;
 use App\Modules\Cart\CustomerCart;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Inventory\StockReservations;
@@ -49,8 +50,9 @@ final class ConfirmCheckout
             $public = (string) Str::ulid();
             $id = DB::table('checkouts')->insertGetId(['user_id' => $owner, 'cart_id' => $cart->id, 'cart_version' => $version,
                 'quote_hash' => $data['quote_hash'], 'intent_hash' => $intent, 'public_id' => $public]);
-            $due = now()->addHours(24)->toIso8601String();
+            $preorderDue = now()->addHours(24)->toIso8601String();
             foreach ($plan['groups'] as $g) {
+                $due = $g['method'] === 'READY_TO_SHIP' ? now()->addMinutes(OperationalSettings::value('inventory.reservation_ttl_minutes'))->toIso8601String() : $preorderDue;
                 $order = app(CheckoutOrders::class)->create($id, $owner, $g, $plan['address'], $due, $notes);
                 if ($g['method'] === 'READY_TO_SHIP') {
                     app(StockReservations::class)->reserve($order['id']);

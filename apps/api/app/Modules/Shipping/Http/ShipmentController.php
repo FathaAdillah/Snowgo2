@@ -4,6 +4,7 @@ namespace App\Modules\Shipping\Http;
 
 use App\Modules\Foundation\Idempotency\IdempotentMutation;
 use App\Modules\Shipping\Packages;
+use App\Modules\Shipping\Tracking;
 use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
 use Closure;
@@ -11,6 +12,7 @@ use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class ShipmentController
@@ -22,7 +24,7 @@ final class ShipmentController
     #[Response(200, type: 'array{success:bool,message:string,data:list<'.self::ROW.'>,meta:array{request_id:string,page:int,last_page:int,total:int,per_page:int}}')]
     public function index(Request $request): JsonResponse
     {
-        $d = $request->validate([...ApiInput::PAGE, 'status' => 'sometimes|required|string|in:PENDING,PICKED_UP,CANCELLED', 'from' => 'sometimes|required|date', 'to' => 'sometimes|required|date']);
+        $d = $request->validate([...ApiInput::PAGE, 'status' => 'sometimes|required|string|in:PENDING,PICKED_UP,IN_TRANSIT,OUT_FOR_DELIVERY,FAILED,RETURNED,DELIVERED,CANCELLED', 'from' => 'sometimes|required|date', 'to' => 'sometimes|required|date']);
         ApiInput::fields($request, $d);
         $p = DB::table('shipments')->when($d['status'] ?? null, fn ($q, $v) => $q->where('status', $v))->when($d['from'] ?? null, fn ($q, $v) => $q->where('created_at', '>=', $v))->when($d['to'] ?? null, fn ($q, $v) => $q->where('created_at', '<=', $v))->orderByDesc('id')->paginate((int) ($d['per_page'] ?? 20), ['number'], page: (int) ($d['page'] ?? 1));
 
@@ -57,6 +59,24 @@ final class ShipmentController
 
             return ApiResponse::success($f());
         })->header('Cache-Control', 'private, no-store');
+    }
+
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
+    #[Response(200, type: self::ONE)]
+    public function track(Request $request, string $number): JsonResponse
+    {
+        $d = $request->validate([
+            'status' => 'required|string|in:IN_TRANSIT,OUT_FOR_DELIVERY,DELIVERED,FAILED,RETURNED',
+            'occurred_at' => 'required|date|before_or_equal:now',
+            'note' => 'required_if:status,FAILED,RETURNED|nullable|string|max:1000',
+        ]);
+
+        return self::write($request, $d, function () use ($request, $number, $d) {
+            app(Tracking::class)->append($number, 'manual:'.hash('sha256', $request->user()->id.':'.$request->header('Idempotency-Key')), $d['status'], Carbon::parse($d['occurred_at']), $request->user()->id, $d['note'] ?? null);
+
+            return Packages::detail($number);
+        });
     }
 
     #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]

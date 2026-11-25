@@ -330,3 +330,25 @@ Jalankan `php artisan migrate --force` dan `php artisan db:seed --class=Permissi
 Setelah TASK-022–024, jalankan `docker compose exec api php artisan migrate --force` dan `docker compose exec api php artisan db:seed --class=ShippingPermissionsSeeder --force`, lalu build ulang admin. Seeder mendaftarkan izin; role yang sudah ada perlu diberi izin tiap aksi. Master tidak dihapus: arsipkan tarif atau layanan agar tidak bisa dipilih pada paket baru.
 
 Di **Pengiriman**, isi kurir, layanan, dan tarif per pasangan kecamatan. Untuk RTS gunakan layanan checkout dan gudang reservasi. Untuk PO/RO gunakan jumlah yang sudah diterima, input berat terukur jika snapshot berat tidak tersedia, lalu ajukan quote paket melalui **Commerce → Invoice**. Paket dengan ongkir nol tidak perlu invoice ongkir; paket berbayar membutuhkan persetujuan pelanggan dan pelunasan. Packing bertahap tidak memotong stok. Dispatch membuat event awal dan SALE hanya untuk RTS; timeline setelah serah ke kurir masuk TASK-026. Replacement dari return menunggu TASK-028.
+
+### Mengaktifkan tracking dan completion (TASK-026)
+
+Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di container API, restart scheduler dan rebuild admin-preview. Berikan `shipping.shipment.view` dan `shipping.tracking.manage` ke staf pelacakan. Form dan timeline berada pada detail Paket & Dispatch. Untuk FAILED atau RETURNED isi catatan kejadian. Scheduler memeriksa pesanan tiap jam setelah jangka terlama dari `RETURN_WINDOW_HOURS` (48) dan `COMPLETION_DELAY_HOURS` (72). Polling memakai adapter fake dalam pengujian. Integrasi kurir jaringan dijadwalkan pada Phase 2.
+
+### Mengaktifkan refund manual (TASK-027)
+
+Jalankan migrasi dan PermissionSeeder. Berikan izin melalui Role & Izin pada role yang sudah ada. Pelanggan dapat meminta refund dari alokasi pembayaran yang telah dicapture. Finance mereview nominal, lalu staf lain memeriksa mutasi sebelum START/RETRY. Pemindahan dana dilakukan di bank. Catat satu referensi, bukti privat READY dan daftar alokasi sesuai transfer aktual. FAILED tetap memegang cap sampai bank terkonfirmasi. Izin pembatalan memerlukan izin review dan cancel. Alur yang menutup order hanya berlaku saat belum ada unit dikirim.
+
+### Mengaktifkan retur per paket (TASK-028)
+
+Jalankan migrasi dan PermissionSeeder. Berikan izin review dan resolve ke CS, serta inspect ke warehouse. Retur dalam jendela 48 jam memerlukan dua foto privat (barang dan label) yang telah lulus scan untuk approval. Hanya barang RTS yang diterima fisik dan lolos inspeksi yang dapat direstock. Paket pengganti dipacking, dikirim, dan dilacak di halaman pengiriman. Selesaikan kasus setelah paket pengganti delivered, refund selesai atau perbaikan dikonfirmasi.
+
+### Mengaktifkan laporan (TASK-029)
+
+Jalankan PermissionSeeder dan rebuild admin. Dashboard memerlukan reporting.dashboard.view. Berikan reporting.transaction.view untuk membuka Finance → Laporan Transaksi. Periode transaksi berdasarkan tanggal capture atau transfer refund di Asia/Jakarta (maksimum 92 hari). Antrean dan stok menipis memakai kondisi saat ini. Laporan tidak menyertakan rekening, bukti atau alamat pelanggan.
+
+### Mengaktifkan antrean operasional (TASK-030)
+
+Jalankan migrasi, PermissionSeeder, restart worker/scheduler dan rebuild admin. Untuk role yang sudah ada, berikan grant baca dan mutasi yang dibutuhkan melalui Role & Izin. Menu baru meliputi Pesanan, Return, Refund, Audit Log dan Pengaturan Toko. Pengaturan profil tetap di menu profil. Migrasi menginisialisasi jendela retur dan waktu penyelesaian dari konfigurasi lingkungan. Reservasi RTS baru berlaku 60 menit sesuai asumsi bisnis dan dapat dikonfigurasi antara 5 dan 180 menit. Deadline yang telah diterbitkan tetap berlaku. Konfirmasi transfer refund harus memakai bukti privat READY dan pelaksana yang berbeda dari penyetuju.
+
+Pada Finance → Refund, grant `refunds.shortage.review` menampilkan kekurangan pemasok yang belum diputuskan, termasuk receipt yang sudah ada saat migrasi. Catat alasan aktif domain `refunds` untuk menutup satu receipt tanpa pengembalian atau memulai refund item dengan grant create. Pembukaan refund mengganti hold receipt dengan hold kasus sampai keputusan finance. Jika refund retur ditolak atau dibatalkan, CS dapat menentukan perbaikan atau penggantian pada retur yang sama.

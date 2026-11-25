@@ -6,7 +6,10 @@ use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InitialInvoices;
 use App\Modules\Orders\CheckoutOrders;
+use App\Modules\Orders\CompleteDeliveredOrders;
+use App\Modules\Shipping\FakeTrackingProvider;
 use App\Modules\Shipping\Packages;
+use App\Modules\Shipping\PollTracking;
 use App\Support\Http\ApiProblem;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
@@ -151,4 +154,155 @@ it('guards archive separately from updates and rejects duplicate couriers', func
     $this->patchJson('/api/v1/admin/couriers/'.$id, ['active' => false], ['Idempotency-Key' => 'archive'])->assertForbidden();
     $this->getJson('/api/v1/admin/couriers')->assertOk();
     $this->getJson('/api/v1/admin/shipments')->assertForbidden();
+});
+
+it('recovers failed tracking, ignores provider replays and completes only after the last delivery window', function () {
+    ($this->login)($this->buyer);
+    app(CustomerCart::class)->set($this->buyer->id, $this->rts);
+    [$body] = ($this->finalQuote)($this->body);
+    ($this->confirm)($body)->assertCreated();
+    $o = DB::table('orders')->sole();
+    DB::transaction(function () use ($o) {
+        app(StockReservations::class)->commit($o->id, 1);
+        DB::table('orders')->where('id', $o->id)->update(['status' => 'CONFIRMED', 'payment_status' => 'PAID']);
+        DB::table('invoices')->update(['status' => 'PAID']);
+    });
+    ($this->staffSession)();
+    $p = ($this->plan)();
+    $p['items'][0]['qty'] = 2;
+    $n = ($this->write)('admin/shipments', $p)->assertOk()->json('data.number');
+    ($this->pack)($n, $o->number);
+    ($this->write)("admin/shipments/$n/dispatches", ['service_code' => 'REG', 'tracking_number' => 'ABC'])->assertOk();
+    $this->travel(5)->minutes();
+    $failedAt = now();
+    $track = "admin/shipments/$n/tracking-events";
+    ($this->write)($track, ['status' => 'FAILED', 'occurred_at' => $failedAt->toISOString(), 'note' => 'Penerima belum tersedia'])->assertOk()->assertJsonPath('data.status', 'FAILED');
+    $this->travel(1)->minutes();
+    $events = [
+        ['id' => 'old', 'status' => 'delivered', 'at' => $failedAt->copy()->subMinute()->toISOString()],
+        ['id' => 'x', 'status' => 'unknown-code', 'at' => now()->toISOString()],
+        ['id' => 'retry', 'status' => 'transit', 'at' => now()->toISOString()],
+        ['id' => 'retry', 'status' => 'transit', 'at' => now()->toISOString()],
+    ];
+    $poll = app(PollTracking::class);
+    $carrier = DB::table('shipments')->sole()->carrier_id;
+    $poll->run(new FakeTrackingProvider(['ABC' => ['events' => [], 'retry_after' => 10]]), $carrier);
+    $fake = new FakeTrackingProvider(['ABC' => ['events' => $events]]);
+    $poll->run($fake, $carrier);
+    expect(DB::table('shipments')->sole()->status)->toBe('FAILED');
+    $this->travel(11)->seconds();
+    $poll->run($fake, $carrier);
+    $poll->run($fake, $carrier);
+    expect(DB::table('shipments')->sole()->status)->toBe('IN_TRANSIT')
+        ->and(DB::table('tracking_events')->where('source', 'PROVIDER')->count())->toBe(3);
+    $delivered = ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()];
+    ($this->write)($track, $delivered, 'delivery')->assertOk();
+    ($this->write)($track, $delivered, 'delivery')->assertOk();
+    expect(DB::table('order_items')->sole()->delivered_qty)->toBe(2)
+        ->and(DB::table('orders')->sole()->fulfillment_status)->toBe('DELIVERED');
+    app(CompleteDeliveredOrders::class)->run();
+    expect(DB::table('orders')->sole()->status)->toBe('CONFIRMED');
+    $this->travel(73)->hours();
+    DB::table('order_transition_holds')->insert(['order_id' => $o->id, 'kind' => 'DISPUTE', 'source_ref' => 'test']);
+    app(CompleteDeliveredOrders::class)->run();
+    expect(DB::table('orders')->sole()->status)->toBe('CONFIRMED');
+    DB::table('order_transition_holds')->where('source_ref', 'test')->delete();
+    app(CompleteDeliveredOrders::class)->run();
+    app(CompleteDeliveredOrders::class)->run();
+    expect(DB::table('orders')->sole()->status)->toBe('COMPLETED')
+        ->and(DB::table('outbox_events')->where('event_type', 'OrderCompleted')->count())->toBe(1);
+});
+
+it('limits claims to delivered shipment units, restocks once and waits for a delivered replacement', function () {
+    DB::table('reason_codes')->insert(['code' => 'DAMAGED', 'domain' => 'returns', 'label' => 'Damaged item']);
+    ($this->login)($this->buyer);
+    app(CustomerCart::class)->set($this->buyer->id, $this->rts);
+    [$body] = ($this->finalQuote)($this->body);
+    ($this->confirm)($body)->assertCreated();
+    $o = DB::table('orders')->sole();
+    DB::transaction(function () use ($o) {
+        app(StockReservations::class)->commit($o->id, 1);
+        DB::table('orders')->update(['status' => 'CONFIRMED', 'payment_status' => 'PAID']);
+        DB::table('invoices')->update(['status' => 'PAID']);
+    });
+    ($this->staffSession)();
+    $plan = ($this->plan)();
+    $plan['items'][0]['qty'] = 2;
+    $n = ($this->write)('admin/shipments', $plan)->assertOk()->json('data.number');
+    ($this->pack)($n, $o->number);
+    ($this->write)("admin/shipments/$n/dispatches", ['service_code' => 'REG', 'tracking_number' => 'ORIGINAL'])->assertOk();
+    $this->travel(1)->minutes();
+    ($this->write)("admin/shipments/$n/tracking-events", ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()])->assertOk();
+    ($this->login)($this->buyer);
+    $item = DB::table('shipment_items')->sole()->public_id;
+    $claim = ['order_number' => $o->number, 'shipment_number' => $n, 'reason_code' => 'DAMAGED', 'items' => [['shipment_item_id' => $item, 'qty' => 1]]];
+    $number = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
+    $secondNumber = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
+    ($this->write)('returns', $claim)->assertConflict()->assertJsonPath('code', 'QUANTITY_CONFLICT');
+    ($this->staffSession)();
+    ($this->write)("admin/returns/$number/reviews", ['decision' => 'START'])->assertOk();
+    ($this->write)("admin/returns/$number/reviews", ['decision' => 'REJECT', 'reason_code' => 'DAMAGED'])->assertOk();
+    ($this->login)($this->buyer);
+    $number = ($this->write)('returns', $claim)->assertCreated()->json('data.number');
+    $this->assertDatabaseHas('return_items', ['return_id' => DB::table('returns')->where('number', $number)->value('id'), 'unit_coverage' => '{[0,1)}']);
+    $this->travel(49)->hours();
+    ($this->login)($this->buyer);
+    ($this->write)('returns', $claim)->assertConflict()->assertJsonPath('code', 'RETURN_WINDOW_CLOSED');
+    ($this->login)(User::factory()->create());
+    $this->getJson("/api/v1/returns/$number")->assertNotFound();
+    ($this->staffSession)();
+    $case = "admin/returns/$number";
+    ($this->write)("$case/reviews", ['decision' => 'START'])->assertOk();
+    ($this->write)("$case/reviews", ['decision' => 'APPROVE'])->assertConflict();
+    foreach (['a', 'b'] as $digest) {
+        $ref = (string) Str::ulid();
+        DB::table('stored_files')->insert(['public_id' => $ref, 'owner_type' => 'return', 'owner_id' => DB::table('returns')->where('number', $number)->sole()->id, 'collection' => 'return_evidence', 'uploaded_by' => $this->buyer->id, 'status' => 'READY', 'object_key' => 'return/'.$ref, 'mime' => 'image/png', 'size_bytes' => 10, 'sha256' => str_repeat($digest, 64)]);
+    }
+    ($this->write)("$case/reviews", ['decision' => 'APPROVE'])->assertOk();
+    ($this->write)("$case/reviews", ['decision' => 'GIVE_INSTRUCTIONS', 'instructions' => 'Return to warehouse within 7 days'])->assertOk();
+    ($this->login)($this->buyer);
+    ($this->write)("returns/$number/dispatches", ['tracking_number' => 'RET'])->assertOk();
+    ($this->staffSession)();
+    ($this->write)("$case/receipts", [])->assertForbidden();
+    $this->staff->givePermissionTo('returns.return.inspect');
+    ($this->write)("$case/receipts", [])->assertOk();
+    $inspect = ['result' => 'ACCEPT', 'note' => 'Sealed and intact', 'items' => [['shipment_item_id' => $item, 'accepted_qty' => 1, 'disposition' => 'RESTOCK']]];
+    ($this->write)("$case/inspections", $inspect, 'inspect')->assertOk();
+    ($this->write)("$case/inspections", $inspect, 'inspect')->assertOk();
+    ($this->write)("$case/inspections", $inspect)->assertConflict();
+    expect(DB::table('inventory_movements')->where('type', 'RETURN')->sum('on_hand_delta'))->toEqual(1);
+    // A declined financial resolution still permits CS to arrange a replacement.
+    $return = DB::table('returns')->where('number', $number)->sole();
+    DB::table('returns')->where('id', $return->id)->update(['resolution' => 'REFUND']);
+    $refundId = DB::table('refunds')->insertGetId(['number' => 'RFD-DECLINED', 'return_id' => $return->id, 'order_id' => $o->id,
+        'requested_by' => $this->staff->id, 'reason_id' => $return->reason_id, 'kind' => 'ITEM', 'requested_amount' => 1, 'cancel_order' => false, 'status' => 'UNDER_REVIEW']);
+    ($this->write)("$case/resolutions", ['resolution' => 'REPLACEMENT', 'note' => 'Exchange'])->assertConflict();
+    DB::table('refunds')->where('id', $refundId)->update(['status' => 'REJECTED']);
+    $decision = ['resolution' => 'REPLACEMENT', 'note' => 'Exchange'];
+    $replacement = ($this->write)("$case/resolutions", $decision)->assertOk()->assertJsonPath('data.status', 'ACCEPTED')->json('data.replacement_number');
+    ($this->write)("$case/resolutions", $decision)->assertOk()->assertJsonPath('data.replacement_number', $replacement);
+    ($this->pack)($replacement, $o->number);
+    $dispatch = fn ($shipment, $tracking) => ($this->write)("admin/shipments/$shipment/dispatches", ['service_code' => 'REG', 'tracking_number' => $tracking]);
+    $dispatch($replacement, 'REPL')->assertConflict();
+    $secondCase = "admin/returns/$secondNumber";
+    // Start with a second independently accepted claim on the same delivery.
+    $secondReturn = DB::table('returns')->where('number', $secondNumber)->sole();
+    DB::table('returns')->where('id', $secondReturn->id)->update(['status' => 'ACCEPTED']);
+    DB::table('return_items')->where('return_id', $secondReturn->id)->update(['accepted_qty' => 1, 'disposition' => 'NO_RECEIPT']);
+    $secondPackage = ($this->write)("$secondCase/resolutions", $decision)->assertOk()->json('data.replacement_number');
+    $this->assertDatabaseHas('shipment_items', ['shipment_id' => DB::table('shipments')->where('number', $secondPackage)->value('id'), 'coverage_start' => 1, 'replacement_coverage' => '{[1,2)}']);
+    ($this->pack)($secondPackage, $o->number);
+    DB::table('order_transition_holds')->insert(['order_id' => $o->id, 'kind' => 'PROOF_REVIEW', 'source_ref' => 'another-payment']);
+    $dispatch($replacement, 'REPL')->assertConflict();
+    DB::table('order_transition_holds')->where('source_ref', 'another-payment')->delete();
+    $dispatch($secondPackage, 'REPL2')->assertOk();
+    ($this->write)("admin/shipments/$replacement/dispatches", ['service_code' => 'REG', 'tracking_number' => 'REPL'])->assertOk();
+    $this->travel(1)->minutes();
+    ($this->write)("admin/shipments/$replacement/tracking-events", ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()])->assertOk();
+    ($this->write)("$case/resolutions", $decision)->assertOk()->assertJsonPath('data.status', 'RESOLVED');
+    ($this->write)("admin/shipments/$secondPackage/tracking-events", ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()])->assertOk();
+    ($this->write)("$secondCase/resolutions", $decision)->assertOk()->assertJsonPath('data.status', 'RESOLVED');
+    expect(DB::table('order_items')->sole()->delivered_qty)->toBe(2)
+        ->and(DB::table('inventory_movements')->where('type', 'REPLACEMENT')->sum('on_hand_delta'))->toEqual(-2)
+        ->and(DB::table('order_transition_holds')->exists())->toBeFalse();
 });

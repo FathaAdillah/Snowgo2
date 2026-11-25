@@ -2,7 +2,7 @@
 import type { ApiError } from '@snowego/api-types'
 
 const props = defineProps<{
-  action: { url: string, method: 'POST' | 'PATCH' | 'DELETE', body?: Record<string, unknown>, label: string }
+  action: { url: string, method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', body?: Record<string, unknown>, label: string }
 }>()
 const emit = defineEmits<{ saved: [], cancel: [] }>()
 const { stepUp, csrf } = useAdminAuth()

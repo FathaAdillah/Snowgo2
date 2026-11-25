@@ -2,11 +2,13 @@
 
 namespace App\Modules\Payments;
 
+use App\Modules\Administration\OperationalSettings;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Files\StoredFiles;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Inventory\StockReservations;
+use App\Modules\Refunds\RefundOrderCancellation;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -34,7 +36,7 @@ final class PaymentFlow
                 $due = $extended && $invoice->replaces_invoice_id === null ? $extended : min($due, $extended ?? $order->payment_due_at);
             }
             if ($invoice->total_amount <= 0 || $invoice->status !== 'ISSUED' || $invoice->currency !== 'IDR' || ! in_array($order->status, ['PENDING_PAYMENT', 'CONFIRMED'], true)
-                || self::due($due) || DB::table('payment_allocations as a')->join('payments as p', 'p.id', '=', 'a.payment_id')
+                || RefundOrderCancellation::processing($order->id) || self::due($due) || DB::table('payment_allocations as a')->join('payments as p', 'p.id', '=', 'a.payment_id')
                     ->where('a.invoice_id', $invoice->id)->where(fn ($q) => $q->whereIn('p.status', self::LIVE)->orWhereNotNull('a.applied_at'))->exists()) {
                 throw new ApiProblem(409, 'INVOICE_NOT_PAYABLE', 'Invoice is not available for a new payment.');
             }
@@ -87,10 +89,11 @@ final class PaymentFlow
             return;
         }
         $submitted = now();
-        $newDue = $submitted->copy()->addDay()->toISOString();
+        $newDue = $submitted->copy()->addHours(OperationalSettings::value('payment.verification_hold_hours'))->toISOString();
         $deadline = $newDue;
         foreach ($orders as $order) {
-            if (! in_array($order->status, ['CONFIRMED', 'PENDING_PAYMENT'], true)) {
+            if (RefundOrderCancellation::processing($order->id)
+                || ! in_array($order->status, ['CONFIRMED', 'PENDING_PAYMENT'], true)) {
                 throw self::invalid();
             }
             if ($order->status === 'PENDING_PAYMENT') {
@@ -99,16 +102,18 @@ final class PaymentFlow
                     if (self::due($order->payment_due_at)) {
                         throw self::invalid();
                     }
+                    $holdDue = max($newDue, Carbon::parse($order->payment_due_at)->toISOString());
                     if ($order->selling_method === 'READY_TO_SHIP') {
-                        app(StockReservations::class)->extendForProof($order->id, $proof);
+                        app(StockReservations::class)->extendForProof($order->id, $proof, $holdDue);
                     } elseif ($order->selling_method === 'PREORDER') {
                         $holds = DB::table('preorder_allocations')->whereIn('order_item_id', DB::table('order_items')->where('order_id', $order->id)->select('id'));
                         if (! (clone $holds)->exists() || (clone $holds)->where(fn ($q) => $q->where('status', '!=', 'RESERVED')->orWhereRaw('expires_at <= clock_timestamp()'))->exists()) {
                             throw self::invalid();
                         }
-                        $holds->update(['expires_at' => $newDue]);
+                        $holdDue = max($holdDue, Carbon::parse((clone $holds)->max('expires_at'))->toISOString());
+                        $holds->update(['expires_at' => $holdDue]);
                     }
-                    DB::table('payment_hold_extensions')->insert(['order_id' => $order->id, 'proof_id' => $proof, 'expires_at' => $newDue]);
+                    DB::table('payment_hold_extensions')->insert(['order_id' => $order->id, 'proof_id' => $proof, 'expires_at' => $holdDue]);
                 } else {
                     if (self::due($oldDue)) {
                         throw self::invalid();

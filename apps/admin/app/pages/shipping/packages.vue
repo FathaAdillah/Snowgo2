@@ -21,12 +21,23 @@ const serviceId = ref<number>()
 const lines = ref([{ order_item_id: '', qty: 1 }])
 const selected = ref<Package>()
 const tracking = ref('')
+const nextStatus = ref('IN_TRANSIT')
+const eventTime = ref('')
+const eventNote = ref('')
+const trackingOptions: Record<string, string[]> = {
+  PICKED_UP: ['IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED', 'RETURNED'],
+  IN_TRANSIT: ['OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED', 'RETURNED'],
+  OUT_FOR_DELIVERY: ['DELIVERED', 'FAILED', 'RETURNED'],
+  FAILED: ['IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'RETURNED']
+}
 const reason = ref('')
 const quote = ref('')
 const action = ref<InventoryAction>()
 const stages: Record<string, string> = { PENDING: 'PACK_START', PACKING: 'PACK_FINISH', PACKED: 'READY_FOR_DISPATCH' }
 function select(row: Package) {
   selected.value = row
+  nextStatus.value = trackingOptions[row.status]?.[0] ?? ''
+  eventNote.value = eventTime.value = ''
   tracking.value = reason.value = quote.value = ''
 }
 function ask(path: string, body: Record<string, unknown>, label: string) {
@@ -61,7 +72,7 @@ async function saved() {
       <template #filters>
         <USelect
           v-model="filter"
-          :items="['Semua', 'PENDING', 'PICKED_UP', 'CANCELLED']"
+          :items="['Semua', 'PENDING', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'FAILED', 'DELIVERED', 'RETURNED', 'CANCELLED']"
         />
       </template><template #actions="{ item }">
         <UButton
@@ -178,6 +189,46 @@ async function saved() {
           />
         </div>
       </div>
+      <ol
+        v-if="selected.tracking.length"
+        aria-label="Riwayat pelacakan"
+      >
+        <li
+          v-for="(event, i) in selected.tracking"
+          :key="i"
+        >
+          {{ event.status }} · {{ new Date(event.occurred_at).toLocaleString('id-ID') }}
+        </li>
+      </ol>
+      <form
+        v-if="can('shipping.tracking.manage') && trackingOptions[selected.status]"
+        class="space-y-3"
+        @submit.prevent="ask(`shipments/${selected.number}/tracking-events`, { status: nextStatus, occurred_at: new Date(eventTime).toISOString(), ...(eventNote ? { note: eventNote } : {}) }, `Catat ${nextStatus} untuk ${selected.number}`)"
+      >
+        <UFormField label="Status pelacakan">
+          <USelect
+            v-model="nextStatus"
+            :items="trackingOptions[selected.status]"
+          />
+        </UFormField>
+        <UFormField label="Waktu kejadian">
+          <UInput
+            v-model="eventTime"
+            type="datetime-local"
+            required
+          />
+        </UFormField>
+        <UFormField label="Catatan">
+          <UTextarea
+            v-model="eventNote"
+            :required="['FAILED', 'RETURNED'].includes(nextStatus)"
+          />
+        </UFormField>
+        <UButton
+          type="submit"
+          label="Catat pelacakan"
+        />
+      </form>
     </UCard>
     <ConfirmAdminAction
       v-if="action"

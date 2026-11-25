@@ -56,7 +56,7 @@ final class InvoiceLifecycle
             ) SELECT EXISTS(SELECT FROM revisions r JOIN order_charge_consents c ON c.invoice_id=r.id
                 WHERE EXISTS (SELECT FROM shipping_quotes q JOIN shipments s ON s.id=q.shipment_id WHERE q.id=c.quote_id AND s.status='CANCELLED')
                 OR EXISTS (SELECT FROM order_items i JOIN shipment_items l ON l.order_item_id=i.id JOIN shipments s ON s.id=l.shipment_id
-                    WHERE i.public_id=c.lines->0->>'order_item_id' AND s.status='PICKED_UP'
+                    WHERE i.public_id=c.lines->0->>'order_item_id' AND s.shipped_at IS NOT NULL
                     AND l.coverage_start < (c.lines->0->>'start')::int + (c.lines->0->>'qty')::int
                     AND l.coverage_start+l.qty > (c.lines->0->>'start')::int))", [$invoice->id])) {
                 throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'Cannot reissue this charge after cancellation or dispatch.');

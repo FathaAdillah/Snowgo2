@@ -27,6 +27,11 @@ class StaffRoleSeeder extends Seeder
                 $role->givePermissionTo(ProcurementPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(RequestOrderPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(InvoicePermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(OperationalPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(ReportPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(ReturnPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(RefundPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(TrackingPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(ShippingPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(BillingTermsPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(SettlementPermissionsSeeder::initialGrants($name));

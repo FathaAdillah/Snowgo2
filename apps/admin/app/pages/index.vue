@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { PurchaseMethod } from '@snowego/api-types'
-
 definePageMeta({ permission: 'reporting.dashboard.view' })
 
 useHead({ title: 'Dashboard · Snowego Admin' })
@@ -10,7 +8,7 @@ const { user } = useAdminAuth()
 
 const today = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())
 
-const summary = computed(() => data.value?.summary)
+const summary = computed(() => data.value?.data)
 
 const stats = computed(() => summary.value
   ? [
@@ -29,7 +27,7 @@ const queues = computed(() => summary.value
     ]
   : [])
 
-const methodLabels: Record<PurchaseMethod, { label: string, color: string }> = {
+const methodLabels: Record<string, { label: string, color: string }> = {
   ready_stock: { label: 'Siap Kirim', color: 'bg-primary' },
   preorder: { label: 'Preorder', color: 'bg-secondary' },
   request_order: { label: 'Request Order', color: 'bg-warning' }
@@ -61,15 +59,6 @@ const methods = computed(() => {
         {{ today }}
       </div>
     </div>
-
-    <UAlert
-      v-if="data?.sample"
-      color="info"
-      variant="subtle"
-      icon="i-lucide-info"
-      title="Data contoh"
-      description="Endpoint laporan (API-RPT-001) belum tersedia, jadi angka di bawah adalah data contoh untuk meninjau tampilan."
-    />
 
     <div
       v-if="status === 'pending' && !data"
@@ -107,13 +96,13 @@ const methods = computed(() => {
               <div class="flex flex-wrap items-center gap-4">
                 <DashboardDateRangePicker v-model="range" />
                 <div class="flex items-center gap-4 text-xs text-muted">
-                  <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-primary" />Penjualan (Rp)</span>
+                  <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-primary" />Capture (Rp)</span>
                   <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-secondary" />Jumlah Pesanan</span>
                 </div>
               </div>
             </div>
           </template>
-          <DashboardTrendChart :points="data?.trend ?? []" />
+          <DashboardTrendChart :points="summary.trend ?? []" />
         </UCard>
       </DashboardSection>
 
@@ -160,7 +149,7 @@ const methods = computed(() => {
                   name="i-lucide-list-todo"
                   class="size-4 text-primary"
                 />
-                Antrean Operasional
+                Antrean Operasional Saat Ini
               </h3>
             </template>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">

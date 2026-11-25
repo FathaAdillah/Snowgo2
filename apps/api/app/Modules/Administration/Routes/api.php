@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Administration\Http\Controllers\OperationalController;
 use App\Modules\Administration\Http\Controllers\RoleController;
 use App\Modules\Administration\Http\Controllers\StaffAccountController;
 use App\Modules\Identity\Http\Middleware\EnsureIdentity;
@@ -21,4 +22,11 @@ Route::prefix('admin')->name('admin.roles.')->middleware([StaffOrigin::class, 'a
     Route::post('roles', [RoleController::class, 'create'])->middleware(['can:admin.roles.create', 'can:admin.roles.assign_permissions'])->name('create');
     Route::patch('roles/{id}', [RoleController::class, 'update'])->whereNumber('id')->middleware(['can:admin.roles.update', 'can:admin.roles.assign_permissions'])->name('update');
     Route::delete('roles/{id}', [RoleController::class, 'destroy'])->whereNumber('id')->middleware('can:admin.roles.delete')->name('destroy');
+});
+
+Route::prefix('admin')->middleware([StaffOrigin::class, 'auth:web', EnsureIdentity::class.':staff'])->group(function () {
+    Route::get('audit-logs', [OperationalController::class, 'audit'])->middleware('can:admin.audit.view')->name('admin.audit.index');
+    Route::get('settings', [OperationalController::class, 'settings'])->middleware('can:admin.setting.view')->name('admin.settings.index');
+    Route::get('settings/{key}', [OperationalController::class, 'show'])->middleware('can:admin.setting.view')->name('admin.settings.show');
+    Route::put('settings/{key}', [OperationalController::class, 'update'])->middleware(['can:admin.setting.view', 'can:admin.setting.manage'])->name('admin.settings.update');
 });
