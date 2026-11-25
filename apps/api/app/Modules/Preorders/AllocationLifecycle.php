@@ -2,6 +2,8 @@
 
 namespace App\Modules\Preorders;
 
+use App\Modules\Foundation\Audit\Journal;
+use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Orders\OrderExpiry;
 use App\Support\Http\ApiProblem;
@@ -10,6 +12,17 @@ use Illuminate\Support\Facades\DB;
 
 final class AllocationLifecycle
 {
+    public static function recordShortage(int $itemId, int $qty, int $actor, int $reason): void
+    {
+        $allocation = DB::table('preorder_allocations')->where(['order_item_id' => $itemId, 'status' => 'CONFIRMED'])->lockForUpdate()->firstOrFail();
+        $failed = $allocation->failed_qty + $qty;
+        $status = $failed === $allocation->qty ? 'FAILED' : 'CONFIRMED';
+        DB::table('preorder_allocations')->where('id', $allocation->id)->update(['failed_qty' => $failed, 'status' => $status]);
+        if ($status === 'FAILED') {
+            app(Journal::class)->transition(Subject::Allocation, $allocation->id, 'status', $allocation->status, $status, 'supplier:FAILED', $actor, $reason);
+        }
+    }
+
     /** Settlement calls this in the same transaction as the initial capture. */
     public function confirm(int $orderId): void
     {

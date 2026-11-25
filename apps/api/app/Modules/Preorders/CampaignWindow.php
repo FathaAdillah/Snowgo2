@@ -14,10 +14,15 @@ final class CampaignWindow
 {
     public const ACTIONS = ['SCHEDULE', 'OPEN', 'CLOSE', 'START_PROCUREMENT', 'FULFILL', 'COMPLETE', 'CANCEL'];
 
+    public static function lock(int|string $reference): object
+    {
+        return DB::table('preorder_campaigns')->where(is_int($reference) ? 'id' : 'number', $reference)->lockForUpdate()->first() ?? abort(404);
+    }
+
     /** @param array<string,string> $input */
     public function act(string $number, string $action, int $actor, array $input): void
     {
-        $c = DB::table('preorder_campaigns')->where('number', $number)->lockForUpdate()->first() ?? abort(404);
+        $c = self::lock($number);
         $now = DB::scalar('SELECT clock_timestamp()');
         $started = DB::scalar('SELECT ?::timestamptz >= ?::timestamptz', [$now, $c->starts_at]);
         $ended = DB::scalar('SELECT ?::timestamptz >= ?::timestamptz', [$now, $c->ends_at]);

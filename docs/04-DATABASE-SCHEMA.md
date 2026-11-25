@@ -725,6 +725,8 @@ Histori pengadaan. Append-only
 
 **Constraint dan indeks tambahan** · U(batch_id,event_key); I(batch_id,occurred_at).
 
+Setiap penerimaan menyimpan delta per baris dalam `procurement_receipt_lines` (append-only, actor, waktu, jumlah diterima/gagal dan snapshot alasan). Lock berurutan: sumber kampanye/request → batch → order (ID terurut) → item → alokasi. Sisa yang boleh ditugaskan = qty order − received_qty − cancelled_qty − sisa penugasan pada batch OPEN/IN_PROGRESS. Pelepasan batch tidak menghapus histori. Order RO hanya bisa merujuk satu request milik pembeli yang sama; satu request hanya bisa dikonversi sekali.
+
 ### DB-REQ-001 — request_orders
 
 Permintaan independen. Catatan internal via message visibility

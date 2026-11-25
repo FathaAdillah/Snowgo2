@@ -166,6 +166,8 @@ Status terminal · RELEASED, EXPIRED, FULFILLED, CANCELLED, FAILED.
 
 Receipt sebagian boleh ketika IN_PROGRESS; close hanya semua baris resolved, termasuk terminal failure dengan reason.
 
+Bedakan **gagal pemasok yang akan dicoba lagi** dari **kekurangan final untuk pembeli**. Untuk mencoba pemasok lain, ubah stage ke FAILED lalu batalkan batch dengan alasan; hanya sisa yang belum diterima/gagal yang bebas ditugaskan lagi. Untuk shortage final, kirim `failed_qty` dengan alasan aktif domain `procurement`. Unit tersebut menjadi `cancelled_qty`, bukan stok bebas. Satu hold DISPUTE dan event `SupplierShortageReviewRequested` per baris receipt mengikat review ke pesanan yang terdampak. TASK-018 tidak mentransfer uang, menerbitkan pelunasan, atau menganggap unit yang diterima sudah dikirim. Refunds melepas hold sumbernya setelah keputusan; Invoicing/Shipping membaca qty kumulatif per item.
+
 | Asal | Tujuan diizinkan |
 |---|---|
 | OPEN | IN_PROGRESS, CANCELLED |
