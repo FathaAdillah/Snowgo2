@@ -13,6 +13,7 @@ enum Subject: string
     case Allocation = 'preorder_allocation';
     case Batch = 'procurement_batch';
     case RequestOrder = 'request_order';
+    case Quotation = 'quotation';
     case Payment = 'payment';
     case Invoice = 'invoice';
     case Refund = 'refund';

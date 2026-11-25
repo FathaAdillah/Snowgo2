@@ -126,6 +126,8 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | reporting.dashboard.view | Admin, Product Manager, Inventory Staff, Order Staff, Finance, Customer Service, Warehouse, Content Manager |
 | reporting.transaction.view | Admin, Finance |
 | request_orders.quotation.manage | Admin, Order Staff |
+| request_orders.quotation.view | Admin, Order Staff, Customer Service; diperlukan bersama request.view untuk membaca penawaran |
+| request_orders.quotation.create / update / dispatch / withdraw | Admin, Order Staff; tiap aksi juga memerlukan quotation.view dan quotation.manage |
 | request_orders.request.review | Admin, Order Staff, Customer Service |
 | request_orders.request.view | Admin, Order Staff, Customer Service |
 | request_orders.request.start / need_information / reject / reopen | Admin, Order Staff, Customer Service; satu izin per keputusan review |

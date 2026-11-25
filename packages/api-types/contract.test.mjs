@@ -152,3 +152,15 @@ test('request orders keep both case surfaces private and document every thread m
     }
   }
 })
+
+test('quotation actions on both surfaces publish idempotency and reject anonymous writes', async () => {
+  const base = '/admin/request-orders/{number}/quotations'
+  for (const [method, path] of [['POST', base], ['PATCH', `${base}/{quotation_number}`], ['POST', `${base}/{quotation_number}/dispatches`],
+    ['POST', `${base}/{quotation_number}/withdrawals`], ['POST', '/request-orders/{number}/quotations/{quotation_number}/decisions']]) {
+    const op = spec.paths[path][method.toLowerCase()]
+    assert.ok(op.parameters.some(p => p.name === 'Idempotency-Key' && p.required))
+    const result = await client[method](path, { params: { path: { number: 'REQ-MISSING', quotation_number: 'QUO-MISSING' } }, body: {} })
+    assert.ok([401, 403, 419].includes(result.response.status))
+    validateResponse(path, result.response.status, result.error, method.toLowerCase())
+  }
+})

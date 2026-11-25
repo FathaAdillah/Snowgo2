@@ -901,6 +901,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/request-orders/{number}/quotations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requests.staff.quotation.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/request-orders/{number}/quotations/{quotation_number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["requests.staff.quotation.update"];
+        trace?: never;
+    };
+    "/admin/request-orders/{number}/quotations/{quotation_number}/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requests.staff.quotation.dispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/request-orders/{number}/quotations/{quotation_number}/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requests.staff.quotation.withdraw"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/request-orders/{number}/reviews": {
         parameters: {
             query?: never;
@@ -1945,6 +2009,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["requests.message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/request-orders/{number}/quotations/{quotation_number}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requests.quotation.decide"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8549,8 +8629,27 @@ export interface operations {
                             }[];
                             number: string;
                             quotations: {
+                                deposit_amount: number | null;
+                                items: {
+                                    exchange_rate?: string | null;
+                                    foreign_amount?: string | null;
+                                    foreign_currency?: string | null;
+                                    label: string;
+                                    options: string | null;
+                                    qty: number;
+                                    request_item_id: string;
+                                    unit_amount: number;
+                                    weight_g: number | null;
+                                }[];
                                 number: string;
+                                revision: number;
+                                shipping_estimate_amount: number | null;
                                 status: string;
+                                subtotal_amount: number;
+                                term: string;
+                                terms: string;
+                                total_amount: number;
+                                valid_until: string;
                                 version: number;
                             }[];
                             review_actions: string[];
@@ -8622,8 +8721,27 @@ export interface operations {
                             }[];
                             number: string;
                             quotations: {
+                                deposit_amount: number | null;
+                                items: {
+                                    exchange_rate?: string | null;
+                                    foreign_amount?: string | null;
+                                    foreign_currency?: string | null;
+                                    label: string;
+                                    options: string | null;
+                                    qty: number;
+                                    request_item_id: string;
+                                    unit_amount: number;
+                                    weight_g: number | null;
+                                }[];
                                 number: string;
+                                revision: number;
+                                shipping_estimate_amount: number | null;
                                 status: string;
+                                subtotal_amount: number;
+                                term: string;
+                                terms: string;
+                                total_amount: number;
+                                valid_until: string;
                                 version: number;
                             }[];
                             review_actions: string[];
@@ -8781,6 +8899,588 @@ export interface operations {
             };
         };
     };
+    "requests.staff.quotation.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    deposit_amount?: number | null;
+                    items: {
+                        exchange_rate?: string;
+                        foreign_amount?: string;
+                        foreign_currency?: string;
+                        label: string;
+                        options?: string;
+                        qty: number;
+                        request_item_id: string;
+                        unit_amount: number;
+                        weight_g?: number;
+                    }[];
+                    shipping_estimate_amount?: number | null;
+                    /** @enum {string} */
+                    term: "FULL" | "DEPOSIT";
+                    terms: string;
+                    /** Format: date-time */
+                    valid_until: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Draft quotation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            deposit_amount: number | null;
+                            items: {
+                                exchange_rate?: string | null;
+                                foreign_amount?: string | null;
+                                foreign_currency?: string | null;
+                                label: string;
+                                options: string | null;
+                                qty: number;
+                                request_item_id: string;
+                                unit_amount: number;
+                                weight_g: number | null;
+                            }[];
+                            number: string;
+                            revision: number;
+                            shipping_estimate_amount: number | null;
+                            status: string;
+                            subtotal_amount: number;
+                            term: string;
+                            terms: string;
+                            total_amount: number;
+                            valid_until: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid state, expired or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "requests.staff.quotation.update": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+                quotation_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    deposit_amount?: number | null;
+                    items?: {
+                        exchange_rate?: string;
+                        foreign_amount?: string;
+                        foreign_currency?: string;
+                        label: string;
+                        options?: string;
+                        qty: number;
+                        request_item_id: string;
+                        unit_amount: number;
+                        weight_g?: number;
+                    }[];
+                    revision: number;
+                    shipping_estimate_amount?: number | null;
+                    /** @enum {string} */
+                    term?: "FULL" | "DEPOSIT";
+                    terms?: string;
+                    /** Format: date-time */
+                    valid_until?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated draft */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            deposit_amount: number | null;
+                            items: {
+                                exchange_rate?: string | null;
+                                foreign_amount?: string | null;
+                                foreign_currency?: string | null;
+                                label: string;
+                                options: string | null;
+                                qty: number;
+                                request_item_id: string;
+                                unit_amount: number;
+                                weight_g: number | null;
+                            }[];
+                            number: string;
+                            revision: number;
+                            shipping_estimate_amount: number | null;
+                            status: string;
+                            subtotal_amount: number;
+                            term: string;
+                            terms: string;
+                            total_amount: number;
+                            valid_until: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Quotation not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid state, expired or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "requests.staff.quotation.dispatch": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+                quotation_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    revision: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Frozen quotation sent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            deposit_amount: number | null;
+                            items: {
+                                exchange_rate?: string | null;
+                                foreign_amount?: string | null;
+                                foreign_currency?: string | null;
+                                label: string;
+                                options: string | null;
+                                qty: number;
+                                request_item_id: string;
+                                unit_amount: number;
+                                weight_g: number | null;
+                            }[];
+                            number: string;
+                            revision: number;
+                            shipping_estimate_amount: number | null;
+                            status: string;
+                            subtotal_amount: number;
+                            term: string;
+                            terms: string;
+                            total_amount: number;
+                            valid_until: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Quotation not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid state, expired or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "requests.staff.quotation.withdraw": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+                quotation_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Withdrawn quotation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            deposit_amount: number | null;
+                            items: {
+                                exchange_rate?: string | null;
+                                foreign_amount?: string | null;
+                                foreign_currency?: string | null;
+                                label: string;
+                                options: string | null;
+                                qty: number;
+                                request_item_id: string;
+                                unit_amount: number;
+                                weight_g: number | null;
+                            }[];
+                            number: string;
+                            revision: number;
+                            shipping_estimate_amount: number | null;
+                            status: string;
+                            subtotal_amount: number;
+                            term: string;
+                            terms: string;
+                            total_amount: number;
+                            valid_until: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Quotation not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid state or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
     "requests.staff.review": {
         parameters: {
             query?: never;
@@ -8840,8 +9540,27 @@ export interface operations {
                             }[];
                             number: string;
                             quotations: {
+                                deposit_amount: number | null;
+                                items: {
+                                    exchange_rate?: string | null;
+                                    foreign_amount?: string | null;
+                                    foreign_currency?: string | null;
+                                    label: string;
+                                    options: string | null;
+                                    qty: number;
+                                    request_item_id: string;
+                                    unit_amount: number;
+                                    weight_g: number | null;
+                                }[];
                                 number: string;
+                                revision: number;
+                                shipping_estimate_amount: number | null;
                                 status: string;
+                                subtotal_amount: number;
+                                term: string;
+                                terms: string;
+                                total_amount: number;
+                                valid_until: string;
                                 version: number;
                             }[];
                             review_actions: string[];
@@ -14947,8 +15666,27 @@ export interface operations {
                             }[];
                             number: string;
                             quotations: {
+                                deposit_amount: number | null;
+                                items: {
+                                    exchange_rate?: string | null;
+                                    foreign_amount?: string | null;
+                                    foreign_currency?: string | null;
+                                    label: string;
+                                    options: string | null;
+                                    qty: number;
+                                    request_item_id: string;
+                                    unit_amount: number;
+                                    weight_g: number | null;
+                                }[];
                                 number: string;
+                                revision: number;
+                                shipping_estimate_amount: number | null;
                                 status: string;
+                                subtotal_amount: number;
+                                term: string;
+                                terms: string;
+                                total_amount: number;
+                                valid_until: string;
                                 version: number;
                             }[];
                             status: string;
@@ -15288,6 +16026,186 @@ export interface operations {
                 };
             };
             /** @description Message rate limit */
+            429: {
+                headers: {
+                    /** @description Seconds to wait before retrying. */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "requests.quotation.decide": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+                quotation_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    address_id?: string;
+                    /** @enum {string} */
+                    decision: "ACCEPT" | "REJECT" | "REVISE";
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Quotation decision and conversion references */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            invoice_number?: string;
+                            order_number?: string;
+                            quotation: {
+                                deposit_amount: number | null;
+                                items: {
+                                    exchange_rate?: string | null;
+                                    foreign_amount?: string | null;
+                                    foreign_currency?: string | null;
+                                    label: string;
+                                    options: string | null;
+                                    qty: number;
+                                    request_item_id: string;
+                                    unit_amount: number;
+                                    weight_g: number | null;
+                                }[];
+                                number: string;
+                                revision: number;
+                                shipping_estimate_amount: number | null;
+                                status: string;
+                                subtotal_amount: number;
+                                term: string;
+                                terms: string;
+                                total_amount: number;
+                                valid_until: string;
+                                version: number;
+                            };
+                            request_status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified customer required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Request, sent quotation or address not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid state, expired or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Decision rate limit */
             429: {
                 headers: {
                     /** @description Seconds to wait before retrying. */
