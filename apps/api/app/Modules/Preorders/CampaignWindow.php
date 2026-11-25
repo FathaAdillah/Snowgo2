@@ -14,10 +14,15 @@ final class CampaignWindow
 {
     public const ACTIONS = ['SCHEDULE', 'OPEN', 'CLOSE', 'START_PROCUREMENT', 'FULFILL', 'COMPLETE', 'CANCEL'];
 
+    public static function lock(int|string $reference): object
+    {
+        return DB::table('preorder_campaigns')->where(is_int($reference) ? 'id' : 'number', $reference)->lockForUpdate()->first() ?? abort(404);
+    }
+
     /** @param array<string,string> $input */
     public function act(string $number, string $action, int $actor, array $input): void
     {
-        $c = DB::table('preorder_campaigns')->where('number', $number)->lockForUpdate()->first() ?? abort(404);
+        $c = self::lock($number);
         $now = DB::scalar('SELECT clock_timestamp()');
         $started = DB::scalar('SELECT ?::timestamptz >= ?::timestamptz', [$now, $c->starts_at]);
         $ended = DB::scalar('SELECT ?::timestamptz >= ?::timestamptz', [$now, $c->ends_at]);
@@ -38,12 +43,24 @@ final class CampaignWindow
             ->sharedLock()->value('id') ?? throw ValidationException::withMessages(['reason_code' => 'Select an active order reason.']) : null;
         if ($target === 'CANCELLED') {
             // Claim all parents before releasing shared SKU quota; expiry locks parent then quota.
-            $orders = DB::table('orders')->where('campaign_id', $c->id)->whereNotIn('status', ['EXPIRED', 'CANCELLED'])->orderBy('id')->lockForUpdate()->pluck('number');
+            $orders = DB::table('orders')->where('campaign_id', $c->id)->whereNotIn('status', ['EXPIRED', 'CANCELLED'])->orderBy('id')->lockForUpdate()->get(['id', 'number', 'status']);
             foreach ($orders as $order) {
-                app(OrderLifecycle::class)->apply($order, null, $actor, 'CANCEL', $input);
+                if ($c->status === 'IN_PROCUREMENT' && $c->first_received_at === null && $order->status === 'CONFIRMED' && $this->allUnitsFailed($order->id)) {
+                    // The campaign can end; the paid order stays with Refunds for its own decision.
+                    continue;
+                }
+                app(OrderLifecycle::class)->apply($order->number, null, $actor, 'CANCEL', $input);
             }
         }
         $this->transition($c, $target, $actor, $reason, $input['note'] ?? null);
+    }
+
+    private function allUnitsFailed(int $orderId): bool
+    {
+        return (bool) DB::table('order_items as i')->leftJoin('preorder_allocations as a', 'a.order_item_id', '=', 'i.id')
+            ->where('i.order_id', $orderId)
+            ->selectRaw("bool_and(i.cancelled_qty=i.qty AND coalesce(a.status='FAILED' AND a.failed_qty=i.qty, false)) AS all_failed")
+            ->value('all_failed');
     }
 
     public function advanceDue(): int

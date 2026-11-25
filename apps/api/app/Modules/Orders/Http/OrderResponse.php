@@ -19,7 +19,7 @@ final class OrderResponse
 
     private const SHIPPING = 'array{quote_id:string,carrier_label:string|null,service_code:string|null,amount:int,estimated_days_from:int,estimated_days_to:int}';
 
-    private const DETAIL = 'array{'.self::FIELDS.',subtotal_amount?:int,discount_amount?:int,tax_amount?:int,shipping_amount?:int,checkout_shipping?:'.self::SHIPPING.',items:list<array{id:string|null,sku:string|null,name:string|null,variant:string|null,qty:int,unit_amount:int|null,shipped_qty:int,cancelled_qty:int}>,address:'.self::ADDRESS.'|null,history:list<array{dimension:string,to_status:string,occurred_at:string}>,invoice_numbers:list<string>,shipment_numbers:list<string>,payment_numbers:list<string>,charge_consents:list<array{id:string,revision:int,status:string,amount:int,expires_at:string,lines:list<array{type:string,description:string,amount:int}>,invoice_number?:string}>}';
+    private const DETAIL = 'array{'.self::FIELDS.',subtotal_amount?:int,discount_amount?:int,tax_amount?:int,shipping_amount?:int,checkout_shipping?:'.self::SHIPPING.',items:list<array{id:string|null,sku:string|null,name:string|null,variant:string|null,qty:int,unit_amount:int|null,received_qty:int,shipped_qty:int,cancelled_qty:int}>,address:'.self::ADDRESS.'|null,history:list<array{dimension:string,to_status:string,occurred_at:string}>,invoice_numbers:list<string>,shipment_numbers:list<string>,payment_numbers:list<string>,charge_consents:list<array{id:string,revision:int,status:string,amount:int,expires_at:string,lines:list<array{type:string,description:string,amount:int}>,invoice_number?:string}>}';
 
     private const META = 'array{request_id:string,page:int,per_page:int,total:int,last_page:int}';
 

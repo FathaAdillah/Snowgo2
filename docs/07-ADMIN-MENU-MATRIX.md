@@ -114,6 +114,7 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | preorders.campaign.create, preorders.campaign.update, preorders.campaign.schedule, preorders.campaign.open, preorders.campaign.close, preorders.campaign.start_procurement, preorders.campaign.fulfill, preorders.campaign.complete, preorders.campaign.cancel | Admin, Order Staff |
 | preorders.campaign.view | Admin, Product Manager, Order Staff, Customer Service |
 | procurement.batch.manage | Admin, Order Staff |
+| procurement.batch.create, procurement.batch.stage, procurement.batch.receipt, procurement.batch.close | Admin, Order Staff (perlu view + manage). Sidebar Commerce → Batch Pengadaan membutuhkan view; Warehouse default baca-saja. |
 | procurement.batch.view | Admin, Order Staff, Warehouse |
 | promotions.coupon.manage | Admin, Product Manager, Content Manager |
 | promotions.coupon.view | Admin, Content Manager |

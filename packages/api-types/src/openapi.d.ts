@@ -613,6 +613,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/procurement-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["procurement.index"];
+        put?: never;
+        post: operations["procurement.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/procurement-batches/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["procurement.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/procurement-batches/{number}/closures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["procurement.close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/procurement-batches/{number}/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["procurement.receipt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/procurement-batches/{number}/stage-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["procurement.stage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/procurement-batches/eligible-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["procurement.choices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/product-media": {
         parameters: {
             query?: never;
@@ -5057,6 +5153,7 @@ export interface operations {
                                 id: string | null;
                                 name: string | null;
                                 qty: number;
+                                received_qty: number;
                                 shipped_qty: number;
                                 sku: string | null;
                                 unit_amount: number | null;
@@ -5176,6 +5273,7 @@ export interface operations {
                                 id: string | null;
                                 name: string | null;
                                 qty: number;
+                                received_qty: number;
                                 shipped_qty: number;
                                 sku: string | null;
                                 unit_amount: number | null;
@@ -5318,6 +5416,7 @@ export interface operations {
                                 id: string | null;
                                 name: string | null;
                                 qty: number;
+                                received_qty: number;
                                 shipped_qty: number;
                                 sku: string | null;
                                 unit_amount: number | null;
@@ -6071,6 +6170,768 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "procurement.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                number?: string;
+                page?: number;
+                per_page?: number;
+                status?: "OPEN" | "IN_PROGRESS" | "RECEIVED" | "CLOSED" | "CANCELLED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Batch list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            campaign_number: string | null;
+                            closure_reason: string | null;
+                            closure_target: string | null;
+                            eta_date: string | null;
+                            items: {
+                                failed_qty: number;
+                                order_item_id: string;
+                                order_number: string;
+                                qty: number;
+                                received_qty: number;
+                                sku: string | null;
+                            }[];
+                            next_stages: string[];
+                            notes: string | null;
+                            number: string;
+                            request_number: string | null;
+                            stage: string;
+                            stage_events: {
+                                eta_date: string | null;
+                                note: string | null;
+                                occurred_at: string;
+                                stage: string;
+                            }[];
+                            status: string;
+                            supplier_ref: string | null;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "procurement.create": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    campaign_number?: string;
+                    /** Format: date */
+                    eta_date?: string;
+                    items: {
+                        order_item_id: string;
+                        qty: number;
+                    }[];
+                    notes?: string;
+                    request_number?: string;
+                    supplier_ref?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Batch created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            campaign_number: string | null;
+                            closure_reason: string | null;
+                            closure_target: string | null;
+                            eta_date: string | null;
+                            items: {
+                                failed_qty: number;
+                                order_item_id: string;
+                                order_number: string;
+                                qty: number;
+                                received_qty: number;
+                                sku: string | null;
+                            }[];
+                            next_stages: string[];
+                            notes: string | null;
+                            number: string;
+                            request_number: string | null;
+                            stage: string;
+                            stage_events: {
+                                eta_date: string | null;
+                                note: string | null;
+                                occurred_at: string;
+                                stage: string;
+                            }[];
+                            status: string;
+                            supplier_ref: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Source or item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Quantity, state or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "procurement.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Batch details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            campaign_number: string | null;
+                            closure_reason: string | null;
+                            closure_target: string | null;
+                            eta_date: string | null;
+                            items: {
+                                failed_qty: number;
+                                order_item_id: string;
+                                order_number: string;
+                                qty: number;
+                                received_qty: number;
+                                sku: string | null;
+                            }[];
+                            next_stages: string[];
+                            notes: string | null;
+                            number: string;
+                            request_number: string | null;
+                            stage: string;
+                            stage_events: {
+                                eta_date: string | null;
+                                note: string | null;
+                                occurred_at: string;
+                                stage: string;
+                            }[];
+                            status: string;
+                            supplier_ref: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown batch */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "procurement.close": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Batch closed or cancelled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            campaign_number: string | null;
+                            closure_reason: string | null;
+                            closure_target: string | null;
+                            eta_date: string | null;
+                            items: {
+                                failed_qty: number;
+                                order_item_id: string;
+                                order_number: string;
+                                qty: number;
+                                received_qty: number;
+                                sku: string | null;
+                            }[];
+                            next_stages: string[];
+                            notes: string | null;
+                            number: string;
+                            request_number: string | null;
+                            stage: string;
+                            stage_events: {
+                                eta_date: string | null;
+                                note: string | null;
+                                occurred_at: string;
+                                stage: string;
+                            }[];
+                            status: string;
+                            supplier_ref: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown batch */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description State or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "procurement.receipt": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        failed_qty: number;
+                        order_item_id: string;
+                        received_qty: number;
+                    }[];
+                    note?: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Receipt recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            campaign_number: string | null;
+                            closure_reason: string | null;
+                            closure_target: string | null;
+                            eta_date: string | null;
+                            items: {
+                                failed_qty: number;
+                                order_item_id: string;
+                                order_number: string;
+                                qty: number;
+                                received_qty: number;
+                                sku: string | null;
+                            }[];
+                            next_stages: string[];
+                            notes: string | null;
+                            number: string;
+                            request_number: string | null;
+                            stage: string;
+                            stage_events: {
+                                eta_date: string | null;
+                                note: string | null;
+                                occurred_at: string;
+                                stage: string;
+                            }[];
+                            status: string;
+                            supplier_ref: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown batch or item */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Quantity, state or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "procurement.stage": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date */
+                    eta_date?: string;
+                    note?: string;
+                    /** @enum {string} */
+                    stage: "PURCHASED" | "SELLER_SHIPPED" | "AT_ORIGIN_WAREHOUSE" | "INTERNATIONAL_TRANSIT" | "AT_DESTINATION_WAREHOUSE" | "IMPORT_FEE_ASSESSMENT" | "RECEIVED" | "FAILED";
+                };
+            };
+        };
+        responses: {
+            /** @description Stage recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            campaign_number: string | null;
+                            closure_reason: string | null;
+                            closure_target: string | null;
+                            eta_date: string | null;
+                            items: {
+                                failed_qty: number;
+                                order_item_id: string;
+                                order_number: string;
+                                qty: number;
+                                received_qty: number;
+                                sku: string | null;
+                            }[];
+                            next_stages: string[];
+                            notes: string | null;
+                            number: string;
+                            request_number: string | null;
+                            stage: string;
+                            stage_events: {
+                                eta_date: string | null;
+                                note: string | null;
+                                occurred_at: string;
+                                stage: string;
+                            }[];
+                            status: string;
+                            supplier_ref: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown batch */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description State or request conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "procurement.choices": {
+        parameters: {
+            query?: {
+                number?: string;
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Purchasable units for batch assignment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            available_qty: number;
+                            campaign_number: string | null;
+                            order_item_id: string;
+                            order_number: string;
+                            request_number: string | null;
+                            sku: string | null;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "catalog.product-media.index": {
@@ -12355,6 +13216,7 @@ export interface operations {
                                 id: string | null;
                                 name: string | null;
                                 qty: number;
+                                received_qty: number;
                                 shipped_qty: number;
                                 sku: string | null;
                                 unit_amount: number | null;

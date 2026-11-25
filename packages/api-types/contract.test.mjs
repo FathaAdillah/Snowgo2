@@ -120,9 +120,18 @@ test('public preorder campaigns and customer allocation reads use distinct bound
 })
 
 test('order, campaign and inventory reads are staff-only and use the documented error envelope', async () => {
-  for (const path of ['/admin/preorder-campaigns', '/admin/orders', '/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
+  for (const path of ['/admin/procurement-batches', '/admin/procurement-batches/eligible-items', '/admin/preorder-campaigns', '/admin/orders', '/admin/warehouses', '/admin/stock-levels', '/admin/stock-movements', '/admin/stock-adjustments', '/admin/stock-reservations']) {
     const result = await client.GET(path)
     assert.ok([401, 403].includes(result.response.status))
     validateResponse(path, result.response.status, result.error)
+  }
+})
+
+test('procurement detail and every mutation reject public callers with the published envelope', async () => {
+  const base = '/admin/procurement-batches'
+  for (const [method, path] of [['GET', `${base}/{number}`], ['POST', base], ...['stage-events', 'receipts', 'closures'].map(s => ['POST', `${base}/{number}/${s}`])]) {
+    const result = await client[method](path, { params: { path: { number: 'BAT-UNASSIGNED' } }, ...(method === 'POST' && { body: {} }) })
+    assert.ok([401, 403, 419].includes(result.response.status))
+    validateResponse(path, result.response.status, result.error, method.toLowerCase())
   }
 })

@@ -13,6 +13,7 @@ const server = await createServer({
 after(() => server.close())
 const load = async path => (await server.ssrLoadModule(`/app/${path}`)).default
 const inventory = await server.ssrLoadModule('/app/composables/useInventory.ts')
+const procurement = await server.ssrLoadModule('/app/composables/useProcurement.ts')
 const { adminNavigation, hasPageAccess } = await server.ssrLoadModule('/app/composables/useAdminNavigation.ts')
 const components = {}
 for (const name of ['InventoryListTable', 'InventoryWarehouseList', 'InventoryAdjustmentList', 'InventoryStockForm', 'InventoryWarehouseForm', 'InventoryWarehousePicker']) {
@@ -24,7 +25,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   const requests = []
   const buttons = {}
   let pager, retry, state, meta
-  Object.assign(globalThis, inventory, {
+  Object.assign(globalThis, inventory, procurement, {
     computed, reactive, ref, watch, useTemplateRef, useHead() {}, definePageMeta(value) { meta = value },
     useRoute: () => ({ query: fixture.route ?? {} }), useAdminAuth: () => ({ can: grant => grants.includes(grant) }),
     useFetch(url, options) {
@@ -38,7 +39,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   const component = await load(`${path}.vue`)
   const app = createSSRApp({ ...component, setup: (p, ctx) => (state = component.setup(p, ctx)) }, props)
   for (const [name, value] of Object.entries(components)) app.component(name, value)
-  for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction']) {
+  for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction', 'ProcurementCreate']) {
     app.component(name, (_, { attrs, slots }) => h('div', [attrs.label, slots.header?.(), slots.default?.()]))
   }
   app.component('UAlert', (_, { attrs }) => {
@@ -94,6 +95,39 @@ test('warehouse screen separates create-only, view, update and archive', async (
   list.buttons['Arsipkan gudang BDG'].onClick()
   assert.deepEqual(list.state.action.value.body, { active: false })
   assert.equal(list.state.action.value.url, '/api/v1/admin/warehouses/9')
+})
+
+test('Commerce exposes a usable procurement page only with read permission', async () => {
+  const link = adminNavigation.find(e => e.label === 'Commerce').children.find(e => e.label === 'Batch Pengadaan')
+  assert.equal(link.to, '/procurement')
+  assert.equal(hasPageAccess(link.permission, p => p === 'procurement.batch.manage'), false)
+  assert.equal(hasPageAccess(link.permission, p => p === 'procurement.batch.view'), true)
+  const show = (...grants) => render('pages/procurement/index', grants.map(g => `procurement.batch.${g}`), { rows: [{ number: 'BAT-1', status: 'OPEN' }] })
+  const read = await show('view')
+  assert.equal(read.meta.permission, link.permission)
+  assert.equal(read.buttons['Lihat batch BAT-1'].to, '/procurement/BAT-1')
+  assert.doesNotMatch(read.html, /Tambah Batch/)
+  assert.doesNotMatch((await show('view', 'manage')).html, /Tambah Batch/)
+  assert.match((await show('view', 'manage', 'create')).html, /Tambah Batch/)
+})
+
+test('procurement actions require individual grants and a valid lifecycle state', async () => {
+  const batch = { number: 'BAT-1', status: 'IN_PROGRESS', stage: 'PURCHASED', next_stages: ['SELLER_SHIPPED', 'FAILED'], closure_target: null,
+    items: [{ order_item_id: 'I1', order_number: 'O1', sku: 'A', received_qty: 1, failed_qty: 0, qty: 3 }] }
+  const show = (b, ...grants) => render('components/ProcurementActions', ['view', 'manage', ...grants].map(g => `procurement.batch.${g}`), {}, { batch: b })
+  assert.deepEqual((await show(batch)).buttons, {})
+  assert.deepEqual(Object.keys((await show(batch, 'stage')).buttons), ['Catat tahap'])
+  assert.deepEqual(Object.keys((await show({ ...batch, stage: 'FAILED', next_stages: [], closure_target: 'CANCELLED' }, 'receipt', 'stage', 'close')).buttons), ['Batalkan batch'])
+  const receive = await show(batch, 'receipt')
+  receive.buttons['Catat penerimaan atau kekurangan'].onClick()
+  receive.state.received.value = 1
+  receive.state.failed.value = 1
+  receive.state.submit()
+  assert.equal(receive.state.action.value, undefined)
+  receive.state.reason.value = 'SHORT'
+  receive.state.submit()
+  assert.deepEqual(receive.state.action.value.body, { reason_code: 'SHORT', items: [{ order_item_id: 'I1', received_qty: 1, failed_qty: 1 }] })
+  assert.match(receive.state.action.value.url, /BAT-1\/receipts$/)
 })
 
 test('reservation table shows partial dispatch without offering stock commands', async () => {

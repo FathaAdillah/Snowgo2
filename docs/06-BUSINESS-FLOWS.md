@@ -151,6 +151,8 @@ Scheduler membuka/tutup sesuai window. OPEN boleh diperpanjang sebelum ends_at, 
 
 Status terminal · CANCELLED, COMPLETED.
 
+Jika tidak ada unit yang pernah diterima dan seluruh unit pesanan berbayar sudah gagal final, staf dapat membatalkan *kampanye* dari IN_PROCUREMENT. Pesanan berbayar, invoice dan hold tetap menunggu keputusan refund; pembatalan kampanye tidak mencatat penerimaan atau mengembalikan dana. Satu unit berbayar yang masih bisa dipenuhi tetap memblokir pembatalan.
+
 ### PreorderAllocation
 
 RESERVED mengikuti hold. CONFIRMED sesudah initial invoice PAID; FAILED bila seluruh sisa pemasok gagal, CANCELLED bila pembeli/operator membatalkan seluruh alokasi. Partial failure dicatat via failed_qty dan jadikan FULFILLED saat sisa sukses final.
@@ -165,6 +167,8 @@ Status terminal · RELEASED, EXPIRED, FULFILLED, CANCELLED, FAILED.
 ### Procurement
 
 Receipt sebagian boleh ketika IN_PROGRESS; close hanya semua baris resolved, termasuk terminal failure dengan reason.
+
+Bedakan **gagal pemasok yang akan dicoba lagi** dari **kekurangan final untuk pembeli**. Untuk mencoba pemasok lain, ubah stage ke FAILED lalu batalkan batch dengan alasan; hanya sisa yang belum diterima/gagal yang bebas ditugaskan lagi. Untuk shortage final, kirim `failed_qty` dengan alasan aktif domain `procurement`. Unit tersebut menjadi `cancelled_qty`, bukan stok bebas. Satu hold DISPUTE dan event `SupplierShortageReviewRequested` per baris receipt mengikat review ke pesanan yang terdampak. TASK-018 tidak mentransfer uang, menerbitkan pelunasan, atau menganggap unit yang diterima sudah dikirim. Refunds melepas hold sumbernya setelah keputusan; Invoicing/Shipping membaca qty kumulatif per item.
 
 | Asal | Tujuan diizinkan |
 |---|---|

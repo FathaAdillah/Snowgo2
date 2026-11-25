@@ -40,7 +40,7 @@ export const adminNavigation: NavEntry[] = [
     children: [
       { label: 'Pesanan & RTS', icon: 'i-lucide-package' },
       { label: 'Kampanye Preorder', icon: 'i-lucide-calendar-clock' },
-      { label: 'Batch Pengadaan', icon: 'i-lucide-boxes' },
+      { label: 'Batch Pengadaan', icon: 'i-lucide-boxes', to: '/procurement', permission: 'procurement.batch.view' },
       { label: 'Request Order', icon: 'i-lucide-message-square-quote' },
       { label: 'Invoice', icon: 'i-lucide-file-text' },
       { label: 'Return', icon: 'i-lucide-undo-2' }

@@ -42,6 +42,9 @@ final class Journal
             return null;
         }
         $fields = ['status', 'active', 'amount_idr', 'quantity', 'role', 'grants', 'visibility'];
+        if ($subject === Subject::Batch) {
+            $fields = [...$fields, 'stage', 'eta_date', 'received_qty', 'failed_qty', 'order_item_id'];
+        }
         if ($subject === Subject::Campaign) {
             $fields = [...$fields, 'slug', 'name', 'starts_at', 'ends_at', 'ready_eta_from', 'ready_eta_to', 'ship_eta_from', 'ship_eta_to', 'payment_scheme'];
         }

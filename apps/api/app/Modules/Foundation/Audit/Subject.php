@@ -11,6 +11,7 @@ enum Subject: string
     case Campaign = 'preorder_campaign';
     case CampaignVariant = 'preorder_campaign_variant';
     case Allocation = 'preorder_allocation';
+    case Batch = 'procurement_batch';
     case Payment = 'payment';
     case Invoice = 'invoice';
     case Refund = 'refund';

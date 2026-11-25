@@ -249,3 +249,17 @@ Tidak perlu build frontend: ini API, belum ada menu kampanye. Seeder tidak mengu
 Scheduler membuka/menutup kampanye menurut jam PostgreSQL dan melepas alokasi kedaluwarsa milik pesanan yang belum dibayar serta tidak ditahan untuk review. Kedua perintah `preorders:advance-windows` dan `preorders:expire-holds` aman dijalankan ulang. Checkout tetap memeriksa waktu meskipun scheduler terlambat.
 
 Penambahan kuota tidak menambah stok gudang. Perubahan SKU penawaran di PATCH adalah upsert; SKU yang tidak dikirim tetap ada. Gunakan kuota nol untuk menutup penawaran yang belum dialokasikan. Alokasi terkonfirmasi tetap memakai kuota historis. Jangan mengubah invoice lewat SQL: konfirmasi alokasi adalah port internal settlement, bukan endpoint untuk mengakui transfer. Penerimaan/shortage pemasok, pelunasan dan refund belum termasuk.
+
+## Mengaktifkan batch pengadaan (TASK-018)
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin
+```
+
+Buka **Commerce → Batch Pengadaan**. Superadmin tetap login; untuk role lama tambahkan `procurement.batch.view` lewat Role & Izin. Aksi tulis juga membutuhkan `procurement.batch.manage` dan izin aksi dari [matriks](07-ADMIN-MENU-MATRIX.md). Daftarkan kode alasan aktif domain `procurement` untuk pembatalan dan kekurangan final.
+
+Pilihan item hanya berisi alokasi PO terkonfirmasi pada kampanye IN_PROCUREMENT/FULFILLING atau item request yang sudah dikonversi dan dibayar awal. Daftar kosong sebelum ada unit yang layak adalah normal. Alur pengajuan/konversi request, settlement transfer, tagihan lanjutan dan pembayaran refund tetap milik task masing-masing. Jangan mengubah status pembayaran manual untuk membuat data muncul.
+
+Rollback migrasi batch hanya diizinkan sebelum batch pertama dibuat. Sesudah itu rollback aplikasi tanpa menghapus skema; perbaiki data melalui migrasi lanjutan agar histori tetap terhubung ke order dan hold refund.
