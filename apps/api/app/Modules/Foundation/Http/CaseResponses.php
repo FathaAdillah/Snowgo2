@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Support\Http;
+namespace App\Modules\Foundation\Http;
 
 use App\Modules\Foundation\Idempotency\IdempotentMutation;
 use App\Modules\Identity\Staff\StaffAccess;
+use App\Support\Http\ApiInput;
+use App\Support\Http\ApiProblem;
+use App\Support\Http\ApiResponse;
 use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;

@@ -2,12 +2,12 @@
 
 namespace App\Modules\Returns\Http;
 
+use App\Modules\Foundation\Http\CaseResponses;
 use App\Modules\Returns\ReturnClaims;
 use App\Modules\Returns\ReturnInspection;
 use App\Modules\Returns\ReturnResolution;
 use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
-use App\Support\Http\CaseResponses;
 use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Database\Query\Builder;
