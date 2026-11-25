@@ -63,7 +63,8 @@ final class PaymentData
         $authorize = function () use ($request, $abilities) {
             $actor = $request->user();
             if ($abilities) {
-                if (in_array('payments.bank.manage', $abilities, true) && $request->session()->get('staff.step_up', 0) <= now()->subMinutes(10)->timestamp) {
+                if (array_intersect(['payments.bank.manage', 'payments.payment.recover', 'payments.reconciliation.review'], $abilities)
+                    && $request->session()->get('staff.step_up', 0) <= now()->subMinutes(10)->timestamp) {
                     throw new ApiProblem(403, 'STEP_UP_REQUIRED', 'Confirm password and a fresh TOTP code');
                 }
                 abort_unless(! $request->session()->has(StaffAccess::PASSWORD_ONLY_VERSION) && $actor->fresh()?->can($abilities), 403);

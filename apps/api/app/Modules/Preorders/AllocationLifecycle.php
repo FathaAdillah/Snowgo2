@@ -45,6 +45,25 @@ final class AllocationLifecycle
         });
     }
 
+    /** Reacquire quota at the original terms and within the current campaign limit. */
+    public function recover(int $orderId, int $owner): void
+    {
+        $rows = DB::table('preorder_allocations')->whereIn('order_item_id', DB::table('order_items')->where('order_id', $orderId)->select('id'))->orderBy('campaign_variant_id')->lockForUpdate()->get();
+        $offers = app(CheckoutAllocations::class)->offers($rows->pluck('campaign_variant_id'), $owner, true);
+        foreach ($rows as $r) {
+            $offer = $offers->get($r->campaign_variant_id);
+            if (! $offer || ! in_array($r->status, ['RESERVED', 'EXPIRED'], true) || ($r->status === 'EXPIRED' && $offer->remaining < $r->qty)) {
+                throw new ApiProblem(409, 'QUOTA_FULL', 'Preorder quota is no longer available.');
+            }
+            if ($r->status === 'EXPIRED') {
+                DB::table('preorder_campaign_variants')->where('id', $offer->id)->increment('reserved_qty', $r->qty);
+                $offer->remaining -= $r->qty;
+                app(Journal::class)->transition(Subject::Allocation, $r->id, 'status', 'EXPIRED', 'RESERVED', 'recovery:RESERVED');
+            }
+            DB::table('preorder_allocations')->where('id', $r->id)->update(['status' => 'RESERVED', 'expires_at' => now()->addMinute()]);
+        }
+    }
+
     private function due(): Builder
     {
         return DB::table('orders as o')->select('o.id')->where(['o.selling_method' => 'PREORDER', 'o.status' => 'PENDING_PAYMENT', 'o.payment_status' => 'UNPAID'])

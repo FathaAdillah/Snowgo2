@@ -693,6 +693,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/payment-reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.reconciliations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payments.staff.reconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations/{id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.reconciliation.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-reconciliations/{id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.reconciliation.review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/payments": {
         parameters: {
             query?: never;
@@ -735,6 +799,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["payments.staff.decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payments/{number}/reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payments.staff.reconciliation.open"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7098,6 +7178,215 @@ export interface operations {
             };
         };
     };
+    "payments.staff.reconciliations": {
+        parameters: {
+            query?: {
+                from?: string;
+                page?: number;
+                per_page?: number;
+                status?: "OPEN" | "APPROVED" | "REJECTED" | "APPLIED" | "RETURNED";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "payments.staff.reconciliation.decide": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "APPLY" | "RETURN";
+                    note: string;
+                    proof_file_id?: string;
+                    refund_transfer_ref?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliation.review": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "APPROVE" | "REJECT";
+                    note: string;
+                    reason_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "payments.staff.index": {
         parameters: {
             query?: {
@@ -7219,9 +7508,11 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    bank_tx_ref?: string;
                     /** @enum {string} */
-                    decision: "REJECT";
-                    reason_code: string;
+                    decision: "APPROVE" | "REJECT";
+                    reason_code?: string;
+                    received_amount?: number;
                 };
             };
         };
@@ -7249,6 +7540,61 @@ export interface operations {
                             status: string;
                             submitted_at: string | null;
                             verified_at: string | null;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "payments.staff.reconciliation.open": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bank_tx_ref: string;
+                    reason_code: string;
+                    received_amount: number;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            amount: number;
+                            bank_tx_ref: string;
+                            decision_note: string | null;
+                            id: number;
+                            opened_by_me: boolean;
+                            payment_number: string;
+                            reason_code: string;
+                            refund_transfer_ref: string | null;
+                            review_note: string | null;
+                            reviewed_by_me: boolean;
+                            status: string;
                         };
                         message: string;
                         meta: {
