@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Modules\Cart\CustomerCart;
+use App\Modules\Foundation\Files\ScanQueue;
 use App\Modules\Foundation\Outbox\ConsumeEvent;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Invoicing\InvoiceIssuer;
@@ -200,6 +201,19 @@ it('retries a failed PDF and signs only one private, downloadable copy', functio
         DB::rollBack();
     }
     try {
+        $private = Storage::disk('private');
+        $isolated = Storage::fake('private');
+        try {
+            foreach ([$original->object_key, 'ready/orphan'] as $key) {
+                $isolated->put($key, 'old bytes');
+                touch($isolated->path($key), now()->subDays(2)->timestamp);
+            }
+            app(ScanQueue::class)->prune();
+            $isolated->assertExists($original->object_key);
+            $isolated->assertMissing('ready/orphan');
+        } finally {
+            Storage::set('private', $private);
+        }
         $job->handle();
         $job->handle();
         $this->assertDatabaseCount('stored_files', 1);

@@ -35,7 +35,8 @@ final class RenderInvoicePdf implements ShouldQueue
         $bytes = Pdf::setOption(['isRemoteEnabled' => false, 'isPhpEnabled' => false, 'isJavascriptEnabled' => false])
             ->loadView('invoice-pdf', ['invoice' => $data])->setPaper('a4')->output();
         $hash = hash('sha256', $bytes);
-        $key = "ready/invoice_pdf/$object.pdf";
+        // Owned by the invoice document even before file registration, outside the upload janitor's prefixes.
+        $key = "generated/invoice_pdf/$object.pdf";
         $target = ['Bucket' => config('filesystems.disks.private.bucket'), 'Key' => $key];
         $disk = Storage::disk('private');
         if (! $disk instanceof AwsS3V3Adapter) {
