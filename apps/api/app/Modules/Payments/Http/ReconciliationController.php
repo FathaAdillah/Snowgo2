@@ -7,6 +7,7 @@ use App\Modules\Payments\Reconciliations;
 use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
 use Dedoc\Scramble\Attributes\Response;
+use Dedoc\Scramble\Attributes\HeaderParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,6 +37,8 @@ final class ReconciliationController
         return ApiResponse::success(Reconciliations::rows($request->user()->id)->where('r.id', $id)->first() ?? abort(404))->header('Cache-Control', 'private, no-store');
     }
 
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, type: self::ONE)]
     public function open(Request $request, string $number): JsonResponse
     {
@@ -44,6 +47,8 @@ final class ReconciliationController
         return PaymentData::mutate($request, $data, ['payments.reconciliation.view', 'payments.payment.recover'], fn () => $this->show($request, Reconciliations::open($number, $request->user()->id, $data)));
     }
 
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, type: self::ONE)]
     public function review(Request $request, int $id): JsonResponse
     {
@@ -56,6 +61,8 @@ final class ReconciliationController
         });
     }
 
+    #[HeaderParameter('Idempotency-Key', required: true, type: 'string')]
+    #[HeaderParameter('X-XSRF-TOKEN', required: true, type: 'string')]
     #[Response(200, type: self::ONE)]
     public function decide(Request $request, int $id): JsonResponse
     {
