@@ -134,21 +134,21 @@ it('expires the order, invoice and stock in the same leased operation', function
     expect(DB::table('outbox_events')->where('event_type', 'OrderExpired')->count())->toBe(1);
 });
 
-it('repairs already expired checkout holds without releasing stock twice or closing a paid invoice', function () {
+it('repairs already expired checkout holds without releasing stock twice or closing a paid invoice', function (bool $paid) {
     ($this->place)();
     $repair = fn (int $expected) => $this->artisan('orders:reconcile-expired-stock')->expectsOutput("Reconciled expired RTS orders: $expected")->assertSuccessful();
     $repair(0);
     DB::table('stock_reservations')->update(['status' => 'EXPIRED', 'released_qty' => DB::raw('qty')]);
     DB::table('stock_expiry_work')->delete();
-    DB::table('invoices')->update(['status' => 'PAID']);
+    if ($paid) {
+        DB::table('invoices')->update(['status' => 'PAID']);
+    }
+    $repair($paid ? 0 : 1);
     $repair(0);
-    DB::table('invoices')->update(['status' => 'ISSUED']);
-    $repair(1);
-    $repair(0);
-    $this->assertDatabaseHas('orders', ['status' => 'EXPIRED']);
-    $this->assertDatabaseHas('invoices', ['status' => 'VOID']);
+    $this->assertDatabaseHas('orders', ['status' => $paid ? 'PENDING_PAYMENT' : 'EXPIRED']);
+    $this->assertDatabaseHas('invoices', ['status' => $paid ? 'PAID' : 'VOID']);
     $this->assertDatabaseMissing('outbox_events', ['event_type' => 'StockReleased']);
-});
+})->with([false, true]);
 
 it('separates staff read, PII, cancel and complete permissions even on replay and scopes support activity', function () {
     $number = ($this->place)();

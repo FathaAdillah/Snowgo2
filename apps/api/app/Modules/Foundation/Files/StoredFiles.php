@@ -50,6 +50,29 @@ final class StoredFiles
         return StoredFile::query()->findOrFail($id);
     }
 
+    /** Generated collections cannot be populated by the upload API. */
+    public function registerGenerated(StagedFile $file, string $type, int $owner, string $collection): int
+    {
+        if (! DB::transactionLevel() || (FileRules::GENERATED_OWNERS[$collection] ?? null) !== $type) {
+            throw new LogicException('A domain transaction and generated collection are required.');
+        }
+
+        return DB::table('stored_files')->insertGetId(['public_id' => $file->publicId, 'owner_type' => $type, 'owner_id' => $owner,
+            'collection' => $collection, 'object_key' => $file->key, 'mime' => $file->mime, 'size_bytes' => $file->size, 'sha256' => $file->hash,
+            'original_name' => $file->name, 'status' => 'READY', 'scan_due_at' => null]);
+    }
+
+    /** @return array{url:string,expires_at:string} */
+    public function downloadBound(?int $id, string $type, int $owner, string $collection, int $actor): array
+    {
+        $file = StoredFile::query()->whereKey($id)->where(['owner_type' => $type, 'owner_id' => $owner, 'collection' => $collection, 'status' => 'READY'])->first();
+        if (! $file) {
+            throw new FileProblem(409, 'FILE_NOT_READY', 'File is not ready');
+        }
+
+        return $this->download($file, $actor);
+    }
+
     public function checkQuota(string $type, int $owner, string $collection, string $mime): void
     {
         $active = DB::table('stored_files')->where(['owner_type' => $type, 'owner_id' => $owner, 'collection' => $collection])

@@ -226,6 +226,8 @@ Status terminal · WITHDRAWN, ACCEPTED, REJECTED, EXPIRED, SUPERSEDED.
 
 PAID dan VOID terminal; refund tidak mengubah invoice asli. VOID hanya bila belum ada applied payment; revision menghasilkan nomor baru.
 
+Pada TASK-021, invoice awal terbit bersama checkout atau persetujuan quotation. Pengganti invoice VOID menyalin snapshot dan tujuan yang sama, tanpa nominal dari klien. Order awal tidak dapat memperpanjang batas hold. Revisi jatuh tempo menutup dan menggantikan invoice overdue yang belum dibayar pada order CONFIRMED dalam satu transaksi. Review transfer dan dispute memblokir perubahan. PDF mencetak snapshot penerbitan, bukan status pelunasan saat ini.
+
 | Asal | Tujuan diizinkan |
 |---|---|
 | DRAFT | ISSUED, VOID |

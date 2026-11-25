@@ -501,6 +501,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invoices.staff.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invoices/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invoices.staff.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invoices/{number}/due-date-revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["invoices.staff.revise"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invoices/{number}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invoices.staff.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invoices/{number}/pdf-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["invoices.staff.retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/invoices/{number}/voids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["invoices.staff.void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/orders": {
         parameters: {
             query?: never;
@@ -543,6 +639,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["orders.staff.action"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{number}/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["invoices.staff.issue"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1767,6 +1879,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["foundation.health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invoices.customer.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invoices.customer.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{number}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invoices.customer.pdf"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5302,6 +5462,665 @@ export interface operations {
             };
         };
     };
+    "invoices.staff.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                order?: string;
+                page?: number;
+                per_page?: number;
+                status?: "ISSUED" | "VOID" | "PAID";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invoices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified identity and read access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "invoices.staff.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invoice snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified identity and read access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.staff.revise": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    due_at: string;
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description New invoice with revised due date */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown invoice */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invoice not eligible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.staff.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Five-minute private URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            expires_at: string;
+                            url: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified identity and download access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description FILE_NOT_READY */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.staff.retry": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: null;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown invoice */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Render is not failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.staff.void": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason_code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Voided invoice */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown invoice */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invoice not eligible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
     "orders.staff.index": {
         parameters: {
             query?: {
@@ -5735,6 +6554,152 @@ export interface operations {
                 };
             };
             /** @description Invalid input or IDEMPOTENCY_KEY_REUSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        code: "VALIDATION_FAILED" | "IDEMPOTENCY_KEY_REUSED";
+                        errors?: {
+                            [key: string]: string[];
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.staff.issue": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "X-XSRF-TOKEN": string;
+            };
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    due_at: string;
+                    /** @enum {string} */
+                    purpose: "BALANCE" | "FULL_PAYMENT" | "DEPOSIT" | "ADDITIONAL_CHARGE";
+                    replaces_invoice_number?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Issued replacement */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            /** @description Unknown order or source */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invoice not eligible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description CSRF mismatch */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Invalid input or reused key */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -14396,6 +15361,272 @@ export interface operations {
                         };
                         /** @constant */
                         success: true;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.customer.index": {
+        parameters: {
+            query?: {
+                from?: string;
+                order?: string;
+                page?: number;
+                per_page?: number;
+                status?: "ISSUED" | "VOID" | "PAID";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invoices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified identity and read access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "invoices.customer.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invoice snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            currency: string;
+                            discount_amount: number;
+                            due_at: string;
+                            issued_at: string;
+                            items: {
+                                amount: number;
+                                description: string;
+                                qty: number;
+                                type: string;
+                                unit_amount: number;
+                            }[];
+                            number: string;
+                            order_number: string;
+                            order_status: string;
+                            paid_at: string | null;
+                            pdf_ready: boolean;
+                            /** @enum {string} */
+                            pdf_status: "PENDING" | "RENDERING" | "FAILED" | "READY";
+                            /** @enum {string} */
+                            purpose: "FULL_PAYMENT" | "DEPOSIT" | "BALANCE" | "ADDITIONAL_CHARGE";
+                            replaced_by_invoice_number: string | null;
+                            replaces_invoice_number: string | null;
+                            shipping_amount: number;
+                            /** @enum {string} */
+                            status: "ISSUED" | "PAID" | "VOID";
+                            subtotal_amount: number;
+                            tax_amount: number;
+                            total_amount: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified identity and read access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+        };
+    };
+    "invoices.customer.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Five-minute private URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            expires_at: string;
+                            url: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            /** @description Verified identity and download access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
+                    };
+                };
+            };
+            /** @description FILE_NOT_READY */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: false;
                     };
                 };
             };

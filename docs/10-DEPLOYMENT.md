@@ -290,3 +290,22 @@ docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d -
 Buka **Commerce → Request Order → detail → Penawaran harga**. Mulai review sebelum membuat draf. Untuk role lama, tambahkan `request_orders.request.view` dan `request_orders.quotation.view`; aksi tulis memerlukan `request_orders.quotation.manage` beserta izin `create`, `update`, `dispatch`, atau `withdraw` sesuai tugas. Penarikan membutuhkan kode alasan aktif domain `request_orders`.
 
 Harga barang dan invoice dalam IDR. Kurs pemasok hanya referensi internal; estimasi ongkir belum ditagih. Pengiriman versi baru menggantikan versi aktif sebelumnya. Scheduler menjalankan `quotations:expire` tiap menit; persetujuan tetap memeriksa waktu database jika scheduler terlambat. Customer memutuskan lewat API; halaman storefront belum termasuk. Sesudah penawaran pertama, rollback aplikasi tanpa menghapus skema atau snapshot.
+
+## Mengaktifkan invoice dan PDF privat (TASK-021)
+
+Jika sudah menerima transaksi, hentikan checkout dan persetujuan penawaran selama rollout. Versi lama langsung menyimpan invoice `ISSUED`; setelah migrasi, barisnya hanya dapat ditambahkan oleh versi baru sebelum invoice disegel.
+
+```sh
+docker compose exec api php artisan migrate --force
+docker compose exec api php artisan db:seed --class=PermissionSeeder --force
+docker compose restart horizon scheduler
+docker compose -f docker-compose.yml -f docker-compose.admin-preview.yml up -d --build --no-deps --wait admin
+```
+
+Buka **Commerce → Invoice**. Seeder mendaftarkan izin dan tidak menimpa role lama: berikan `invoicing.invoice.view` untuk daftar/detail. Unduh perlu `invoicing.invoice.download`, `foundation.file.view` dan `foundation.file.download`; perubahan perlu `invoicing.invoice.manage` beserta izin aksi `void`, `issue`, `revise_due`, atau `retry_pdf`. Tambahkan kode alasan aktif domain `invoicing` sebelum membatalkan atau merevisi jatuh tempo.
+
+Invoice lama ikut antre tanpa mengirim ulang email. Penerbitan baru mencatat `InvoiceIssued` dalam transaksi; outbox memicu notifikasi tanpa lampiran dan antrean dokumen. Scheduler `invoices:dispatch-pdfs` mengirim job ke queue `low`. Pastikan bucket privat, signing endpoint, scheduler dan Horizon aktif. Tautan unduh berlaku lima menit. Jika PDF `FAILED`, pulihkan storage/worker lalu pilih **Ulangi pembuatan PDF**; jangan terbitkan invoice lagi. Lease kedaluwarsa kembali ke antrean otomatis.
+
+PDF terbit berada di prefix privat `generated/invoice_pdf/`, bukan prefix upload sementara. Jangan pasang aturan expiry untuk prefix ini. Untuk nama barang beraksara Korea, image membawa [Nanum Gothic Regular](https://github.com/google/fonts/tree/16680f8688ffcd467d2eb2146a9ce0343404581d/ofl/nanumgothic) berlisensi SIL OFL dan metrik Dompdf; worker tidak memerlukan unduhan font.
+
+Sesudah ada invoice, jangan rollback skema. Pembayaran tetap di TASK-022/023; sumber saldo, biaya tambahan dengan persetujuan, dan koreksi shortage di TASK-024. Staf tidak dapat mengetik nominal tagihan baru.

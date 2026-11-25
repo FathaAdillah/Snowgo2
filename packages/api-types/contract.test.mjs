@@ -107,6 +107,22 @@ test('checkout data and mutations reject unauthenticated API callers', async () 
   }
 })
 
+test('invoice snapshots and PDFs are private on both API surfaces', async () => {
+  for (const base of ['/invoices', '/admin/invoices']) {
+    for (const path of [base, `${base}/{number}`, `${base}/{number}/pdf`]) {
+      const result = await client.GET(path, { params: { path: { number: 'INV-UNASSIGNED' } } })
+      assert.ok([401, 403].includes(result.response.status))
+      validateResponse(path, result.response.status, result.error)
+    }
+  }
+  for (const path of ['/admin/orders/{number}/invoices', ...['voids', 'due-date-revisions', 'pdf-requests'].map(x => `/admin/invoices/{number}/${x}`)]) {
+    assert.ok(spec.paths[path].post.parameters.some(p => p.name === 'Idempotency-Key' && p.required))
+    const result = await client.POST(path, { params: { path: { number: 'INV-UNASSIGNED' } }, body: {} })
+    assert.ok([401, 403, 419].includes(result.response.status))
+    validateResponse(path, result.response.status, result.error, 'post')
+  }
+})
+
 test('public preorder campaigns and customer allocation reads use distinct boundaries', async () => {
   const page = await client.GET('/preorders', { params: { query: { per_page: 1 } } })
   assert.equal(page.response.status, 200)

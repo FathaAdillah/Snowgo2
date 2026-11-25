@@ -26,6 +26,7 @@ class StaffRoleSeeder extends Seeder
                 $role->givePermissionTo(PreorderPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(ProcurementPermissionsSeeder::initialGrants($name));
                 $role->givePermissionTo(RequestOrderPermissionsSeeder::initialGrants($name));
+                $role->givePermissionTo(InvoicePermissionsSeeder::initialGrants($name));
                 if ($name !== 'inventory_staff') {
                     $role->givePermissionTo('foundation.file.view', 'foundation.file.create', 'foundation.file.download');
                 }

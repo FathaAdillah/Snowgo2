@@ -5,6 +5,7 @@ namespace App\Modules\Preorders;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
+use App\Modules\Invoicing\OrderInvoices;
 use App\Modules\Orders\OrderExpiry;
 use App\Support\Http\ApiProblem;
 use Illuminate\Database\Query\Builder;
@@ -28,8 +29,7 @@ final class AllocationLifecycle
     {
         DB::transaction(function () use ($orderId) {
             $order = DB::table('orders')->where(['id' => $orderId, 'selling_method' => 'PREORDER'])->lockForUpdate()->first() ?? abort(404);
-            $initial = DB::table('invoices')->where(['order_id' => $orderId, 'source_ref' => 'checkout:initial'])->lockForUpdate()->first();
-            if ($initial?->status !== 'PAID' || ! in_array($order->status, ['PENDING_PAYMENT', 'CONFIRMED'], true)) {
+            if (! app(OrderInvoices::class)->checkoutInitialPaid($orderId) || ! in_array($order->status, ['PENDING_PAYMENT', 'CONFIRMED'], true)) {
                 throw new ApiProblem(409, 'INVALID_STATE_TRANSITION', 'A paid initial invoice is required.');
             }
             $items = DB::table('order_items')->where('order_id', $orderId)->pluck('id')->all();
