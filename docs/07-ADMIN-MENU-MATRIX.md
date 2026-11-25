@@ -129,7 +129,7 @@ Sidebar muncul saat staff memiliki permission baca untuk submenu. Tombol, route 
 | request_orders.request.review | Admin, Order Staff, Customer Service |
 | request_orders.request.view | Admin, Order Staff, Customer Service |
 | request_orders.request.start / need_information / reject / reopen | Admin, Order Staff, Customer Service; satu izin per keputusan review |
-| request_orders.request.assign | Admin, Order Staff, Customer Service; memilih penanggung jawab saat review |
+| request_orders.request.assign | Admin, Order Staff, Customer Service; penanggung jawab harus staf aktif yang dapat membaca dan mereview request (atau superadmin) |
 | request_orders.request.reply | Admin, Order Staff, Customer Service; mengirim balasan ke pelanggan |
 | request_orders.request.note | Admin, Order Staff, Customer Service; menulis catatan internal mandiri atau saat review |
 | returns.return.inspect | Admin, Warehouse |

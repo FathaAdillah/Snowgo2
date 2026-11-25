@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
+use App\Modules\Identity\Staff\StaffAccess;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -43,8 +44,12 @@ final class RequestCases
     {
         $to = self::REVIEWS[$case->status][$data['decision']] ?? throw self::invalid();
         $assignee = $data['assignee_id'] ?? $case->assigned_to ?? ($data['decision'] === 'START' ? $actor : null);
-        if (isset($data['assignee_id']) && ! User::query()->where('account_type', User::STAFF)->whereNull('disabled_at')->whereNotNull('two_factor_confirmed_at')->sharedLock()->find($assignee)) {
-            throw ValidationException::withMessages(['assignee_id' => 'Select an active staff member.']);
+        if (isset($data['assignee_id'])) {
+            $target = User::query()->where('account_type', User::STAFF)->whereNull('disabled_at')
+                ->whereNotNull('two_factor_confirmed_at')->sharedLock()->find($assignee);
+            if (! $target || array_diff(['request_orders.request.view', 'request_orders.request.review'], StaffAccess::permissions($target))) {
+                throw ValidationException::withMessages(['assignee_id' => 'Select an active staff member with request review access.']);
+            }
         }
         $reason = self::reason($data['reason_code'] ?? null);
         DB::table('request_orders')->where('id', $case->id)->update(['assigned_to' => $assignee]);

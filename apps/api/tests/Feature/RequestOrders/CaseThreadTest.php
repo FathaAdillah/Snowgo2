@@ -200,6 +200,23 @@ function requestReviewWorker(string $number, int $actor, string $barrier): Closu
     };
 }
 
+it('assigns only to provisioned reviewers without requiring the target to have a live session', function () {
+    $number = ($this->submitCase)();
+    ($this->operator)();
+    $url = "$this->admin/$number/reviews";
+    $target = User::factory()->staff()->create(['two_factor_confirmed_at' => now(), 'staff_session_version' => 23]);
+    $start = ['decision' => 'START', 'assignee_id' => $target->id];
+    ($this->postCase)($url, $start)->assertUnprocessable()->assertJsonValidationErrors('assignee_id');
+    $target->givePermissionTo('request_orders.request.view');
+    ($this->postCase)($url, $start)->assertUnprocessable()->assertJsonValidationErrors('assignee_id');
+    $this->assertDatabaseHas('request_orders', ['number' => $number, 'status' => 'SUBMITTED', 'assigned_to' => null]);
+    $target->assignRole('order_staff');
+    ($this->postCase)($url, $start)->assertOk()->assertJsonPath('data.assigned_to', $target->id);
+    $super = User::factory()->staff()->create(['two_factor_confirmed_at' => now()]);
+    $super->assignRole('super_admin');
+    ($this->postCase)($url, ['decision' => 'NEED_INFORMATION', 'assignee_id' => $super->id])->assertOk()->assertJsonPath('data.assigned_to', $super->id);
+});
+
 it('lets only one staff member claim a submitted case', function () {
     $number = ($this->submitCase)();
     $other = User::factory()->staff()->create(['two_factor_confirmed_at' => now()]);
