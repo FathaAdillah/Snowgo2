@@ -109,6 +109,33 @@ function competingShipmentWorker(array $plan, int $actor): Closure
         }
     };
 }
+
+it('dispatches a received free unit without billing the outstanding units early', function () {
+    $order = DB::transaction(function () {
+        $line = ['term' => 'DEPOSIT', 'qty' => 1, 'initial_tax' => 0, 'tax_amount' => 0, 'weight_g' => 250];
+        $lines = [
+            $line + ['product_snapshot' => 'Bonus', 'unit_amount' => 0, 'initial_unit_amount' => 0, 'received_qty' => 1],
+            $line + ['product_snapshot' => 'Album', 'unit_amount' => 300, 'initial_unit_amount' => 99, 'received_qty' => 0],
+        ];
+        $group = ['method' => 'REQUEST_ORDER', 'term' => 'DEPOSIT', 'subtotal_amount' => 300, 'total_amount' => 300, 'shipping_amount' => 0, 'tax_amount' => 0, 'discount_amount' => 0, 'due_now_amount' => 99, 'initial_tax' => 0, 'campaign_terms' => null, 'lines' => $lines];
+        $addr = ['district_id' => $this->district, 'line1' => 'Street', 'recipient' => 'Buyer', 'phone' => '090', 'postal_code' => '12345', 'region_snapshot' => []];
+        $due = now()->addDay()->toISOString();
+        $o = app(CheckoutOrders::class)->create(null, $this->buyer->id, $group, $addr, $due, null);
+        app(InitialInvoices::class)->issue($o['id'], $this->buyer->id, $group, $o['lines'], $due, 'quotation:bonus');
+        DB::table('invoices')->update(['status' => 'PAID']);
+        DB::table('orders')->update(['status' => 'CONFIRMED', 'payment_status' => 'PARTIALLY_PAID']);
+        DB::table('shipping_rates')->update(['base_amount' => 0, 'amount_per_kg' => 0]);
+
+        return DB::table('orders')->where('id', $o['id'])->value('number');
+    });
+    ($this->staffSession)();
+    $item = DB::table('order_items')->where('unit_amount', 0)->sole();
+    $p = ['order_number' => $order, 'warehouse_id' => DB::table('warehouses')->sole()->id, 'service_code' => 'REG', 'items' => [['order_item_id' => $item->public_id, 'qty' => 1]]];
+    $number = ($this->write)('admin/shipments', $p)->assertOk()->json('data.number');
+    ($this->pack)($number, $order);
+    ($this->write)("admin/shipments/$number/dispatches", ['service_code' => 'REG', 'tracking_number' => 'BONUS'])->assertOk();
+    expect(DB::table('invoices')->where('purpose', 'BALANCE')->exists())->toBeFalse();
+});
 it('guards archive separately from updates and rejects duplicate couriers', function () {
     ($this->staffSession)();
     $d = ['code' => 'xp', 'name' => 'Express', 'active' => true];

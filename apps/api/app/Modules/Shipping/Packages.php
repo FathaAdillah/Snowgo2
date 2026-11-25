@@ -6,6 +6,7 @@ use App\Modules\Foundation\Audit\Journal;
 use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Inventory\StockReservations;
+use App\Modules\Invoicing\BalanceInvoices;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -181,12 +182,15 @@ final class Packages
             if (! $rts && $i->term === 'DEPOSIT') {
                 $cursor = $l->coverage_start;
                 foreach (DB::table('invoice_items as l')->join('invoices as v', 'v.id', '=', 'l.invoice_id')->where(['l.order_item_id' => $i->id, 'v.purpose' => 'BALANCE', 'v.status' => 'PAID'])->whereNotNull('l.coverage_start')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.covered_qty']) as $b) {
-                    if ($b->coverage_start > $cursor) {
-                        break;
+                    if ($b->coverage_start > $cursor && BalanceInvoices::balanceForRange($i, $cursor, min($end, $b->coverage_start)) > 0) {
+                        throw self::invalid();
                     }
                     $cursor = max($cursor, $b->coverage_start + $b->covered_qty);
+                    if ($cursor >= $end) {
+                        break;
+                    }
                 }
-                if ($cursor < $end) {
+                if ($cursor < $end && BalanceInvoices::balanceForRange($i, $cursor, $end) > 0) {
                     throw self::invalid();
                 }
             }
