@@ -56,13 +56,8 @@ final class CampaignWindow
                 if (! $c) {
                     return 0;
                 }
-                if ($c->status === 'SCHEDULED') {
-                    $this->transition($c, 'OPEN', null);
-                    $c->status = 'OPEN';
-                }
-                if (DB::scalar('SELECT ?::timestamptz <= clock_timestamp()', [$c->ends_at])) {
-                    $this->transition($c, 'CLOSED', null);
-                }
+                $ended = DB::scalar('SELECT ?::timestamptz <= clock_timestamp()', [$c->ends_at]);
+                $this->transition($c, $ended ? 'CLOSED' : 'OPEN', null);
 
                 return 1;
             });

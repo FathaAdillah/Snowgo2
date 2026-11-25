@@ -66,6 +66,14 @@ it('requires action grants, replays creation, and hides drafts and staff counter
     $this->assertDatabaseHas('preorder_campaigns', ['slug' => 'winter', 'status' => 'CLOSED']);
 });
 
+it('closes a missed scheduled window without announcing that sales opened', function () {
+    DB::table('preorder_campaigns')->update(['status' => 'SCHEDULED', 'ends_at' => now()->subMinute()]);
+    expect(app(CampaignWindow::class)->advanceDue())->toBe(1)->and(app(CampaignWindow::class)->advanceDue())->toBe(0);
+    $this->assertDatabaseHas('status_histories', ['subject_type' => 'preorder_campaign', 'from_status' => 'SCHEDULED', 'to_status' => 'CLOSED']);
+    $this->assertDatabaseMissing('status_histories', ['subject_type' => 'preorder_campaign', 'to_status' => 'OPEN']);
+    expect(DB::table('outbox_events')->where('event_type', 'PreorderStatusChanged')->count())->toBe(1);
+});
+
 it('rejects invalid campaign data and rolls back offers, journal and events', function (array $change, string $field) {
     ($this->asStaff)('admin');
     $this->postJson($this->admin, array_replace_recursive($this->input, $change), ['Idempotency-Key' => 'bad'])->assertUnprocessable()->assertJsonValidationErrors($field);
