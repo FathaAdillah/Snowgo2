@@ -11,11 +11,19 @@ use Illuminate\Support\Facades\DB;
 
 final class RefundOrderCancellation
 {
+    public static function processing(int $order): bool
+    {
+        return DB::table('refunds')->where(['order_id' => $order, 'cancel_order' => true])->whereIn('status', ['PROCESSING', 'FAILED'])->exists();
+    }
+
     public static function check(object $refund): void
     {
         $order = DB::table('orders')->where('id', $refund->order_id)->firstOrFail();
         if ($order->status !== 'CONFIRMED'
             || DB::table('order_items')->where('order_id', $order->id)->where('shipped_qty', '>', 0)->exists()
+            || DB::table('payments as p')->join('payment_allocations as a', 'a.payment_id', '=', 'p.id')
+                ->join('invoices as i', 'i.id', '=', 'a.invoice_id')->where('i.order_id', $order->id)
+                ->where('p.status', 'UNPAID')->where('p.expires_at', '>', now())->exists()
             || DB::table('order_transition_holds')->where(['order_id' => $order->id, 'kind' => 'PROOF_REVIEW'])->exists()
             || DB::table('refunds')->where(['order_id' => $order->id, 'cancel_order' => true])->where('id', '!=', $refund->id)->whereIn('status', ['PROCESSING', 'FAILED'])->exists()) {
             throw Refunds::invalid();

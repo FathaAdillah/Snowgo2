@@ -8,6 +8,7 @@ use App\Modules\Foundation\Audit\Subject;
 use App\Modules\Foundation\Files\StoredFiles;
 use App\Modules\Foundation\Outbox\Outbox;
 use App\Modules\Inventory\StockReservations;
+use App\Modules\Refunds\RefundOrderCancellation;
 use App\Support\Http\ApiProblem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -35,7 +36,7 @@ final class PaymentFlow
                 $due = $extended && $invoice->replaces_invoice_id === null ? $extended : min($due, $extended ?? $order->payment_due_at);
             }
             if ($invoice->total_amount <= 0 || $invoice->status !== 'ISSUED' || $invoice->currency !== 'IDR' || ! in_array($order->status, ['PENDING_PAYMENT', 'CONFIRMED'], true)
-                || self::due($due) || DB::table('payment_allocations as a')->join('payments as p', 'p.id', '=', 'a.payment_id')
+                || RefundOrderCancellation::processing($order->id) || self::due($due) || DB::table('payment_allocations as a')->join('payments as p', 'p.id', '=', 'a.payment_id')
                     ->where('a.invoice_id', $invoice->id)->where(fn ($q) => $q->whereIn('p.status', self::LIVE)->orWhereNotNull('a.applied_at'))->exists()) {
                 throw new ApiProblem(409, 'INVOICE_NOT_PAYABLE', 'Invoice is not available for a new payment.');
             }
@@ -91,7 +92,7 @@ final class PaymentFlow
         $newDue = $submitted->copy()->addHours(OperationalSettings::value('payment.verification_hold_hours'))->toISOString();
         $deadline = $newDue;
         foreach ($orders as $order) {
-            if (DB::table('refunds')->where(['order_id' => $order->id, 'cancel_order' => true])->whereIn('status', ['PROCESSING', 'FAILED'])->exists()
+            if (RefundOrderCancellation::processing($order->id)
                 || ! in_array($order->status, ['CONFIRMED', 'PENDING_PAYMENT'], true)) {
                 throw self::invalid();
             }

@@ -272,6 +272,9 @@ it('serializes cancellation-bearing bank attempts before an executor sends funds
     ($this->write)('admin/refunds/SECOND/execution-attempts', $start)->assertConflict();
     ($this->write)('admin/refunds/FIRST/execution-attempts', ['action' => 'FAIL', 'reason_code' => 'CANCEL'])->assertOk();
     ($this->write)('admin/refunds/SECOND/execution-attempts', $start)->assertConflict();
+    ($this->login)($this->buyer);
+    ($this->write)('payments', $this->intent)->assertConflict()->assertJsonPath('code', 'INVOICE_NOT_PAYABLE');
+    $this->assertDatabaseCount('payments', 0);
 });
 
 it('uses the review timeout without shortening the original order and stock deadlines', function () {
