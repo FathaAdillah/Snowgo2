@@ -43,7 +43,7 @@ Sediakan toko satu merchant dengan tiga cara pembelian, jalur operasi admin, dan
 | BR-CNT-001 | Konten toko | Publik hanya melihat versi terbit yang efektif |
 | BR-NTF-001 | Notifikasi | Notifikasi in-app tidak duplikat dan email dilacak per delivery |
 | BR-SRC-001 | Search dan SEO | Draft tidak ditemukan dan canonical/metadata tersedia |
-| BR-RPT-001 | Dashboard dan laporan | Revenue memakai dana terverifikasi dikurangi refund selesai |
+| BR-RPT-001 | Dashboard dan laporan | Pada dashboard operasional, penerimaan bersih adalah pembayaran terverifikasi dikurangi refund selesai. Laporan keuangan Phase 2 memisahkan penerimaan, piutang dan laba berdasarkan pendapatan yang diakui, HPP dan biaya operasional. |
 | BR-ADM-001 | Administrasi | Perubahan sensitif memiliki actor dan audit record |
 | BR-FND-001 | Platform dan operasi | Build dan deployment dapat diulang dan kegagalan terlihat |
 | BR-SEC-001 | Kontrol keamanan dan aksesibilitas | Operasi sensitif terlindungi dan keyboard journeys dapat diselesaikan |
