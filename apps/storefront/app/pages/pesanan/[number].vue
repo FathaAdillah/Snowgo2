@@ -124,8 +124,9 @@ async function act(path: string, body: Record<string, unknown>, question: string
           Selesaikan pesanan
         </button>
         <RefundForm
-          v-if="['PAID', 'PARTIALLY_PAID', 'PARTIALLY_REFUNDED'].includes(o.payment_status)"
+          v-if="(o.refundable_amount ?? 0) > 0"
           :order="o"
+          @refresh="refresh()"
         />
       </template>
     </StoreResult>

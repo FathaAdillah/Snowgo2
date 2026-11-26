@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{ order: StoreRead<'/orders/{number}'>['data'] }>()
+const emit = defineEmits<{ refresh: [] }>()
 const kind = ref('PARTIAL')
 const reason = ref('')
 const amount = ref<number>()
@@ -10,10 +11,15 @@ const cancel = ref(false)
 const { busy, problem, run } = useCustomerAction()
 const write = useRetryableCustomerWrite()
 async function submit() {
-  const body = { kind: kind.value, order_number: props.order.number, requested_amount: amount.value, reason_code: reason.value,
+  const body = { kind: kind.value, order_number: props.order.number, requested_amount: kind.value === 'FULL' ? props.order.refundable_amount : amount.value, reason_code: reason.value,
     cancel_order: cancel.value, ...(note.value ? { note: note.value } : {}), ...(kind.value === 'ITEM' ? { items: [{ order_item_id: item.value, qty: qty.value, requested_amount: amount.value }] } : {}) }
-  const result = await write<{ data: { number: string } }>('/refunds', body)
-  await navigateTo('/purnajual/refund/' + result.data.number)
+  try {
+    const result = await write<{ data: { number: string } }>('/refunds', body)
+    await navigateTo('/purnajual/refund/' + result.data.number)
+  } catch (err) {
+    if ((err as { data?: { code?: string } }).data?.code === 'REFUND_LIMIT') emit('refresh')
+    throw err
+  }
 }
 </script>
 
@@ -52,12 +58,14 @@ async function submit() {
         >
         </label>
       </template>
-      <label>Nominal refund (Rp)<input
+      <p>Dana yang dapat diajukan untuk refund · {{ rupiah(order.refundable_amount ?? 0) }}</p>
+      <label v-if="kind !== 'FULL'">Nominal refund (Rp)<input
         v-model.number="amount"
         required
         type="number"
         min="1"
         step="1"
+        :max="order.refundable_amount"
       >
       </label>
       <ReasonChoice

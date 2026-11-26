@@ -21230,6 +21230,9 @@
                                                 "payment_due_at": {
                                                     "type": "string"
                                                 },
+                                                "refundable_amount": {
+                                                    "type": "integer"
+                                                },
                                                 "subtotal_amount": {
                                                     "type": "integer"
                                                 },
@@ -46843,6 +46846,9 @@
                                                     "payment_due_at": {
                                                         "type": "string"
                                                     },
+                                                    "refundable_amount": {
+                                                        "type": "integer"
+                                                    },
                                                     "subtotal_amount": {
                                                         "type": "integer"
                                                     },
@@ -47305,6 +47311,9 @@
                                                 },
                                                 "payment_due_at": {
                                                     "type": "string"
+                                                },
+                                                "refundable_amount": {
+                                                    "type": "integer"
                                                 },
                                                 "subtotal_amount": {
                                                     "type": "integer"
@@ -47835,6 +47844,9 @@
                                                 },
                                                 "payment_due_at": {
                                                     "type": "string"
+                                                },
+                                                "refundable_amount": {
+                                                    "type": "integer"
                                                 },
                                                 "subtotal_amount": {
                                                     "type": "integer"

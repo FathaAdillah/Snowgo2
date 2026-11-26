@@ -8132,6 +8132,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -8252,6 +8253,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -8395,6 +8397,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -20421,6 +20424,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
