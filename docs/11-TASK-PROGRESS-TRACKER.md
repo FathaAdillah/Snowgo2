@@ -2,6 +2,18 @@
 
 Sumber status pengerjaan development. Setiap epic di bawah memiliki feature PRD, task yang dapat diuji dan subtasks praktis di deskripsi. Milestone E00 menutup review dokumentasi dengan product owner. Centang menunjukkan penyelesaian scope task, bukan kesiapan go-live.
 
+## Ringkasan progres
+
+| Status | Jumlah task | Cakupan |
+|---|---:|---|
+| `DONE` | 32 | TASK-001–032. Tracking, refund, retur, laporan transaksi dan antrean admin (TASK-026–030) selesai melalui [PR #47](https://github.com/FathaAdillah/Snowgo2/pull/47). |
+| `TESTING` | 2 | TASK-033–034: [storefront sudah diimplementasikan](https://github.com/FathaAdillah/Snowgo2/pull/50). Verifikasi visual desktop/ponsel dan perjalanan pembeli dengan keyboard masih terbuka. |
+| `NOT_STARTED` | 12 | TASK-000 menunggu keputusan PO atas Q-01–Q-05; TASK-035–045 belum dimulai. Dashboard keuangan dan laba rugi (TASK-044–045) masih [rencana](https://github.com/FathaAdillah/Snowgo2/pull/53), bukan bagian laporan transaksi yang sudah selesai. |
+
+**Dokumentasi TASK-034:** [Panduan operasional Ready Stock, Open Preorder dan Request Order](PANDUAN-OPERASIONAL-PEMBELIAN.md) selesai melalui [PR #54](https://github.com/FathaAdillah/Snowgo2/pull/54). Panduan ini tidak menggantikan uji browser.
+
+## Milestone dan daftar task
+
 | Epic | Milestone | Dependensi milestone |
 |---|---|---|
 | E00 | Discovery dan arsitektur | — |
