@@ -110,7 +110,7 @@ function save() {
         />
       </UFormField>
       <UFormField label="ID gambar katalog terbit">
-        <UInput v-model="edit.media_id" />
+        <UInput :model-value="edit.media_id ?? undefined" @update:model-value="edit.media_id = String($event)" />
       </UFormField>
       <UFormField label="Urutan">
         <UInput
@@ -129,7 +129,7 @@ function save() {
         v-if="edit.status === 'PUBLISHED'"
         label="Waktu terbit (ISO 8601 beserta zona waktu, kosong untuk sekarang)"
       >
-        <UInput v-model="edit.publish_at" />
+        <UInput :model-value="edit.publish_at ?? undefined" @update:model-value="edit.publish_at = String($event)" />
       </UFormField>
       <div class="flex gap-2">
         <UButton
