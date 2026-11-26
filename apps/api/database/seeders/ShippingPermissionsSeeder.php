@@ -10,7 +10,11 @@ final class ShippingPermissionsSeeder extends FeaturePermissions
     public static function initialGrants(string $role): array
     {
         return match ($role) {
-            'admin' => self::ACTIONS,'warehouse' => array_values(array_filter(self::ACTIONS, fn ($k) => str_contains($k, 'shipment.') || str_ends_with($k, '.view') || in_array($k, ['shipping.quote.create', 'orders.packing.manage'], true))),default => []
+            'admin' => self::ACTIONS,
+            'warehouse' => array_values(array_filter(self::ACTIONS, fn ($k) => str_contains($k, 'shipment.') || str_ends_with($k, '.view') || in_array($k, ['shipping.quote.create', 'orders.packing.manage'], true))),
+            'order_staff' => ['shipping.shipment.view', 'orders.packing.manage', 'shipping.courier.view', 'shipping.service.view', 'shipping.rate.view'],
+            'customer_service' => ['shipping.shipment.view'],
+            default => [],
         };
     }
 }

@@ -194,6 +194,24 @@ it('ships separated units together with one freight share and refunds the return
     expect(DB::table('refund_items')->sole()->qty)->toBe(2);
 });
 
+it('seeds packing and tracking for order staff and shipment lookup for customer service', function () {
+    $this->staff->syncRoles(['order_staff']);
+    ($this->staffSession)();
+    foreach (['shipments', 'couriers', 'courier-services', 'shipping-rates'] as $resource) {
+        $this->getJson('/api/v1/admin/'.$resource)->assertOk();
+    }
+    expect($this->staff->can('orders.packing.manage'))->toBeTrue()
+        ->and($this->staff->can('shipping.tracking.manage'))->toBeTrue();
+    ($this->write)('admin/shipments', [])->assertForbidden();
+    ($this->write)('admin/couriers', [])->assertForbidden();
+    $this->staff->syncRoles(['customer_service']);
+    $this->getJson('/api/v1/admin/shipments')->assertOk();
+    $this->getJson('/api/v1/admin/shipping-rates')->assertForbidden();
+    ($this->write)('admin/orders/example/packing-events', [])->assertForbidden();
+    ($this->write)('admin/shipments/example/tracking-events', [])->assertForbidden();
+    ($this->write)('admin/shipments/example/dispatches', [])->assertForbidden();
+});
+
 it('guards archive separately from updates and rejects duplicate couriers', function () {
     ($this->staffSession)();
     $d = ['code' => 'xp', 'name' => 'Express', 'active' => true];
