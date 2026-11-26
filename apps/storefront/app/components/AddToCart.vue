@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const props = defineProps<{ sku: string, campaign?: string, min?: number, max?: number, full?: boolean, deposit?: boolean }>()
+const props = withDefaults(defineProps<{ sku: string, campaign?: string, min?: number, max?: number, full?: boolean, deposit?: boolean }>(), {
+  full: true
+})
 const qty = ref(props.min ?? 1)
 const term = ref(props.full === false ? 'DEPOSIT' : 'FULL')
 const { busy, notice, problem, run } = useCustomerAction()
