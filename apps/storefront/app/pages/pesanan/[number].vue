@@ -126,7 +126,6 @@ async function act(path: string, body: Record<string, unknown>, question: string
         <RefundForm
           v-if="(o.refundable_amount ?? 0) > 0"
           :order="o"
-          @refresh="refresh()"
         />
       </template>
     </StoreResult>
