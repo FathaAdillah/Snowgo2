@@ -29,6 +29,7 @@ enum Subject: string
     case StockReservation = 'stock_reservation';
     case Warehouse = 'warehouse';
     case Product = 'product';
+    case ContentEntry = 'content_entry';
     case Variant = 'variant';
     case Category = 'category';
     case Brand = 'brand';

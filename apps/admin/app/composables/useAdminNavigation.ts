@@ -106,8 +106,7 @@ export const adminNavigation: NavEntry[] = [
     label: 'Konten & Promo',
     icon: 'i-lucide-megaphone',
     children: [
-      { label: 'Homepage & Banner', icon: 'i-lucide-panels-top-left' },
-      { label: 'Halaman & FAQ', icon: 'i-lucide-book-open' },
+      { label: 'Konten Storefront', icon: 'i-lucide-panels-top-left', to: '/content', permission: 'content.entry.view' },
       { label: 'Promo & Kupon', icon: 'i-lucide-ticket-percent' }
     ]
   },

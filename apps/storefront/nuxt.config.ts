@@ -21,10 +21,12 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // Private Laravel upstream (Nginx/PHP-FPM); override with NUXT_API_INTERNAL_ORIGIN.
-    apiInternalOrigin: 'http://127.0.0.1:8000'
+    apiInternalOrigin: 'http://127.0.0.1:8000',
+    public: { siteUrl: 'http://localhost' }
   },
 
   routeRules: {
+    ...Object.fromEntries(['/akun', '/akun/**', '/favorit', '/keranjang', '/pesanan', '/pesanan/**', '/invoice/**', '/pembayaran/**', '/pengiriman/**', '/purnajual', '/purnajual/**', '/request-order', '/request-order/**', '/masuk', '/verify-email', '/reset-password', '/auth/**'].map(path => [path, { ssr: false, headers: { 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex', 'referrer-policy': 'strict-origin' } }])),
     '/**': { headers: { 'x-frame-options': 'DENY', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' } }
   },
 

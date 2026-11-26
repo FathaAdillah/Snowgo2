@@ -192,6 +192,7 @@ it('holds refund caps, separates approval from transfer and replays a confirmed 
     DB::table('reason_codes')->insert(['domain' => 'refunds', 'code' => 'CANCEL', 'label' => 'Cancel order']);
     ($this->login)($this->buyer);
     $request = ['order_number' => DB::table('orders')->sole()->number, 'kind' => 'FULL', 'reason_code' => 'CANCEL', 'requested_amount' => $amount, 'cancel_order' => true];
+    $this->getJson('/api/v1/orders/'.$request['order_number'])->assertOk()->assertJsonPath('data.refundable_amount', $amount);
     $refund = ($this->write)('refunds', $request, 'refund')->assertCreated()->json('data.number');
     ($this->write)('refunds', $request, 'refund')->assertCreated()->assertJsonPath('data.number', $refund);
     $other = ($this->write)('refunds', $request)->assertCreated()->json('data.number');
@@ -235,6 +236,8 @@ it('holds refund caps, separates approval from transfer and replays a confirmed 
     $executor->syncRoles(['warehouse']);
     $this->getJson('/api/v1/admin/dashboard')->assertOk();
     $this->getJson($report)->assertForbidden();
+    ($this->login)($this->buyer);
+    $this->getJson('/api/v1/orders/'.$request['order_number'])->assertOk()->assertJsonPath('data.refundable_amount', 0);
 });
 
 it('isolates store settings and audit access, and refuses stale configuration updates', function () {
