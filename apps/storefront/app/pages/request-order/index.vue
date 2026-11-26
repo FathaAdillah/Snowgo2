@@ -6,14 +6,14 @@ const { busy, problem, run } = useCustomerAction()
 const write = useRetryableCustomerWrite()
 const title = ref('')
 const description = ref('')
-const budget = ref<number>()
+const budget = ref<number | ''>()
 const target = ref('')
 const item = () => ({ name: '', qty: 1, source_url: '', options: '' })
 const items = ref([item()])
 async function submit() {
   await run(async () => {
     const response = await write<{ data: { number: string } }>('/request-orders', {
-      title: title.value, description: description.value, ...(budget.value != null && budget.value !== 0 ? { budget_amount: budget.value } : {}),
+      title: title.value, description: description.value, ...(typeof budget.value === 'number' ? { budget_amount: budget.value } : {}),
       ...(target.value ? { target_date: target.value } : {}),
       items: items.value.map(i => ({ name: i.name, qty: i.qty, ...(i.source_url ? { source_url: i.source_url } : {}), ...(i.options ? { options: i.options } : {}) }))
     })
