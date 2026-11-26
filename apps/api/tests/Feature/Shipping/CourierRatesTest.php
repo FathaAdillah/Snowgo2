@@ -62,7 +62,7 @@ it('requires the explicit sync grant and replays the same imported page without 
     Http::assertSentCount(1);
 });
 
-it('freezes measured package freight and issues no invoice before the customer accepts', function (string $method) {
+it('freezes measured package freight and issues no invoice before the customer accepts', function (string $method, string $source) {
     courierFixtures($this->district);
     $order = DB::transaction(function () use ($method) {
         $addr = ['district_id' => $this->district, 'line1' => 'Street', 'recipient' => 'Buyer', 'phone' => '090', 'postal_code' => '12345', 'region_snapshot' => []];
@@ -82,22 +82,31 @@ it('freezes measured package freight and issues no invoice before the customer a
     $route = ['warehouse_id' => DB::table('warehouses')->sole()->id, 'order_number' => $order, 'measured_weight_g' => 1250];
     $write = fn ($url, $body) => $this->postJson('/api/v1/'.$url, $body, ['Idempotency-Key' => (string) Str::uuid()]);
     $plan = ['items' => [['order_item_id' => DB::table('order_items')->sole()->public_id, 'qty' => 1]], 'service_code' => 'REG'] + $route;
-    $option = $this->getJson('/api/v1/admin/shipment-rate-options?'.http_build_query($route))->assertOk()->assertJsonPath('data.0.source', 'API_CO_ID')->json('data.0');
+    $offers = collect($this->getJson('/api/v1/admin/shipment-rate-options?'.http_build_query($route))->assertOk()->assertJsonCount(2, 'data')->json('data'));
+    $option = $offers->sole('source', $source);
+    $amount = $source === 'MANUAL' ? 200 : 10000;
     $plan += ['rate_key' => $option['rate_key'], 'service_id' => $option['service_id']];
-    $this->travel(16)->minutes();
+    if ($source === 'MANUAL') {
+        DB::table('shipping_rates')->increment('base_amount');
+    } else {
+        $this->travel(16)->minutes();
+    }
     $write('admin/shipments', $plan)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
     $this->assertDatabaseCount('shipments', 0);
     $this->travelBack();
+    if ($source === 'MANUAL') {
+        DB::table('shipping_rates')->decrement('base_amount');
+    }
     $write('admin/shipments', ['measured_weight_g' => 1251] + $plan)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
-    $n = $write('admin/shipments', $plan)->assertOk()->assertJsonPath('data.shipping_amount', 10000)->json('data.number');
+    $n = $write('admin/shipments', $plan)->assertOk()->assertJsonPath('data.shipping_amount', $amount)->json('data.number');
     $q = $write('admin/shipping-quotes', ['order_number' => $order, 'shipment_number' => $n])->assertOk()->json('data.0.id');
     $proposal = $write("admin/orders/$order/charge-consents", ['type' => 'DOMESTIC_SHIPPING', 'quote_id' => $q, 'expires_at' => now()->addHours(4)->toISOString()])->assertOk()->json('data.id');
     $this->assertDatabaseCount('invoices', 0);
     ($this->login)($this->buyer);
     $write("orders/$order/charge-consents/$proposal/decisions", ['decision' => 'ACCEPT'])->assertOk();
-    $this->assertDatabaseHas('invoices', ['purpose' => 'ADDITIONAL_CHARGE', 'total_amount' => 10000]);
+    $this->assertDatabaseHas('invoices', ['purpose' => 'ADDITIONAL_CHARGE', 'total_amount' => $amount]);
     Http::assertSentCount(1);
-})->with(['PREORDER', 'REQUEST_ORDER']);
+})->with([['PREORDER', 'API_CO_ID'], ['REQUEST_ORDER', 'API_CO_ID'], ['PREORDER', 'MANUAL']]);
 
 it('maps each reference beneath its parent without changing existing address IDs or unarchiving couriers', function () {
     $base = 'https://use.api.co.id/courier/v1/';
