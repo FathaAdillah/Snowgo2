@@ -3,6 +3,7 @@
 namespace App\Modules\Shipping\Http;
 
 use App\Modules\Foundation\Idempotency\IdempotentMutation;
+use App\Modules\Shipping\PackageRates;
 use App\Modules\Shipping\Packages;
 use App\Modules\Shipping\ProviderFreight;
 use App\Modules\Shipping\Tracking;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 
 final class ShipmentController
 {
-    #[Response(200, type: 'array{success:bool,message:string,data:list<array{service_id:int,service_code:string,carrier_label:string,amount:int,source:string}>,meta:array{request_id:string}}')]
+    #[Response(200, type: 'array{success:bool,message:string,data:list<array{service_id:int,service_code:string,carrier_label:string,amount:int,source:string,rate_key:string}>,meta:array{request_id:string}}')]
     public function options(Request $request): JsonResponse
     {
         $d = $request->validate(['order_number' => 'required|string|max:40', 'warehouse_id' => 'required|integer|min:1', 'measured_weight_g' => 'required|integer|between:1,2147483647']);
@@ -29,19 +30,11 @@ final class ShipmentController
             if ($order->status !== 'CONFIRMED' || $order->selling_method === 'READY_TO_SHIP') {
                 throw Packages::invalid();
             }
-            $dest = DB::table('order_addresses')->where('order_id', $order->id)->value('district_id');
-            $origin = DB::table('warehouses')->where(['id' => $d['warehouse_id'], 'active' => true])->firstOrFail()->district_id;
-            $grams = (int) $d['measured_weight_g'];
-            $rates = ProviderFreight::offers($origin, $dest, $grams, $lookup);
-            if ($rates->isNotEmpty()) {
-                return $rates->map(fn ($r) => ['service_id' => $r->service_id, 'service_code' => $r->service_code, 'carrier_label' => $r->carrier_label, 'amount' => $r->amount, 'source' => 'API_CO_ID']);
-            }
-            $kg = intdiv($grams + 999, 1000);
+            $warehouse = DB::table('warehouses')->where(['id' => $d['warehouse_id'], 'active' => true])->firstOrFail();
 
-            return DB::table('shipping_rates as r')->join('courier_services as s', 's.id', '=', 'r.service_id')->join('couriers as c', 'c.id', '=', 's.courier_id')
-                ->where(['r.origin_region_id' => $origin, 'r.destination_region_id' => $dest, 'r.active' => true, 's.active' => true, 'c.active' => true])
-                ->whereRaw('amount_per_kg <= (1000000000000 - base_amount) / ?', [$kg])->orderBy('r.id')
-                ->get(['r.*', 's.code as service_code', 'c.name as carrier_label'])->map(fn ($r) => ['service_id' => $r->service_id, 'service_code' => $r->service_code, 'carrier_label' => $r->carrier_label, 'amount' => $r->base_amount + $r->amount_per_kg * $kg, 'source' => 'MANUAL']);
+            return PackageRates::available($order, $warehouse, (int) $d['measured_weight_g'], $lookup)
+                ->map(fn ($r) => ['service_id' => $r->service_id, 'service_code' => $r->service_code, 'carrier_label' => $r->carrier_label,
+                    'amount' => $r->amount, 'source' => $r->source, 'rate_key' => $r->rate_key]);
         });
         if ($offers->isEmpty()) {
             throw new ApiProblem(409, 'NO_SHIPPING_RATE', 'Ongkir belum tersedia untuk rute ini.');
@@ -117,7 +110,7 @@ final class ShipmentController
     #[Response(200, type: self::ONE)]
     public function create(Request $request): JsonResponse
     {
-        $d = $request->validate(['order_number' => 'required|string|max:40', 'service_code' => 'required|string|max:32', 'service_id' => 'sometimes|required|integer|min:1', 'warehouse_id' => 'required|integer|min:1', 'measured_weight_g' => 'sometimes|required|integer|between:1,2147483647', 'items' => 'required|array|list|min:1|max:100', 'items.*' => 'required|array:order_item_id,qty', 'items.*.order_item_id' => 'required|string|ulid|distinct', 'items.*.qty' => 'required|integer|between:1,100000']);
+        $d = $request->validate(['order_number' => 'required|string|max:40', 'service_code' => 'required|string|max:32', 'service_id' => 'sometimes|required|integer|min:1', 'rate_key' => 'sometimes|required|string|size:64', 'warehouse_id' => 'required|integer|min:1', 'measured_weight_g' => 'sometimes|required|integer|between:1,2147483647', 'items' => 'required|array|list|min:1|max:100', 'items.*' => 'required|array:order_item_id,qty', 'items.*.order_item_id' => 'required|string|ulid|distinct', 'items.*.qty' => 'required|integer|between:1,100000']);
 
         return ProviderFreight::withLookup(fn (bool $lookup) => self::write($request, $d, fn () => Packages::detail(Packages::plan($d, $request->user()->id, $lookup))));
     }

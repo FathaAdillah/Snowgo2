@@ -82,8 +82,14 @@ it('freezes measured package freight and issues no invoice before the customer a
     $route = ['warehouse_id' => DB::table('warehouses')->sole()->id, 'order_number' => $order, 'measured_weight_g' => 1250];
     $write = fn ($url, $body) => $this->postJson('/api/v1/'.$url, $body, ['Idempotency-Key' => (string) Str::uuid()]);
     $plan = ['items' => [['order_item_id' => DB::table('order_items')->sole()->public_id, 'qty' => 1]], 'service_code' => 'REG'] + $route;
+    $option = $this->getJson('/api/v1/admin/shipment-rate-options?'.http_build_query($route))->assertOk()->assertJsonPath('data.0.source', 'API_CO_ID')->json('data.0');
+    $plan += ['rate_key' => $option['rate_key'], 'service_id' => $option['service_id']];
+    $this->travel(16)->minutes();
+    $write('admin/shipments', $plan)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
+    $this->assertDatabaseCount('shipments', 0);
+    $this->travelBack();
+    $write('admin/shipments', ['measured_weight_g' => 1251] + $plan)->assertConflict()->assertJsonPath('code', 'QUOTE_CHANGED');
     $n = $write('admin/shipments', $plan)->assertOk()->assertJsonPath('data.shipping_amount', 10000)->json('data.number');
-    $this->getJson('/api/v1/admin/shipment-rate-options?'.http_build_query($route))->assertOk()->assertJsonPath('data.0.source', 'API_CO_ID');
     $q = $write('admin/shipping-quotes', ['order_number' => $order, 'shipment_number' => $n])->assertOk()->json('data.0.id');
     $proposal = $write("admin/orders/$order/charge-consents", ['type' => 'DOMESTIC_SHIPPING', 'quote_id' => $q, 'expires_at' => now()->addHours(4)->toISOString()])->assertOk()->json('data.id');
     $this->assertDatabaseCount('invoices', 0);

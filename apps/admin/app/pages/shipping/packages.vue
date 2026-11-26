@@ -17,12 +17,14 @@ const order = ref('')
 const warehouse = ref<number>()
 const service = ref('')
 const weight = ref<number>()
-type RateOption = { service_id: number, service_code: string, carrier_label: string, amount: number, source: string }
+type RateOption = paths['/admin/shipment-rate-options']['get']['responses'][200]['content']['application/json']['data'][number]
+const chosenRate = ref<RateOption>()
 const options = ref<RateOption[]>([])
 const rateProblem = ref('')
 const loadingRates = ref(false)
 watch([order, warehouse, weight], () => {
-  if (options.value.length) {
+  if (chosenRate.value) {
+    chosenRate.value = undefined
     service.value = ''
     serviceId.value = undefined
   }
@@ -44,6 +46,7 @@ async function lookup() {
   }
 }
 function chooseRate(rate: RateOption) {
+  chosenRate.value = rate
   service.value = rate.service_code
   serviceId.value = rate.service_id
 }
@@ -114,7 +117,7 @@ async function saved() {
     <UCard v-if="allowed('create')">
       <h2>Rencanakan paket</h2><form
         class="space-y-3"
-        @submit.prevent="ask('shipments', { order_number: order, service_code: service, warehouse_id: warehouse, ...(weight ? { measured_weight_g: weight } : {}), ...(serviceId ? { service_id: serviceId } : {}), items: lines.map(l => ({ ...l })) }, `Buat paket untuk ${order}`)"
+        @submit.prevent="ask('shipments', { order_number: order, service_code: service, warehouse_id: warehouse, ...(weight ? { measured_weight_g: weight } : {}), ...(serviceId ? { service_id: serviceId } : {}), ...(chosenRate ? { rate_key: chosenRate.rate_key } : {}), items: lines.map(l => ({ ...l })) }, `Buat paket untuk ${order}`)"
       >
         <div class="flex flex-wrap gap-3">
           <UFormField label="Nomor pesanan">
@@ -138,12 +141,14 @@ async function saved() {
           </UFormField><UFormField label="ID layanan jika kode sama">
             <UInput
               v-model="serviceId"
+              @update:model-value="chosenRate = undefined"
               type="number"
               min="1"
             />
           </UFormField><UFormField label="Kode layanan">
             <UInput
               v-model="service"
+              @update:model-value="chosenRate = undefined"
               required
             />
           </UFormField>

@@ -38857,6 +38857,9 @@
                                                     },
                                                     "source": {
                                                         "type": "string"
+                                                    },
+                                                    "rate_key": {
+                                                        "type": "string"
                                                     }
                                                 },
                                                 "required": [
@@ -38864,7 +38867,8 @@
                                                     "service_code",
                                                     "carrier_label",
                                                     "amount",
-                                                    "source"
+                                                    "source",
+                                                    "rate_key"
                                                 ]
                                             }
                                         },
@@ -39196,6 +39200,11 @@
                                     "service_id": {
                                         "type": "integer",
                                         "minimum": 1
+                                    },
+                                    "rate_key": {
+                                        "type": "string",
+                                        "minLength": 64,
+                                        "maxLength": 64
                                     },
                                     "warehouse_id": {
                                         "type": "integer",

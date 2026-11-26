@@ -14763,6 +14763,7 @@ export interface operations {
                         data: {
                             amount: number;
                             carrier_label: string;
+                            rate_key: string;
                             service_code: string;
                             service_id: number;
                             source: string;
@@ -14881,6 +14882,7 @@ export interface operations {
                     }[];
                     measured_weight_g?: number;
                     order_number: string;
+                    rate_key?: string;
                     service_code: string;
                     service_id?: number;
                     warehouse_id: number;

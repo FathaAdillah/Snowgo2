@@ -76,35 +76,29 @@ final class Packages
             $weight += $qty * $i->weight_g;
         }
         $selected = $rts ? DB::table('shipping_quotes as q')->join('checkouts as c', 'c.cart_id', '=', 'q.cart_id')->where('c.id', $o->checkout_id)->whereNotNull('q.used_at')->first(['q.*']) : null;
-        $dest = DB::table('order_addresses')->where('order_id', $o->id)->value('district_id');
         $grams = $d['measured_weight_g'] ?? $weight;
-        $kg = max(1, intdiv($grams + 999, 1000));
-        $provider = $rts && $selected?->provider_freight_id
-            ? ProviderFreight::rows()->where('f.id', $selected->provider_freight_id)->get()
-            : ($rts ? collect() : ProviderFreight::offers($warehouse->district_id, $dest, $grams, $lookup));
-        if ($provider->isNotEmpty()) {
-            $matches = $rts ? $provider : $provider->where('service_code', strtoupper($d['service_code']))
-                ->when(isset($d['service_id']), fn ($c) => $c->where('service_id', $d['service_id']));
-            if ($matches->count() !== 1 || ($rts && $selected->service_code_snapshot !== $d['service_code'])) {
-                throw new ApiProblem(409, 'NO_SHIPPING_RATE', 'Select an eligible provider service for this package.');
+        if ($rts) {
+            if (isset($d['rate_key']) || ! $selected || $selected->service_code_snapshot !== $d['service_code']) {
+                throw new ApiProblem(409, 'NO_SHIPPING_RATE', 'Select the service from checkout.');
+            }
+            $r = DB::table('courier_services')->where('id', $selected->service_id)->firstOrFail(['id as service_id', 'courier_id as carrier_id']);
+            $source = ['rate_id' => $selected->rate_id, 'provider_freight_id' => $selected->provider_freight_id];
+            $amount = self::checkoutFreightShare($o->id, $selected->amount, $rows);
+        } else {
+            $key = $d['rate_key'] ?? null;
+            $matches = PackageRates::available($o, $warehouse, $grams, $lookup && $key === null)
+                ->where('service_code', strtoupper($d['service_code']))
+                ->when(isset($d['service_id']), fn ($c) => $c->where('service_id', $d['service_id']))
+                ->when($key !== null, fn ($c) => $c->whereStrict('rate_key', $key));
+            if ($matches->count() !== 1) {
+                throw $key !== null ? new ApiProblem(409, 'QUOTE_CHANGED', 'Tarif berubah atau kedaluwarsa. Cek layanan kembali.')
+                    : new ApiProblem(409, 'NO_SHIPPING_RATE', 'Select an unambiguous eligible service.');
             }
             $r = $matches->first();
-            $source = ['provider_freight_id' => $r->id];
-            $freight = $r->amount;
-        } else {
-            $rates = DB::table('shipping_rates as r')->join('courier_services as v', 'v.id', '=', 'r.service_id')->join('couriers as c', 'c.id', '=', 'v.courier_id')->when($rts, fn ($q) => $q->where('r.id', $selected?->rate_id), fn ($q) => $q->where(['v.code' => $d['service_code'], 'r.active' => true, 'v.active' => true, 'c.active' => true, 'r.origin_region_id' => $warehouse->district_id, 'r.destination_region_id' => $dest])->when(isset($d['service_id']), fn ($q) => $q->where('v.id', $d['service_id'])))->sharedLock()->limit(2)->get(['r.*', 'v.code as service_code', 'c.name as carrier_label', 'c.id as carrier_id']);
-            if ($rates->count() !== 1 || ($rts && $selected?->service_code_snapshot !== $d['service_code'])) {
-                throw new ApiProblem(409, 'NO_SHIPPING_RATE', 'Select an unambiguous eligible service.');
-            }
-            $r = $rates->first();
-            if (! $rts && $r->amount_per_kg > intdiv(1000000000000 - $r->base_amount, $kg)) {
-                throw self::quantity();
-            }
-            $source = ['rate_id' => $r->id];
-            $freight = $r->base_amount + $kg * $r->amount_per_kg;
+            $source = $r->source === 'API_CO_ID' ? ['provider_freight_id' => $r->id] : ['rate_id' => $r->id];
+            $amount = $r->amount;
         }
         $n = sprintf('SHP-%s-%06d', now()->format('Ymd'), DB::scalar("SELECT nextval('shipment_number_seq')"));
-        $amount = $selected ? self::checkoutFreightShare($o->id, $selected->amount, $rows) : $freight;
         $s = DB::table('shipments')->insertGetId($source + ['number' => $n, 'order_id' => $o->id, 'warehouse_id' => $warehouse->id, 'weight_g' => $grams, 'service_id' => $r->service_id, 'carrier_id' => $r->carrier_id, 'carrier_label' => $selected->carrier_label_snapshot ?? $r->carrier_label, 'service_code' => $selected->service_code_snapshot ?? $r->service_code, 'shipping_amount' => $amount, 'eta_min_days' => $selected->estimated_days_from ?? $r->eta_min_days, 'eta_max_days' => $selected->estimated_days_to ?? $r->eta_max_days]);
         foreach ($rows as $row) {
             DB::table('shipment_items')->insert(['shipment_id' => $s] + $row);
