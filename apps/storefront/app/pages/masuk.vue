@@ -20,7 +20,7 @@ async function submit() {
     }
     const response = await customerWrite<StoreRead<'/auth/me'>>('/auth/login', 'POST', { email: email.value, password: password.value })
     password.value = ''
-    const next = typeof route.query.next === 'string' && /^\/(?!\/)[a-z0-9/-]*(\?[^\\]*)?$/.test(route.query.next) ? route.query.next : '/akun'
+    const next = typeof route.query.next === 'string' && /^\/(?!\/)[A-Za-z0-9/_-]*(\?[^\\]*)?$/.test(route.query.next) ? route.query.next : '/akun'
     await navigateTo(response.data.email_verified ? next : '/verify-email')
   }, tab.value === 'login' ? '' : 'Periksa email kamu untuk melanjutkan.')
 }
