@@ -21,7 +21,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // Private Laravel upstream (Nginx/PHP-FPM); override with NUXT_API_INTERNAL_ORIGIN.
-    apiInternalOrigin: 'http://127.0.0.1:8000'
+    apiInternalOrigin: 'http://127.0.0.1:8000',
+    public: { siteUrl: 'http://localhost' }
   },
 
   routeRules: {

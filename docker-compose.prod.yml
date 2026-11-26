@@ -57,6 +57,7 @@ x-api: &api
 x-nitro: &nitro
   environment:
     NUXT_API_INTERNAL_ORIGIN: http://api-nginx:8000
+    NUXT_PUBLIC_SITE_URL: ${APP_URL}
   networks: [internal]
   restart: unless-stopped
   depends_on:
