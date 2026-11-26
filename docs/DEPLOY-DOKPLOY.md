@@ -64,8 +64,9 @@ Gunakan **Advanced → Command** dan jalankan **Deploy** satu tahap per kali. Si
 | 4. Terapkan migrasi dengan image kandidat | `--profile release run --rm --no-deps migrate` |
 | 5. Sinkronkan izin per aksi, bukan data demo | `--profile release run --rm --no-deps migrate php artisan db:seed --class=PermissionSeeder --force --no-interaction` |
 | 6. Jalankan runtime melalui Dokploy | `up -d --wait` **tanpa** `--profile release` |
+| 7. Jika File Mount Nginx berubah/dipulihkan, buat ulang kedua proxy | `up -d --no-deps --force-recreate --wait api-nginx edge` |
 
-Contoh isi lengkap tahap 4 **jika** prefix panel adalah `compose -p snowgo2-prod -f docker-compose.prod.yml`: `compose -p snowgo2-prod -f docker-compose.prod.yml --profile release run --rm --no-deps migrate`. Tahap terakhir harus memakai Compose yang dirender Dokploy agar label domain dan jaringan Traefik ikut diterapkan. Kembalikan kolom Command ke default sesudahnya untuk menghindari menjalankan job migrasi saja pada rilis berikutnya; AutoDeploy tetap mati. Ulangi urutan ini saat mengganti digest. `restart` saja tidak mengganti image.
+Contoh isi lengkap tahap 4 **jika** prefix panel adalah `compose -p snowgo2-prod -f docker-compose.prod.yml`: `compose -p snowgo2-prod -f docker-compose.prod.yml --profile release run --rm --no-deps migrate`. Tahap runtime dan pembuatan ulang proxy harus memakai Compose yang dirender Dokploy agar label domain dan jaringan Traefik ikut diterapkan. Tahap 6 saja tidak mendeteksi perubahan isi file pada path mount yang sama; tahap 7 memasang ulang file dan memproses ulang template edge tanpa membuat ulang DB atau worker. Antisipasi jeda singkat pada kedua domain. Kembalikan kolom Command ke default sesudahnya; AutoDeploy tetap mati. Ulangi urutan ini saat mengganti digest. `restart` saja tidak mengganti image.
 
 **Padanan CLI untuk preflight/job rilis.** Di shell **host Docker tujuan** (bukan console container), gunakan working directory, project, env, dan file Compose efektif yang **sama** dengan deployment Dokploy. Ambil nama/path dari panel atau log deployment; jangan menebak `-p snowego`. Contoh:
 
@@ -87,6 +88,8 @@ Di shell host yang sama, jalankan:
 
 ```sh
 dc ps -a
+dc exec -T edge nginx -t
+dc exec -T api-nginx nginx -t
 dc exec -T api php artisan migrate:status
 dc exec -T api php artisan horizon:status
 dc exec -T api php artisan schedule:list
@@ -118,6 +121,6 @@ Sebelum menerima transaksi, uji storefront dan login admin melalui HTTPS, email 
 | Readiness `503`, email atau scan tertahan | Cek DB/migration, Redis, izin S3 dan objek `.readiness`; lalu status Horizon, scheduler, SMTP dan signature ClamAV. Jangan menandai file `READY` secara manual. |
 | Migrasi atau seeder gagal | Hentikan rilis; jangan lanjut ke tahap runtime. Identifikasi DB/project, versi skema, dan penyebab sebelum mengulang. Jangan hapus volume atau jalankan rollback migrasi otomatis. |
 
-Jika masalahnya pada kode, kembalikan **ketiga digest**, versi File Mounts dan konfigurasi yang cocok, lalu deploy ulang runtime melalui Dokploy **hanya jika skema masih kompatibel**. Periksa readiness dan login lagi. Jika data/skema tidak kompatibel, tahan trafik dan worker; pilih perbaikan maju atau restore terkoordinasi PostgreSQL + objek + key dari titik yang konsisten. Jangan menimpa transaksi baru tanpa rekonsiliasi finance. [Backup dan pemulihan](10-DEPLOYMENT.md#backup-restore-dan-disaster-recovery).
+Jika masalahnya pada kode, kembalikan **ketiga digest**, versi File Mounts dan konfigurasi yang cocok, lalu deploy ulang runtime melalui Dokploy **hanya jika skema masih kompatibel**. Jalankan tahap 6 dan, bila File Mounts dipulihkan, tahap 7. Periksa readiness, aturan kedua domain dan login lagi. Jika data/skema tidak kompatibel, tahan trafik dan worker; pilih perbaikan maju atau restore terkoordinasi PostgreSQL + objek + key dari titik yang konsisten, termasuk Redis/antrian dan outbox yang belum diproses. Jangan menimpa transaksi baru tanpa rekonsiliasi finance. [Backup dan pemulihan](10-DEPLOYMENT.md#backup-restore-dan-disaster-recovery).
 
 Referensi resmi: [Dokploy Docker Compose, Environment, Command dan File Mounts](https://docs.dokploy.com/docs/core/docker-compose) · [Domains dan Preview Compose](https://docs.dokploy.com/docs/core/docker-compose/domains).
