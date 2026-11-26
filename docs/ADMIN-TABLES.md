@@ -9,8 +9,22 @@ Gunakan [tabel Pengguna (`/staff`)](../apps/admin/app/pages/staff.vue) sebagai a
 | Kepala halaman | Judul dan deskripsi singkat di kiri. Jika fitur mengizinkan pembuatan data, tampilkan `UButton` **Tambah …** dengan ikon plus di kanan. Gunakan warna `primary` bawaan tema, bukan `success` atau warna tetap. |
 | Pencarian dan filter | Tempatkan `UInput` pencarian dan filter yang relevan (misalnya `USelect` status) di atas `UTable`, dalam satu `UCard`. Beri label sesuai entitas. Biarkan kontrol turun baris pada layar sempit. |
 | Baris | Gunakan ID record yang stabil, kolom identitas utama di awal, dan **Aksi** di akhir bila diperlukan. Beri teks pada `UBadge` agar status tetap jelas tanpa mengandalkan warna. |
-| Tombol aksi | Gunakan `UButton` ikon lokal, `square`, `variant="outline"`. Pensil netral untuk edit; `error` untuk aksi berisiko. Beri `title` dan `aria-label` yang menyebut aksi; sertakan target pada label aksesibel. Konfirmasi aksi berisiko dengan nama aksi sebenarnya. |
+| Tombol aksi | Gunakan [`AdminRowAction`](../apps/admin/app/components/AdminRowAction.vue) untuk setiap aksi per baris atau per kartu data. Hanya ikon lokal dalam tombol persegi berbingkai, tanpa tulisan. `label` (aksi + target) menjadi tooltip saat diarahkan atau difokuskan dengan keyboard, sekaligus nama untuk pembaca layar. Jangan hanya memakai `title`. |
 | Pagination | Letakkan `UPagination` di kanan bawah: **« ‹ 1 › »** (pertama, sebelumnya, nomor halaman, berikutnya, terakhir). Nomor aktif memakai `primary` bawaan tema; panah netral dan nonaktif di batas halaman. Untuk daftar berpaginasi, tampilkan juga saat hasilnya satu halaman, tetapi tidak saat kosong atau gagal dimuat. |
+
+## Contoh aksi per baris
+
+```vue
+<AdminRowAction
+  icon="i-lucide-eye"
+  :label="`Lihat pesanan ${item.number}`"
+  :to="`/orders/${item.number}`"
+/>
+```
+
+Pakai mata untuk detail, pensil untuk edit, kotak arsip untuk arsipkan, dan kotak dengan panah untuk aktifkan kembali. Pakai warna `error` untuk aksi berisiko dan pertahankan dialog konfirmasinya. Tombol utama halaman dan formulir (**Tambah**, **Simpan**, **Batal**, konfirmasi) tetap memakai teks.
+
+Di layar sentuh, ketuk ikon sekali untuk membaca tooltip, lalu ketuk ikon yang sama lagi untuk menjalankan aksi. Dengan mouse atau keyboard, aksi tetap berjalan dalam satu klik atau aktivasi.
 
 ## Data dan izin
 

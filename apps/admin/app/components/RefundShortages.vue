@@ -35,8 +35,9 @@ function select(id: number) {
     @page="page = $event"
   >
     <template #actions="{ item }">
-      <UButton
-        label="Periksa"
+      <AdminRowAction
+        :label="`Periksa kekurangan ${item.order_number} #${item.id}`"
+        icon="i-lucide-eye"
         @click="select(Number(item.id))"
       />
     </template>

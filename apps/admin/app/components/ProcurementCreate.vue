@@ -61,11 +61,10 @@ function submit() {
         </UFormField>
       </template>
       <template #actions="{ item }">
-        <UButton
-          :label="has(item) ? 'Dipilih' : 'Pilih'"
-          :aria-label="`Pilih ${item.order_number} ${item.sku ?? item.order_item_id}`"
-          variant="outline"
+        <AdminRowAction
           :disabled="has(item) || !compatible(item) || selected.length >= 200"
+          :label="`${has(item) ? 'Dipilih' : 'Pilih'} ${item.order_number} ${item.sku ?? item.order_item_id}`"
+          :icon="has(item) ? 'i-lucide-check' : 'i-lucide-plus'"
           @click="selected.push({ item, qty: 1 })"
         />
       </template>
@@ -89,9 +88,9 @@ function submit() {
             required
           />
         </UFormField>
-        <UButton
-          label="Lepas pilihan"
-          variant="ghost"
+        <AdminRowAction
+          :label="`Lepas pilihan ${row.item.order_number} ${row.item.sku ?? row.item.order_item_id}`"
+          icon="i-lucide-minus"
           @click="selected.splice(index, 1)"
         />
       </div>

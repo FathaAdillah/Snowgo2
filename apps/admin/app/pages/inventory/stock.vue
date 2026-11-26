@@ -62,25 +62,17 @@ const columns = computed<TableColumn<Levels['data'][number]>[]>(() => [
       </template>
       <template #actions="{ item }">
         <div class="flex gap-2">
-          <UButton
+          <AdminRowAction
             v-if="can('inventory.movement.view')"
-            square
-            variant="outline"
-            color="neutral"
-            icon="i-lucide-history"
-            title="Lihat mutasi"
-            :aria-label="`Lihat mutasi saldo ${item.id}`"
             :to="{ path: '/inventory/movements', query: { level: item.id } }"
+            :label="`Lihat mutasi saldo ${item.id}`"
+            icon="i-lucide-history"
           />
-          <UButton
+          <AdminRowAction
             v-if="can('inventory.adjustment.create')"
-            square
-            variant="outline"
-            color="neutral"
-            icon="i-lucide-pencil"
-            title="Koreksi stok"
-            :aria-label="`Koreksi saldo ${item.id}`"
             :to="{ path: '/inventory/operations', query: { level: item.id } }"
+            :label="`Koreksi saldo ${item.id}`"
+            icon="i-lucide-pencil"
           />
         </div>
       </template>

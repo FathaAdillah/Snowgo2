@@ -77,13 +77,10 @@ const columns: TableColumn<RequestCase & { id: string }>[] = [
         </UBadge>
       </template>
       <template #actions="{ item }">
-        <UButton
-          icon="i-lucide-eye"
-          square
-          variant="outline"
+        <AdminRowAction
           :to="`/request-orders/${item.number}`"
-          :aria-label="`Lihat request ${item.number}`"
-          title="Lihat request"
+          :label="`Lihat request ${item.number}`"
+          icon="i-lucide-eye"
         />
       </template>
     </InventoryListTable>

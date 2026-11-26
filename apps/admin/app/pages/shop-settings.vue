@@ -30,9 +30,10 @@ const columns = [{ accessorKey: 'label', header: 'Pengaturan' }, { accessorKey: 
       @retry="refresh()"
     >
       <template #actions="{ item }">
-        <UButton
+        <AdminRowAction
           v-if="can('admin.setting.manage')"
-          label="Ubah"
+          :label="`Ubah ${item.label ?? item.key}`"
+          icon="i-lucide-pencil"
           @click="edit = item; value = item.value"
         />
       </template>

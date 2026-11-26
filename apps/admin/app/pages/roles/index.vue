@@ -75,24 +75,23 @@ async function saved() {
         </div>
         <template #footer>
           <div class="flex gap-2">
-            <UButton
+            <AdminRowAction
               v-if="role.editable && can('admin.roles.update') && can('admin.roles.assign_permissions')"
               :to="`/roles/${role.id}`"
-              label="Edit"
-              variant="outline"
+              :label="`Edit role ${role.display_name}`"
               icon="i-lucide-pencil"
             />
-            <UButton
+            <AdminRowAction
               v-else
               :to="`/roles/${role.id}`"
-              label="Lihat detail"
-              variant="ghost"
+              :label="`Lihat role ${role.display_name}`"
+              icon="i-lucide-eye"
             />
-            <UButton
+            <AdminRowAction
               v-if="role.deletable && can('admin.roles.delete')"
-              label="Hapus"
               color="error"
-              variant="ghost"
+              :label="`Hapus role ${role.display_name}`"
+              icon="i-lucide-trash-2"
               @click="removing = role"
             />
           </div>

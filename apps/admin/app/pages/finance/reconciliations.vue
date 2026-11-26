@@ -70,9 +70,9 @@ async function saved() {
       @retry="refresh()"
     >
       <template #actions="{ item }">
-        <UButton
-          label="Detail"
-          variant="outline"
+        <AdminRowAction
+          :label="`Lihat rekonsiliasi ${item.bank_tx_ref}`"
+          icon="i-lucide-eye"
           @click="select(item.id)"
         />
       </template>

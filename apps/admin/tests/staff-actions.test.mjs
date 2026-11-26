@@ -9,6 +9,7 @@ const server = await createServer({ configFile: false, plugins: [vue()], server:
 after(() => server.close())
 const { default: page } = await server.ssrLoadModule('/app/pages/staff.vue')
 const { default: roleCards } = await server.ssrLoadModule('/app/pages/roles/index.vue')
+const { default: rowAction } = await server.ssrLoadModule('/app/components/AdminRowAction.vue')
 const { useStaffFilters } = await server.ssrLoadModule('/app/composables/useStaffFilters.ts')
 const openRole = { id: 2, name: 'packing', display_name: 'Packing', description: '', members: 0, system: false, editable: true, deletable: true, permissions: ['foundation.file.view'] }
 const staff = { id: 2, email: 'staff@example.test', roles: ['admin'], active: true, manageable: true }
@@ -31,6 +32,8 @@ async function render(permissions, component = page, requests = [], buttons = {}
     return { data: ref({ data: fixtures, meta: { last_page: Math.max(1, Math.ceil(total / 25)), page: 1, per_page: 25, total } }), error: ref(null), status: ref('success'), execute, refresh: execute }
   }
   const app = createSSRApp(component)
+  app.component('AdminRowAction', rowAction)
+  app.component('UTooltip', (_, { slots }) => slots.default())
   for (const name of ['UCard', 'UBadge', 'UFormField', 'UInput', 'UAlert', 'USelect']) {
     app.component(name, { setup: (_, { attrs, slots }) => () => h('div', {}, [attrs.label, slots.header?.(), slots.default?.(), slots.footer?.()]) })
   }
@@ -159,12 +162,12 @@ test('pager retains all four controls on one page and sends page changes to the 
 })
 test('role mutations require individual grants and the card must allow the action', async () => {
   const partial = await render(['admin.roles.view', 'admin.roles.create', 'admin.roles.update'], roleCards)
-  assert.doesNotMatch(partial, /Buat role|>Edit<|>Hapus</)
+  assert.doesNotMatch(partial, /Buat role|aria-label="(?:Edit|Hapus) role /)
   const all = await render(['admin.roles.view', 'admin.roles.create', 'admin.roles.update', 'admin.roles.assign_permissions', 'admin.roles.delete'], roleCards)
   assert.match(all, /Buat role/)
   assert.match(all, /Semua izin/)
-  assert.equal(all.match(/>Edit</g)?.length, 1)
-  assert.equal(all.match(/>Hapus</g)?.length, 1)
+  assert.equal(all.match(/aria-label="Edit role Packing"/g)?.length, 1)
+  assert.equal(all.match(/aria-label="Hapus role Packing"/g)?.length, 1)
 })
 
 test('permission picker groups actions, counts grants and never toggles unavailable permissions', async () => {

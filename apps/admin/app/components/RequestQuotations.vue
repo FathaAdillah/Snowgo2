@@ -103,22 +103,23 @@ function saved() {
         </li>
       </ul>
       <div class="flex flex-wrap gap-2">
-        <UButton
+        <AdminRowAction
           v-if="editable && q.status === 'DRAFT' && allowed('update')"
-          label="Edit draf"
-          variant="outline"
+          :label="`Edit draf ${q.number}`"
+          icon="i-lucide-pencil"
           @click="edit(q)"
         />
-        <UButton
+        <AdminRowAction
           v-if="editable && q.status === 'DRAFT' && allowed('dispatch')"
-          label="Kirim penawaran"
+          :label="`Kirim penawaran ${q.number}`"
+          icon="i-lucide-send"
           @click="prepare(q, true)"
         />
-        <UButton
+        <AdminRowAction
           v-if="['DRAFT', 'SENT'].includes(q.status) && allowed('withdraw')"
-          label="Tarik penawaran"
           color="warning"
-          variant="outline"
+          :label="`Tarik penawaran ${q.number}`"
+          icon="i-lucide-undo-2"
           @click="withdrawing = q; editing = undefined; reason = ''"
         />
       </div>
