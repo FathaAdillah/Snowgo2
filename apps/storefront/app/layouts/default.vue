@@ -105,7 +105,7 @@ const policies = computed(() => pages.value?.data.filter(p => p.type === 'PAGE' 
         </section>
         <section>
           <h2>Belanja</h2>
-          <NuxtLink to="/shop">Siap Kirim</NuxtLink>
+          <NuxtLink to="/shop?method=RTS">Siap Kirim</NuxtLink>
           <NuxtLink to="/drops">Preorder</NuxtLink>
           <NuxtLink to="/request-order">Request Order</NuxtLink>
         </section>
