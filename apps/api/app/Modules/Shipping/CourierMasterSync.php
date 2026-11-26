@@ -94,7 +94,7 @@ final class CourierMasterSync
                         || ($match && $existing->has($match->id) && $existing[$match->id] !== $r['code'])) {
                         throw ValidationException::withMessages(['bind' => 'Pemetaan wilayah ambigu atau bertentangan dengan induk/pemetaan sebelumnya: '.$r['code']]);
                     }
-                    if (! $match && $local->contains(fn ($l) => str_replace('.', '', $l->code) === $r['code'])) {
+                    if ($bind === null && $mapped === null && $local->contains(fn ($l) => str_replace('.', '', $l->code) === $r['code'] && $l->id !== $match?->id)) {
                         throw ValidationException::withMessages(['bind' => 'Kode mirip tetapi nama wilayah berbeda. Periksa induk dan gunakan --bind untuk kode '.$r['code']]);
                     }
                     $code = $match->code ?? 'APICO-'.$r['code'];

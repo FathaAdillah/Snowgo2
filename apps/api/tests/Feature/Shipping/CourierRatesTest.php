@@ -129,10 +129,12 @@ it('maps each reference beneath its parent without changing existing address IDs
 
 it('requires an explicit verified binding for similar codes with different names and refuses to rebind it', function () {
     $row = [['code' => '11', 'name' => 'Different spelling']];
+    DB::table('regions')->insert(['code' => 'other', 'name' => 'Different spelling', 'kind' => 'PROVINCE', 'parent_id' => DB::table('regions')->where('code', 'ID')->value('id')]);
     expect(fn () => CourierMasterSync::apply('provinces', null, $row, null))->toThrow(ValidationException::class);
+    $this->assertDatabaseCount('courier_region_codes', 0);
     CourierMasterSync::apply('provinces', null, $row, null, ['11' => '11']);
     $this->assertDatabaseHas('regions', ['code' => '11', 'name' => 'PROVINCE']);
-    DB::table('regions')->insert(['code' => 'other', 'name' => 'Other', 'kind' => 'PROVINCE', 'parent_id' => DB::table('regions')->where('code', 'ID')->value('id')]);
+    CourierMasterSync::apply('provinces', null, $row, null);
     expect(fn () => CourierMasterSync::apply('provinces', null, $row, null, ['11' => 'other']))->toThrow(ValidationException::class);
     $this->assertDatabaseCount('courier_region_codes', 1);
 });
