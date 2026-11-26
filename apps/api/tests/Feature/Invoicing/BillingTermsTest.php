@@ -117,6 +117,32 @@ it('keeps an unshipped unit eligible for fees when a later package leaves first'
     ($this->write)($url, ['type' => 'SERVICE_FEE'] + $fee)->assertOk()->assertJsonPath('data.lines.0.start', 0);
 });
 
+it('packs a paid unit before units held by an item fee or an outstanding balance', function () {
+    DB::table('shipping_rates')->update(['base_amount' => 0, 'amount_per_kg' => 0]);
+    foreach ([1, 2, 3] as $received) {
+        DB::table('order_items')->update(['received_qty' => $received]);
+        $invoice = ($this->write)("admin/orders/$this->order/invoices", $this->balance)->assertOk()->json('data.number');
+        if ($received !== 2) {
+            DB::table('invoices')->where('number', $invoice)->update(['status' => 'PAID']);
+        }
+    }
+    ($this->write)("admin/orders/$this->order/charge-consents", ['type' => 'IMPORT_TAX', 'description' => 'Duty', 'order_item_id' => $this->item->public_id,
+        'qty' => 1, 'unit_amount' => 10, 'expires_at' => now()->addDay()->toISOString()])->assertOk()->assertJsonPath('data.lines.0.start', 0);
+    $package = ['order_number' => $this->order, 'warehouse_id' => DB::table('warehouses')->sole()->id, 'service_code' => 'REG',
+        'items' => [['order_item_id' => $this->item->public_id, 'qty' => 1]]];
+    $pack = function () use ($package) {
+        $number = ($this->write)('admin/shipments', $package)->assertOk()->json('data.number');
+        foreach (['PACK_START', 'PACK_FINISH', 'READY_FOR_DISPATCH'] as $stage) {
+            ($this->write)("admin/orders/$this->order/packing-events", ['shipment_number' => $number, 'action' => $stage])->assertOk();
+        }
+
+        return ($this->write)("admin/shipments/$number/dispatches", ['service_code' => 'REG', 'tracking_number' => $number]);
+    };
+    $pack()->assertOk();
+    expect(DB::table('shipment_items')->sole()->coverage_start)->toBe(2);
+    $pack()->assertConflict();
+});
+
 it('releases a package only when the entire consent invoice chain is void', function () {
     $package = ['order_number' => $this->order, 'warehouse_id' => DB::table('warehouses')->sole()->id, 'service_code' => 'REG', 'items' => [['order_item_id' => $this->item->public_id, 'qty' => 1]]];
     $number = ($this->write)('admin/shipments', $package)->assertOk()->json('data.number');

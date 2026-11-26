@@ -56,20 +56,33 @@ final class Packages
             $i = $items[$line['order_item_id']];
             $qty = (int) $line['qty'];
             $end = min($i->qty - $i->cancelled_qty, $rts ? $i->qty : $i->received_qty);
-            $start = 0;
             if ($rts && ! DB::table('stock_reservations as h')->join('inventory_levels as l', 'l.id', '=', 'h.level_id')->where(['h.order_item_id' => $i->id, 'l.warehouse_id' => $warehouse->id, 'h.status' => 'COMMITTED'])->whereRaw('h.qty-h.shipped_qty-h.released_qty>=?', [$qty])->exists()) {
                 throw self::quantity();
             }
-            foreach (DB::table('shipment_items as l')->join('shipments as s', 's.id', '=', 'l.shipment_id')->where('l.order_item_id', $i->id)->whereNull('s.replacement_return_id')->where('s.status', '!=', 'CANCELLED')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.qty']) as $c) {
-                if ($start + $qty <= $c->coverage_start) {
+            $remaining = $qty;
+            $freeRanges = DB::select("WITH available AS (
+                    SELECT int8multirange(int8range(0, ?)) - coalesce(range_agg(int8range(l.coverage_start::bigint, l.coverage_start::bigint + l.qty)), '{}'::int8multirange) AS units,
+                        ?::int8multirange AS blocked
+                    FROM shipment_items l JOIN shipments s ON s.id = l.shipment_id
+                    WHERE l.order_item_id = ? AND s.replacement_return_id IS NULL AND s.status <> 'CANCELLED'
+                ), choices AS (
+                    SELECT unnest(units - blocked) AS span, false AS held FROM available
+                    UNION ALL SELECT unnest(units * blocked), true FROM available
+                )
+                SELECT lower(span) AS start, upper(span) - lower(span) AS length FROM choices
+                ORDER BY held, (upper(span) - lower(span) >= ?) DESC, lower(span)",
+                [$end, $rts ? '{}' : self::unpaidUnits($i), $i->id, $qty]);
+            foreach ($freeRanges as $range) {
+                $take = min($range->length, $remaining);
+                $rows[] = ['order_item_id' => $i->id, 'public_id' => (string) Str::ulid(), 'coverage_start' => $range->start, 'qty' => $take];
+                $remaining -= $take;
+                if ($remaining === 0) {
                     break;
                 }
-                $start = max($start, $c->coverage_start + $c->qty);
             }
-            if ($start + $qty > $end) {
+            if ($remaining > 0) {
                 throw self::quantity();
             }
-            $rows[] = ['order_item_id' => $i->id, 'public_id' => (string) Str::ulid(), 'coverage_start' => $start, 'qty' => $qty];
             if (! $rts && ! isset($d['measured_weight_g']) && (! $i->weight_g || $i->weight_g < 1)) {
                 throw self::quantity();
             }
@@ -114,10 +127,9 @@ final class Packages
         $units = DB::table('order_items')->where('order_id', $order)->orderBy('id')->pluck('qty', 'id');
         $count = (int) $units->sum();
         $offset = $share = 0;
-        $byItem = array_column($rows, null, 'order_item_id');
+        $byItem = collect($rows)->groupBy('order_item_id');
         foreach ($units as $id => $qty) {
-            if (isset($byItem[$id])) {
-                $line = $byItem[$id];
+            foreach ($byItem->get($id, []) as $line) {
                 $start = $offset + $line['coverage_start'];
                 $share += intdiv($amount, $count) * $line['qty'] + min($line['qty'], max(0, $amount % $count - $start));
             }
@@ -225,27 +237,8 @@ final class Packages
             if ($end > $i->qty - $i->cancelled_qty || (! $rts && $end > $i->received_qty)) {
                 throw self::quantity();
             }
-            if (! $rts && $i->term === 'DEPOSIT') {
-                $cursor = $l->coverage_start;
-                foreach (DB::table('invoice_items as l')->join('invoices as v', 'v.id', '=', 'l.invoice_id')->where(['l.order_item_id' => $i->id, 'v.purpose' => 'BALANCE', 'v.status' => 'PAID'])->whereNotNull('l.coverage_start')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.covered_qty']) as $b) {
-                    if ($b->coverage_start > $cursor && BalanceInvoices::balanceForRange($i, $cursor, min($end, $b->coverage_start)) > 0) {
-                        throw self::invalid();
-                    }
-                    $cursor = max($cursor, $b->coverage_start + $b->covered_qty);
-                    if ($cursor >= $end) {
-                        break;
-                    }
-                }
-                if ($cursor < $end && BalanceInvoices::balanceForRange($i, $cursor, $end) > 0) {
-                    throw self::invalid();
-                }
-            }
-            if (! $rts) {
-                foreach (DB::table('order_charge_consents')->where('order_id', $o->id)->whereNull('quote_id')->whereIn('status', ['ACCEPTED', 'PROPOSED'])->whereRaw("lines->0->>'order_item_id'=? AND (lines->0->>'start')::int < ? AND (lines->0->>'start')::int+(lines->0->>'qty')::int > ?", [$i->public_id, $end, $l->coverage_start])->get() as $fee) {
-                    if (! $fee->invoice_id || ! in_array(self::currentInvoiceStatus($fee->invoice_id), ['PAID', 'VOID'], true)) {
-                        throw self::invalid();
-                    }
-                }
+            if (! $rts && DB::scalar('SELECT int8range(?, ?) && ?::int8multirange', [$l->coverage_start, $end, self::unpaidUnits($i)])) {
+                throw self::invalid();
             }
             if ($rts) {
                 $hold = DB::table('stock_reservations')->where(['order_item_id' => $i->id, 'status' => 'COMMITTED'])->value('id') ?? throw self::quantity();
@@ -266,6 +259,43 @@ final class Packages
         }
 
         return $number;
+    }
+
+    /** Unit ranges blocked by an outstanding fee or a positive, unpaid deposit balance. */
+    private static function unpaidUnits(object $item): string
+    {
+        $fees = [];
+        $consents = DB::table('order_charge_consents')->where('order_id', $item->order_id)->whereNull('quote_id')
+            ->whereIn('status', ['PROPOSED', 'ACCEPTED'])->whereRaw("lines->0->>'order_item_id' = ?", [$item->public_id])
+            ->select('invoice_id')->selectRaw("(lines->0->>'start')::bigint AS start, (lines->0->>'qty')::bigint AS qty")->get();
+        foreach ($consents as $consent) {
+            if (! $consent->invoice_id || ! in_array(self::currentInvoiceStatus($consent->invoice_id), ['PAID', 'VOID'], true)) {
+                $fees[] = sprintf('[%d,%d)', $consent->start, $consent->start + $consent->qty);
+            }
+        }
+        $feeRanges = '{'.implode(',', $fees).'}';
+        if ($item->term !== 'DEPOSIT') {
+            return $feeRanges;
+        }
+
+        // Remainders change the amount due per unit at these boundaries.
+        $quantity = (int) $item->qty;
+        $deposit = $item->initial_line_amount ?? $item->initial_unit_amount * $quantity;
+        $cuts = [0, $quantity, $deposit % $quantity, $item->discount_amount % $quantity, ($item->tax_amount - $item->initial_tax) % $quantity];
+        sort($cuts);
+        $chargeable = [];
+        foreach (array_slice($cuts, 1) as $index => $end) {
+            $start = $cuts[$index];
+            if (BalanceInvoices::balanceForRange($item, $start, $end) > 0) {
+                $chargeable[] = sprintf('[%d,%d)', $start, $end);
+            }
+        }
+
+        return DB::scalar("SELECT ?::int8multirange + (?::int8multirange - coalesce(
+            range_agg(int8range(l.coverage_start::bigint, l.coverage_start::bigint + l.covered_qty)), '{}'::int8multirange))
+            FROM invoice_items l JOIN invoices i ON i.id = l.invoice_id
+            WHERE l.order_item_id = ? AND i.purpose = 'BALANCE' AND i.status = 'PAID' AND l.coverage_start IS NOT NULL",
+            [$feeRanges, '{'.implode(',', $chargeable).'}', $item->id]);
     }
 
     private static function currentInvoiceStatus(int $id): ?string

@@ -329,7 +329,9 @@ Jalankan `php artisan migrate --force` dan `php artisan db:seed --class=Permissi
 
 ### Mengaktifkan paket dan pengiriman (TASK-025)
 
-Setelah TASK-022–024, jalankan `docker compose exec api php artisan migrate --force` dan `docker compose exec api php artisan db:seed --class=ShippingPermissionsSeeder --force`, lalu build ulang admin. Seeder mendaftarkan izin; role yang sudah ada perlu diberi izin tiap aksi. Master tidak dihapus: arsipkan tarif atau layanan agar tidak bisa dipilih pada paket baru.
+Setelah TASK-022–024, jalankan `docker compose exec api php artisan migrate --force` dan `docker compose exec api php artisan db:seed --class=PermissionSeeder --force`, lalu build ulang admin. Saat role dibuat, Order Staff mendapat akses baca paket, kurir, layanan, dan tarif serta izin packing dan tracking. Customer Service mendapat akses baca paket. Untuk role lama, sesuaikan izin lewat **Role & Izin**. Arsipkan tarif atau layanan agar tidak bisa dipilih pada paket baru.
+
+Jalankan migrasi dan perbarui semua proses API serta worker tracking sebelum membuat paket yang menggabungkan rentang unit terpisah. Setelah paket tersebut tercatat, skema lama tidak bisa mewakili rinciannya. Gunakan perbaikan maju untuk mempertahankan riwayat paket dan retur.
 
 Di **Pengiriman**, isi kurir, layanan, dan tarif per pasangan kecamatan. Untuk RTS gunakan layanan checkout dan gudang reservasi. Untuk PO/RO gunakan jumlah yang sudah diterima, input berat terukur jika snapshot berat tidak tersedia, lalu ajukan quote paket melalui **Commerce → Invoice**. Paket dengan ongkir nol tidak perlu invoice ongkir; paket berbayar membutuhkan persetujuan pelanggan dan pelunasan. Packing bertahap tidak memotong stok. Dispatch membuat event awal dan SALE hanya untuk RTS; timeline setelah serah ke kurir masuk TASK-026. Replacement dari return menunggu TASK-028.
 

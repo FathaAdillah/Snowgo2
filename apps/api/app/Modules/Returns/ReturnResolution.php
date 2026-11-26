@@ -52,7 +52,9 @@ final class ReturnResolution
                 $amount += Refunds::paidForRange($item, $span->start, $span->stop);
             }
             if ($amount > 0) {
-                $items[] = ['order_item_id' => $item->public_id, 'qty' => $item->accepted_qty, 'requested_amount' => $amount];
+                $items[$item->public_id] ??= ['order_item_id' => $item->public_id, 'qty' => 0, 'requested_amount' => 0];
+                $items[$item->public_id]['qty'] += $item->accepted_qty;
+                $items[$item->public_id]['requested_amount'] += $amount;
             }
         }
         $number = Refunds::request($actor, ['kind' => 'ITEM', 'items' => $items, 'requested_amount' => array_sum(array_column($items, 'requested_amount')),
