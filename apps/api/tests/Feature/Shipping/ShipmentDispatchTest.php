@@ -7,6 +7,7 @@ use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InitialInvoices;
 use App\Modules\Orders\CheckoutOrders;
 use App\Modules\Orders\CompleteDeliveredOrders;
+use App\Modules\Payments\BankAccounts;
 use App\Modules\Shipping\FakeTrackingProvider;
 use App\Modules\Shipping\Packages;
 use App\Modules\Shipping\PollTracking;
@@ -144,6 +145,55 @@ it('dispatches a received free unit without billing the outstanding units early'
     ($this->write)("admin/shipments/$number/dispatches", ['service_code' => 'REG', 'tracking_number' => 'BONUS'])->assertOk();
     expect(DB::table('invoices')->where('purpose', 'BALANCE')->exists())->toBeFalse();
 });
+it('ships separated units together with one freight share and refunds the returned ranges', function () {
+    ($this->login)($this->buyer);
+    app(CustomerCart::class)->set($this->buyer->id, ['qty' => 3] + $this->rts);
+    [$body] = ($this->finalQuote)($this->body);
+    ($this->confirm)($body)->assertCreated();
+    $order = DB::table('orders')->sole();
+    $invoice = DB::table('invoices')->sole();
+    DB::transaction(function () use ($order, $invoice) {
+        $bank = BankAccounts::save(null, ['code' => 'MAIN', 'bank_code' => 'BANK', 'account_number' => '123456789', 'holder_name' => 'Shop', 'active' => true], $this->staff->id);
+        $payment = DB::table('payments')->insertGetId(['number' => 'PAY-RANGES', 'user_id' => $this->buyer->id, 'bank_account_id' => $bank->id, 'amount' => $invoice->total_amount, 'status' => 'PAID', 'instruction_snapshot_ciphertext' => 'test', 'expires_at' => now()]);
+        DB::table('payment_allocations')->insert(['payment_id' => $payment, 'invoice_id' => $invoice->id, 'amount' => $invoice->total_amount, 'applied_at' => now()]);
+        app(StockReservations::class)->commit($order->id, $payment);
+        DB::table('orders')->update(['status' => 'CONFIRMED', 'payment_status' => 'PAID']);
+        DB::table('invoices')->update(['status' => 'PAID']);
+    });
+    ($this->staffSession)();
+    $plan = ($this->plan)();
+    $first = ($this->write)('admin/shipments', $plan)->assertOk()->json('data.number');
+    $middle = ($this->write)('admin/shipments', $plan)->assertOk()->json('data');
+    $dispatch = function ($number) use ($order) {
+        ($this->pack)($number, $order->number);
+        ($this->write)("admin/shipments/$number/dispatches", ['service_code' => 'REG', 'tracking_number' => $number])->assertOk();
+    };
+    $dispatch($middle['number']);
+    DB::table('reason_codes')->insert(['domain' => 'shipping', 'code' => 'REPACK', 'label' => 'Repack']);
+    ($this->write)("admin/shipments/$first/cancellations", ['reason_code' => 'REPACK'])->assertOk();
+    $plan['items'][0]['qty'] = 2;
+    $combined = ($this->write)('admin/shipments', $plan)->assertOk()->json('data');
+    $number = $combined['number'];
+    expect($combined['shipping_amount'] + $middle['shipping_amount'])->toBe($invoice->shipping_amount);
+    $dispatch($number);
+    foreach ([$middle['number'], $number] as $shipment) {
+        ($this->write)("admin/shipments/$shipment/tracking-events", ['status' => 'DELIVERED', 'occurred_at' => now()->toISOString()])->assertOk();
+    }
+    expect(DB::table('order_items')->sole()->delivered_qty)->toBe(3)
+        ->and(DB::table('inventory_movements')->where('type', 'SALE')->sum('on_hand_delta'))->toEqual(-3);
+
+    ($this->login)($this->buyer);
+    DB::table('reason_codes')->insert(['domain' => 'returns', 'code' => 'DAMAGED', 'label' => 'Damaged item']);
+    $claim = ($this->write)('returns', ['order_number' => $order->number, 'shipment_number' => $number, 'reason_code' => 'DAMAGED',
+        'items' => array_map(fn ($line) => ['shipment_item_id' => $line['id'], 'qty' => $line['qty']], $combined['items'])])->assertCreated()->json('data.number');
+    expect(DB::table('return_items')->orderBy('unit_coverage')->pluck('unit_coverage')->all())->toBe(['{[0,1)}', '{[2,3)}']);
+    DB::table('returns')->where('number', $claim)->update(['status' => 'ACCEPTED']);
+    DB::table('return_items')->update(['accepted_qty' => 1, 'disposition' => 'NO_RECEIPT']);
+    ($this->staffSession)();
+    ($this->write)("admin/returns/$claim/resolutions", ['resolution' => 'REFUND', 'note' => 'Both units damaged'])->assertOk();
+    expect(DB::table('refund_items')->sole()->qty)->toBe(2);
+});
+
 it('guards archive separately from updates and rejects duplicate couriers', function () {
     ($this->staffSession)();
     $d = ['code' => 'xp', 'name' => 'Express', 'active' => true];

@@ -56,20 +56,27 @@ final class Packages
             $i = $items[$line['order_item_id']];
             $qty = (int) $line['qty'];
             $end = min($i->qty - $i->cancelled_qty, $rts ? $i->qty : $i->received_qty);
-            $start = 0;
             if ($rts && ! DB::table('stock_reservations as h')->join('inventory_levels as l', 'l.id', '=', 'h.level_id')->where(['h.order_item_id' => $i->id, 'l.warehouse_id' => $warehouse->id, 'h.status' => 'COMMITTED'])->whereRaw('h.qty-h.shipped_qty-h.released_qty>=?', [$qty])->exists()) {
                 throw self::quantity();
             }
-            foreach (DB::table('shipment_items as l')->join('shipments as s', 's.id', '=', 'l.shipment_id')->where('l.order_item_id', $i->id)->whereNull('s.replacement_return_id')->where('s.status', '!=', 'CANCELLED')->orderBy('l.coverage_start')->get(['l.coverage_start', 'l.qty']) as $c) {
-                if ($start + $qty <= $c->coverage_start) {
+            $remaining = $qty;
+            $freeRanges = DB::select("SELECT lower(span) AS start, upper(span) - lower(span) AS length
+                FROM unnest(int8multirange(int8range(0, ?)) - coalesce((
+                    SELECT range_agg(int8range(l.coverage_start::bigint, l.coverage_start::bigint + l.qty))
+                    FROM shipment_items l JOIN shipments s ON s.id = l.shipment_id
+                    WHERE l.order_item_id = ? AND s.replacement_return_id IS NULL AND s.status <> 'CANCELLED'
+                ), '{}'::int8multirange)) span ORDER BY lower(span)", [$end, $i->id]);
+            foreach ($freeRanges as $range) {
+                $take = min($range->length, $remaining);
+                $rows[] = ['order_item_id' => $i->id, 'public_id' => (string) Str::ulid(), 'coverage_start' => $range->start, 'qty' => $take];
+                $remaining -= $take;
+                if ($remaining === 0) {
                     break;
                 }
-                $start = max($start, $c->coverage_start + $c->qty);
             }
-            if ($start + $qty > $end) {
+            if ($remaining > 0) {
                 throw self::quantity();
             }
-            $rows[] = ['order_item_id' => $i->id, 'public_id' => (string) Str::ulid(), 'coverage_start' => $start, 'qty' => $qty];
             if (! $rts && ! isset($d['measured_weight_g']) && (! $i->weight_g || $i->weight_g < 1)) {
                 throw self::quantity();
             }
@@ -103,10 +110,9 @@ final class Packages
         $units = DB::table('order_items')->where('order_id', $order)->orderBy('id')->pluck('qty', 'id');
         $count = (int) $units->sum();
         $offset = $share = 0;
-        $byItem = array_column($rows, null, 'order_item_id');
+        $byItem = collect($rows)->groupBy('order_item_id');
         foreach ($units as $id => $qty) {
-            if (isset($byItem[$id])) {
-                $line = $byItem[$id];
+            foreach ($byItem->get($id, []) as $line) {
                 $start = $offset + $line['coverage_start'];
                 $share += intdiv($amount, $count) * $line['qty'] + min($line['qty'], max(0, $amount % $count - $start));
             }
