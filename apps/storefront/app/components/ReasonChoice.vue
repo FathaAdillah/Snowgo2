@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{ domain: string }>()
 const model = defineModel<string>({ required: true })
-const { data, status, refresh } = await useFetch<{ data: { code: string, label: string }[] }>('/api/v1/customer-reasons', { server: false, query: { domain: props.domain } })
+const { data, status, refresh } = await useFetch<StoreRead<'/customer-reasons'>>('/api/v1/customer-reasons', { server: false, query: { domain: props.domain } })
 </script>
 
 <template>

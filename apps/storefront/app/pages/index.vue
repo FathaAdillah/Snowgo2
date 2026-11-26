@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { data: products, error, refresh } = await useFetch<StoreRead<'/products'>>('/api/v1/products', { query: { per_page: 8 } })
+const { data: products, status, error, refresh } = await useFetch<StoreRead<'/products'>>('/api/v1/products', { query: { per_page: 8 } })
 const { data: categories } = await useFetch<StoreRead<'/categories'>>('/api/v1/categories', { query: { per_page: 100 } })
 const { data: content } = await useFetch<StoreRead<'/content'>>('/api/v1/content')
 const banner = computed(() => content.value?.data.find(e => e.type === 'BANNER' && e.media_url))
@@ -75,7 +75,13 @@ useStoreSeo(() => 'Snowe GO · Siap Kirim, Preorder & Request Order', () => 'Bel
         <NuxtLink to="/shop">Lihat semua →</NuxtLink>
       </div>
       <p
-        v-if="error"
+        v-if="status === 'pending' || status === 'idle'"
+        role="status"
+      >
+        Memuat produk…
+      </p>
+      <p
+        v-else-if="error"
         role="alert"
       >
         Produk belum dapat dimuat. <button @click="refresh()">

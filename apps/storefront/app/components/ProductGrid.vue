@@ -1,5 +1,9 @@
 <script setup lang="ts">
 defineProps<{ products: ProductCard[] }>()
+function startingPrice(product: ProductCard) {
+  const available = product.offers.filter(offer => offer.available)
+  return Math.min(...(available.length ? available : product.offers).map(offer => offer.from_amount))
+}
 </script>
 
 <template>
@@ -29,8 +33,9 @@ defineProps<{ products: ProductCard[] }>()
               v-for="method in new Set(p.offers.map(o => o.method))"
               :key="method"
               class="badge"
-            >{{ method }}</span>
-            <p>Mulai {{ rupiah(Math.min(...p.offers.map(o => o.from_amount))) }}</p>
+            >{{ method === 'RTS' ? 'Siap kirim' : 'Preorder' }}</span>
+            <small v-if="!p.offers.some(offer => offer.available)">Belum tersedia</small>
+            <p>Mulai {{ rupiah(startingPrice(p)) }}</p>
           </div>
           <p v-else>Belum ada penawaran</p>
         </div>
