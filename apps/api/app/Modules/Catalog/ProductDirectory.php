@@ -21,11 +21,11 @@ final class ProductDirectory
         return DB::table('products')->select('id')->where('slug', $slug);
     }
 
-    private static function media(): Builder
+    public static function publicMedia(): Builder
     {
         return DB::table('product_media as m')->join('stored_files as f', 'f.id', '=', 'm.file_id')
             ->leftJoin('product_variants as v', 'v.id', '=', 'm.variant_id')
-            ->where('m.active', true)->where('f.status', 'READY')->whereNotNull('m.published_key')
+            ->whereIn('m.product_id', self::published()->select('products.id'))->where('m.active', true)->where('f.status', 'READY')->whereNotNull('m.published_key')
             ->where(fn ($q) => $q->whereNull('m.variant_id')->orWhere('v.active', true))->whereNull('v.deleted_at')
             ->orderBy('m.product_id')->orderBy('m.position')->orderBy('m.id');
     }
@@ -62,7 +62,7 @@ final class ProductDirectory
             ->where('c.active', true)->whereIntegerInRaw('pc.product_id', $ids)->orderBy('c.slug')
             ->get(['pc.product_id', 'c.slug'])->groupBy('product_id');
         $brands = DB::table('brands')->where('active', true)->whereIntegerInRaw('id', $products->pluck('brand_id')->filter()->all())->pluck('slug', 'id');
-        $covers = self::media()->whereIntegerInRaw('m.product_id', $ids)->selectRaw('DISTINCT ON (m.product_id) m.product_id,m.published_key')
+        $covers = self::publicMedia()->whereIntegerInRaw('m.product_id', $ids)->selectRaw('DISTINCT ON (m.product_id) m.product_id,m.published_key')
             ->get()->keyBy('product_id');
         $prices = self::offerableVariants()->whereIntegerInRaw('product_id', $ids)->where('rts_enabled', true)
             ->leftJoinSub(StockAvailability::readyToShip(), 'stock', 'stock.variant_id', '=', 'product_variants.id')
@@ -97,7 +97,7 @@ final class ProductDirectory
             ->select('product_variants.*')->selectRaw('stock.variant_id IS NOT NULL AS available')->get();
         $options = DB::table('variant_attribute_values as o')->join('attribute_values as av', 'av.id', '=', 'o.value_id')
             ->whereIntegerInRaw('o.variant_id', $variants->pluck('id')->all())->orderBy('o.attribute_id')->get(['o.variant_id', 'av.code', 'av.label'])->groupBy('variant_id');
-        $media = self::media()->where('m.product_id', $p->id)->get(['m.published_key', 'm.alt', 'm.position', 'v.sku']);
+        $media = self::publicMedia()->where('m.product_id', $p->id)->get(['m.published_key', 'm.alt', 'm.position', 'v.sku']);
 
         $card = self::cards(collect([$p]))[0];
         $po = CampaignOffers::open()->where('product_variants.product_id', $p->id)->orderBy('c.slug')->get()->groupBy('variant_id');

@@ -72,6 +72,7 @@ x-node-volumes: &node-volumes
 x-nitro: &nitro
   environment:
     NUXT_API_INTERNAL_ORIGIN: http://api-nginx:8000
+    NUXT_PUBLIC_SITE_URL: ${APP_URL}
   volumes: *node-volumes
   networks: [internal]
   depends_on:

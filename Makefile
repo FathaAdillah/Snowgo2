@@ -52,7 +52,7 @@ test-api: ## Pest on PostgreSQL/Redis/MinIO/ClamAV
 
 test-web: ## Frontend typecheck and permission-aware admin component tests
 	$(NODE) npm run typecheck
-	$(NODE) npm run test -w @snowego/admin
+	$(NODE) npm run test -w @snowego/admin -w @snowego/storefront
 
 contracts: ## Regenerate the public OpenAPI snapshot and shared TypeScript client types
 	@set -eu; tmp=$$(mktemp); trap 'rm -f "$$tmp"' EXIT; $(EXPORT) > "$$tmp"; cp "$$tmp" apps/api/api.json

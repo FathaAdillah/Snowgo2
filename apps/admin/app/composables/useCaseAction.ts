@@ -1,6 +1,6 @@
 export function useCaseAction(base: string, saved: () => Promise<void>) {
-  const action = ref<{ url: string, method: 'POST' | 'PUT', body: Record<string, unknown>, label: string }>()
-  function ask(path: string, body: Record<string, unknown>, label: string, method: 'POST' | 'PUT' = 'POST') {
+  const action = ref<{ url: string, method: 'POST' | 'PUT' | 'PATCH', body: Record<string, unknown>, label: string }>()
+  function ask(path: string, body: Record<string, unknown>, label: string, method: 'POST' | 'PUT' | 'PATCH' = 'POST') {
     action.value = { url: base + path, method, body, label }
   }
   async function finish() {

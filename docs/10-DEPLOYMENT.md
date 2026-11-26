@@ -352,3 +352,13 @@ Jalankan PermissionSeeder dan rebuild admin. Dashboard memerlukan reporting.dash
 Jalankan migrasi, PermissionSeeder, restart worker/scheduler dan rebuild admin. Untuk role yang sudah ada, berikan grant baca dan mutasi yang dibutuhkan melalui Role & Izin. Menu baru meliputi Pesanan, Return, Refund, Audit Log dan Pengaturan Toko. Pengaturan profil tetap di menu profil. Migrasi menginisialisasi jendela retur dan waktu penyelesaian dari konfigurasi lingkungan. Reservasi RTS baru berlaku 60 menit sesuai asumsi bisnis dan dapat dikonfigurasi antara 5 dan 180 menit. Deadline yang telah diterbitkan tetap berlaku. Konfirmasi transfer refund harus memakai bukti privat READY dan pelaksana yang berbeda dari penyetuju.
 
 Pada Finance → Refund, grant `refunds.shortage.review` menampilkan kekurangan pemasok yang belum diputuskan, termasuk receipt yang sudah ada saat migrasi. Catat alasan aktif domain `refunds` untuk menutup satu receipt tanpa pengembalian atau memulai refund item dengan grant create. Pembukaan refund mengganti hold receipt dengan hold kasus sampai keputusan finance. Jika refund retur ditolak atau dibatalkan, CS dapat menentukan perbaikan atau penggantian pada retur yang sama.
+
+### Mengaktifkan konten storefront (TASK-031)
+
+Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di container API dan build ulang admin. Dari **Konten & Promo → Konten Storefront**, buat halaman, FAQ, banner atau kurasi. Berikan izin content.entry per aksi pada role lama. Gunakan media katalog yang sudah terbit. Draf tersimpan dapat dipratinjau staf, sedangkan publikasi terjadwal menggantikan versi publik pada waktu efektifnya. Arsip menarik halaman dari publik.
+
+### Mengaktifkan storefront Snowe GO (TASK-032–034)
+
+Set APP_URL ke origin toko yang dibuka pembeli. Compose meneruskannya sebagai NUXT_PUBLIC_SITE_URL untuk canonical dan sitemap. Jalankan migrasi API, build ulang storefront dan admin, lalu akses host storefront. Halaman Home dan Shop membaca katalog aktif, termasuk saat katalog masih kosong.
+
+Pesanan siap kirim membutuhkan SKU dengan stok, alamat kecamatan dan tarif aktif. Untuk preorder buka kampanye dan pilih termin. Request Order dimulai dari pengajuan pelanggan dan penawaran staf. Aktifkan rekening tujuan untuk transfer, isi kode alasan aktif pada master untuk pengajuan purnajual, dan jalankan worker pemindaian serta PDF. Pembeli membuka invoice, transfer dan paket dari detail pesanan, refund dari pesanan, serta retur dari paket terkirim.

@@ -63,7 +63,7 @@ final class Journal
         if ($subject === Subject::CampaignVariant) {
             $fields = [...$fields, 'quota', 'unit_amount', 'deposit_unit_amount', 'min_qty', 'max_qty'];
         }
-        if ($subject === Subject::Cart) {
+        if (in_array($subject, [Subject::Cart, Subject::ContentEntry], true)) {
             $fields[] = 'version';
         }
         if ($subject === Subject::StockReservation) {

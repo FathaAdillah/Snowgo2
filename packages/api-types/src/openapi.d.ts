@@ -437,6 +437,38 @@ export interface paths {
         patch: operations["catalog.collections.update"];
         trace?: never;
     };
+    "/admin/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content.index"];
+        put?: never;
+        post: operations["content.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/content/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["content.update"];
+        trace?: never;
+    };
     "/admin/courier-services": {
         parameters: {
             query?: never;
@@ -2575,6 +2607,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content.directory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/content/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content.published"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/customer-reasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["customers.reasons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files": {
         parameters: {
             query?: never;
@@ -3103,6 +3183,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["public.search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/shipments/{number}": {
         parameters: {
             query?: never;
@@ -3111,6 +3207,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["shipping.customer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sitemap/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["public.sitemap-products"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6111,6 +6223,227 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "content.index": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            body: string;
+                            id: number;
+                            media_id: string | null;
+                            publish_at: string | null;
+                            slug: string;
+                            sort_order: number;
+                            status: string;
+                            title: string;
+                            type: string;
+                            version: number;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "content.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                    media_id?: string | null;
+                    /** Format: date-time */
+                    publish_at?: string | null;
+                    slug: string;
+                    sort_order?: number;
+                    /** @enum {string} */
+                    status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+                    title: string;
+                    /** @enum {string} */
+                    type: "PAGE" | "FAQ" | "BANNER" | "FEATURED";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            body: string;
+                            id: number;
+                            media_id: string | null;
+                            publish_at: string | null;
+                            slug: string;
+                            sort_order: number;
+                            status: string;
+                            title: string;
+                            type: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "content.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Draft preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            body: string;
+                            id: number;
+                            media_id: string | null;
+                            publish_at: string | null;
+                            slug: string;
+                            sort_order: number;
+                            status: string;
+                            title: string;
+                            type: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "content.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body?: string;
+                    media_id?: string | null;
+                    /** Format: date-time */
+                    publish_at?: string | null;
+                    slug?: string;
+                    sort_order?: number;
+                    /** @enum {string} */
+                    status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+                    title?: string;
+                    /** @enum {string} */
+                    type?: "PAGE" | "FAQ" | "BANNER" | "FEATURED";
+                    version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            body: string;
+                            id: number;
+                            media_id: string | null;
+                            publish_at: string | null;
+                            slug: string;
+                            sort_order: number;
+                            status: string;
+                            title: string;
+                            type: string;
+                            version: number;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            403: components["responses"]["AuthorizationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "shipping.service.list": {
         parameters: {
             query?: never;
@@ -7799,6 +8132,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -7919,6 +8253,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -8062,6 +8397,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -19216,6 +19552,117 @@ export interface operations {
             };
         };
     };
+    "content.directory": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published navigation and homepage entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            media_url: string | null;
+                            slug: string;
+                            title: string;
+                            type: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "content.published": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Effective publication */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            body: string;
+                            media_url: string | null;
+                            slug: string;
+                            title: string;
+                            type: string;
+                        };
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "customers.reasons": {
+        parameters: {
+            query: {
+                domain: "refunds" | "returns" | "orders" | "request_orders";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active customer reason choices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            code: string;
+                            label: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "customer.files.upload": {
         parameters: {
             query?: never;
@@ -19977,6 +20424,7 @@ export interface operations {
                             payment_due_at: string;
                             payment_numbers: string[];
                             payment_status: string;
+                            refundable_amount?: number;
                             shipment_numbers: string[];
                             shipping_amount?: number;
                             /** @enum {string} */
@@ -22402,6 +22850,61 @@ export interface operations {
             422: components["responses"]["ValidationException"];
         };
     };
+    "public.search": {
+        parameters: {
+            query?: {
+                brand?: string;
+                category?: string;
+                collection?: string;
+                method?: "RTS" | "PO";
+                page?: number;
+                per_page?: number;
+                q?: string;
+                sort?: "-published_at" | "name";
+                tag?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published catalog */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            brand_slug: string | null;
+                            category_slugs: string[];
+                            cover_url: string | null;
+                            name: string;
+                            offers: {
+                                available: boolean;
+                                campaign_slug?: string;
+                                from_amount: number;
+                                method: string;
+                            }[];
+                            slug: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            per_page: number;
+                            request_id: string;
+                            total: number;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
     "shipping.customer": {
         parameters: {
             query?: never;
@@ -22451,6 +22954,38 @@ export interface operations {
                 };
             };
             401: components["responses"]["AuthenticationException"];
+        };
+    };
+    "public.sitemap-products": {
+        parameters: {
+            query?: {
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published product slugs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: string[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
         };
     };
     "customers.wishlist.index": {
