@@ -1,5 +1,7 @@
 # Deployment dan operasi
 
+Untuk rilis lewat Dokploy, gunakan [runbook produksi: env, Docker commands, smoke test dan rollback](DEPLOY-DOKPLOY.md). Perintah Compose tanpa `-f` pada contoh lokal di bawah **bukan** perintah deploy produksi.
+
 ## Environment dan network
 
 | Environment | Ingress dan data | Mail, provider dan credential |
