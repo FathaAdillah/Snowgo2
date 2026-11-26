@@ -1,6 +1,6 @@
 # Dokumentasi Snowego E-Commerce
 
-**Status** · Baseline rancangan untuk persetujuan. Development dimulai setelah review dokumentasi. [Risiko dan pertanyaan bisnis](01-BRD.md#asumsi-dan-pertanyaan-terbuka)
+Dokumentasi ini memuat rancangan sekaligus panduan untuk fitur yang sudah tersedia. Mulai dari [ringkasan fitur dan progres](../README.md#progres-pengembangan) untuk membedakan implementasi di `master` dari roadmap.
 
 ## Urutan baca
 
@@ -31,4 +31,4 @@
 
 BRD menetapkan aturan bisnis dan assumption. PRD menetapkan acceptance dan lingkup release. Database, API, flow, dan RBAC masing-masing menjadi sumber skema, kontrak HTTP, transisi, dan grants. Ubah dokumen terkait serta traceability setiap perubahan domain. Status development dilacak di task tracker.
 
-Mulai review dari Q-01–Q-05 di BRD. Setelah keputusan yang memengaruhi baseline disetujui, jalankan E01 Foundation dari task tracker. Gunakan test ID dan acceptance setiap task sebagai bukti selesai.
+Untuk review baseline yang belum ditutup, lihat [keputusan bisnis Q-01–Q-05](01-BRD.md#asumsi-dan-pertanyaan-terbuka). Gunakan test ID dan kriteria penerimaan di tracker untuk memeriksa status setiap task.
