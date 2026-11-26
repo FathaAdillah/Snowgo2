@@ -24,6 +24,8 @@ Gunakan [tabel Pengguna (`/staff`)](../apps/admin/app/pages/staff.vue) sebagai a
 
 Pakai mata untuk detail, pensil untuk edit, kotak arsip untuk arsipkan, dan kotak dengan panah untuk aktifkan kembali. Pakai warna `error` untuk aksi berisiko dan pertahankan dialog konfirmasinya. Tombol utama halaman dan formulir (**Tambah**, **Simpan**, **Batal**, konfirmasi) tetap memakai teks.
 
+Di layar sentuh, ketuk ikon sekali untuk membaca tooltip, lalu ketuk ikon yang sama lagi untuk menjalankan aksi. Dengan mouse atau keyboard, aksi tetap berjalan dalam satu klik atau aktivasi.
+
 ## Data dan izin
 
 - Untuk daftar berpaginasi, kirim pencarian, filter, dan halaman ke API; jangan mengunduh semua baris untuk memfilter di browser. Ikuti [contoh filter staf](../apps/admin/app/composables/useStaffFilters.ts): debounce pencarian 300 ms, kembalikan ke halaman pertama saat kriteria berubah, dan pertahankan filter saat berpindah halaman. Gunakan total dan ukuran halaman dari respons, bukan jumlah baris yang sedang tampil.

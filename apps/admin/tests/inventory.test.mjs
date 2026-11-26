@@ -55,6 +55,31 @@ test('a disabled row action keeps its accessible hint but cannot navigate or emi
   assert.equal(clicks, 0)
 })
 
+test('touch previews before activation, including links; keyboard and mouse activate immediately', async () => {
+  let clicks = 0
+  const { buttons, state } = await render('components/AdminRowAction', [], {}, {
+    label: 'Lihat pesanan', icon: 'i-lucide-eye', to: '/orders/1', onClick: () => clicks++
+  })
+  const button = buttons['Lihat pesanan']
+  const tap = () => {
+    button.onPointerdown({ pointerType: 'touch' })
+    const event = Object.assign(new Event('click', { cancelable: true }), { detail: 1 })
+    button.onClick(event)
+    return event.defaultPrevented
+  }
+  assert.equal(tap(), true)
+  assert.equal(state.open.value, true)
+  assert.equal(clicks, 0)
+  assert.equal(tap(), false)
+  assert.equal(state.open.value, false)
+  assert.equal(clicks, 1)
+  button.onKeydown()
+  button.onClick({ detail: 0 })
+  button.onPointerdown({ pointerType: 'mouse' })
+  button.onClick({ detail: 1 })
+  assert.equal(clicks, 3)
+})
+
 test('API.co.id sync only exposes reference lists covered by the operator grants', async () => {
   const view = 'shipping.courier.view'
   const sync = 'shipping.provider.sync'
