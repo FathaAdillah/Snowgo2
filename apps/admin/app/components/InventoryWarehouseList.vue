@@ -65,23 +65,16 @@ async function saved() {
         v-if="canEdit"
         class="flex gap-2"
       >
-        <UButton
-          square
+        <AdminRowAction
+          :label="`Edit gudang ${item.code}`"
           icon="i-lucide-pencil"
-          color="neutral"
-          variant="outline"
-          title="Edit gudang"
-          :aria-label="`Edit gudang ${item.code}`"
           @click="emit('edit', item)"
         />
-        <UButton
+        <AdminRowAction
           v-if="!item.active || can('inventory.warehouse.archive')"
-          square
-          :icon="item.active ? 'i-lucide-archive' : 'i-lucide-check'"
           :color="item.active ? 'error' : 'neutral'"
-          variant="outline"
-          :title="item.active ? 'Arsipkan' : 'Aktifkan'"
-          :aria-label="`${item.active ? 'Arsipkan' : 'Aktifkan'} gudang ${item.code}`"
+          :label="`${item.active ? 'Arsipkan' : 'Aktifkan'} gudang ${item.code}`"
+          :icon="item.active ? 'i-lucide-archive' : 'i-lucide-archive-restore'"
           @click="changeStatus(item)"
         />
       </div>

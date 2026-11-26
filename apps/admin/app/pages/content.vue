@@ -56,14 +56,15 @@ function save() {
         />
       </template>
       <template #actions="{ item }">
-        <UButton
-          label="Pratinjau"
-          variant="ghost"
+        <AdminRowAction
+          :label="`Pratinjau ${item.title}`"
+          icon="i-lucide-eye"
           @click="preview = item"
         />
-        <UButton
+        <AdminRowAction
           v-if="can('content.entry.update')"
-          label="Ubah"
+          :label="`Ubah ${item.title}`"
+          icon="i-lucide-pencil"
           @click="open(item)"
         />
       </template>

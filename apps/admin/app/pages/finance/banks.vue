@@ -103,10 +103,10 @@ async function saved() {
         </UFormField>
       </template>
       <template #actions="{ item }">
-        <UButton
+        <AdminRowAction
           v-if="may('update')"
-          label="Ubah"
-          variant="outline"
+          :label="`Ubah rekening ${item.code}`"
+          icon="i-lucide-pencil"
           @click="open(item)"
         />
       </template>

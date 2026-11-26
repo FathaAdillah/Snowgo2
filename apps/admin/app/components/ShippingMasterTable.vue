@@ -56,15 +56,16 @@ async function saved() {
         />
       </template>
       <template #actions="{ item }">
-        <UButton
+        <AdminRowAction
           v-if="allowed('update')"
-          label="Edit"
-          variant="ghost"
+          :label="`Edit ${title} #${item.id}`"
+          icon="i-lucide-pencil"
           @click="edit(item)"
-        /><UButton
+        /><AdminRowAction
           v-if="allowed('update') && (!item.active || allowed('archive'))"
-          :label="item.active ? 'Arsipkan' : 'Aktifkan'"
-          variant="ghost"
+          :label="`${item.active ? 'Arsipkan' : 'Aktifkan'} ${title} #${item.id}`"
+          :icon="item.active ? 'i-lucide-archive' : 'i-lucide-archive-restore'"
+          :color="item.active ? 'error' : 'neutral'"
           @click="toggle(item)"
         />
       </template>

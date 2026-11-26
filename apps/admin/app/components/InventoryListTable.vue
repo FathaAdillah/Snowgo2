@@ -43,10 +43,12 @@ const emit = defineEmits<{ retry: [], page: [page: number] }>()
         v-if="$slots.actions"
         #actions-cell="{ row }"
       >
-        <slot
-          name="actions"
-          :item="row.original"
-        />
+        <div class="flex items-center gap-2">
+          <slot
+            name="actions"
+            :item="row.original"
+          />
+        </div>
       </template>
       <template
         v-if="$slots.status"

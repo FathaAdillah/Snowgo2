@@ -18,10 +18,42 @@ const requestOrders = await server.ssrLoadModule('/app/composables/useRequestOrd
 const { adminNavigation, hasPageAccess } = await server.ssrLoadModule('/app/composables/useAdminNavigation.ts')
 const caseActions = await server.ssrLoadModule('/app/composables/useCaseAction.ts')
 const components = {}
-for (const name of ['InventoryListTable', 'InventoryWarehouseList', 'InventoryAdjustmentList', 'InventoryStockForm', 'InventoryWarehouseForm', 'InventoryWarehousePicker']) {
+for (const name of ['AdminRowAction', 'InventoryListTable', 'InventoryWarehouseList', 'InventoryAdjustmentList', 'InventoryStockForm', 'InventoryWarehouseForm', 'InventoryWarehousePicker']) {
   components[name] = await load(`components/${name}.vue`)
 }
 const wh = { id: 9, code: 'BDG', name: 'Bandung', active: true, is_default: false, district_code: '11.01.01', address: 'Jalan A' }
+
+test('shipping master actions have no visible text and keep tooltip, target, permissions and confirmation', async () => {
+  const show = (active, ...actions) => render('components/ShippingMasterTable', actions.map(a => `shipping.courier.${a}`),
+    { rows: [{ id: 9, name: 'JNE', active }] }, { title: 'Kurir', resource: 'couriers', grant: 'shipping.courier', fields: { name: 'Nama' } })
+  const reader = await show(true, 'view')
+  assert.deepEqual(reader.buttons, {})
+  const editor = await show(true, 'manage', 'update')
+  assert.deepEqual(Object.keys(editor.buttons), ['Edit Kurir #9'])
+  const archiver = await show(true, 'manage', 'update', 'archive')
+  const label = 'Arsipkan Kurir #9'
+  const button = archiver.buttons[label]
+  assert.match(archiver.html, /data-tooltip="Arsipkan Kurir #9"><button aria-label="Arsipkan Kurir #9"[^>]*><\/button>/)
+  assert.equal(button.icon, 'i-lucide-archive')
+  assert.equal(button.variant, 'outline')
+  assert.ok(Object.hasOwn(button, 'square'))
+  button.onClick()
+  assert.deepEqual(archiver.state.action.value.body, { active: false })
+  const restorer = await show(false, 'manage', 'update')
+  restorer.buttons['Aktifkan Kurir #9'].onClick()
+  assert.deepEqual(restorer.state.action.value.body, { active: true })
+})
+
+test('a disabled row action keeps its accessible hint but cannot navigate or emit a click', async () => {
+  let clicks = 0
+  const { buttons } = await render('components/AdminRowAction', [], {}, {
+    label: 'Dipilih', icon: 'i-lucide-check', disabled: true, to: '/example', onClick: () => clicks++
+  })
+  assert.equal(buttons.Dipilih['aria-disabled'], true)
+  assert.equal(buttons.Dipilih.to, undefined)
+  buttons.Dipilih.onClick()
+  assert.equal(clicks, 0)
+})
 
 test('API.co.id sync only exposes reference lists covered by the operator grants', async () => {
   const view = 'shipping.courier.view'
@@ -44,7 +76,7 @@ test('quotation controls follow per-action grants and cannot edit a frozen versi
   assert.doesNotMatch((await show('DRAFT', 'view')).html, /Edit draf|Tarik penawaran|Kirim penawaran/)
   assert.doesNotMatch((await show('DRAFT', 'dispatch')).html, /Kirim penawaran/)
   const dispatcher = await show('DRAFT', 'manage', 'dispatch')
-  dispatcher.buttons['Kirim penawaran'].onClick()
+  dispatcher.buttons['Kirim penawaran QUO-1'].onClick()
   assert.equal(dispatcher.state.action.value.url, '/api/v1/admin/request-orders/REQ-1/quotations/QUO-1/dispatches')
   assert.deepEqual(dispatcher.state.action.value.body, { revision: 3 })
   const sent = await show('SENT', 'manage', 'update', 'withdraw', 'create')
@@ -59,7 +91,7 @@ test('saving a reopened draft preserves cleared options instead of restoring the
     items: [{ request_item_id: item.id, label: item.name, options: null, qty: 1, unit_amount: 100 }] }
   const editor = await render('components/RequestQuotations', ['request_orders.quotation.manage', 'request_orders.quotation.update'], {},
     { record: { number: 'REQ-1', status: 'UNDER_REVIEW', items: [item], quotations: [draft] } })
-  editor.buttons['Edit draf'].onClick()
+  editor.buttons['Edit draf QUO-1'].onClick()
   editor.state.terms.value = 'Changed'
   editor.state.save()
   const { body } = editor.state.action.value
@@ -86,6 +118,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   const component = await load(`${path}.vue`)
   const app = createSSRApp({ ...component, setup: (p, ctx) => (state = component.setup(p, ctx)) }, props)
   for (const [name, value] of Object.entries(components)) app.component(name, value)
+  app.component('UTooltip', (_, { attrs, slots }) => h('span', { 'data-tooltip': attrs.text }, slots.default()))
   for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction', 'ShippingMasterTable', 'ProcurementCreate', 'CaseEvidence', 'CaseCreate']) {
     app.component(name, (_, { attrs, slots }) => h('div', [attrs.label, slots.header?.(), slots.default?.()]))
   }
@@ -96,7 +129,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   app.component('UButton', (_, { attrs }) => {
     const label = attrs.label ?? attrs['aria-label']
     buttons[label] = attrs
-    return h('button', label)
+    return h('button', { 'aria-label': attrs['aria-label'] }, attrs.label)
   })
   app.component('UPagination', (_, { attrs }) => {
     pager = attrs

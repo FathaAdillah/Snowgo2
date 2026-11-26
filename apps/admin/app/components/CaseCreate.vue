@@ -112,10 +112,10 @@ function create() {
               required
             />
           </UFormField>
-          <UButton
+          <AdminRowAction
             v-if="lines.length > 1"
-            label="Hapus baris"
-            variant="ghost"
+            :label="`Hapus baris ${index + 1}`"
+            icon="i-lucide-trash-2"
             @click="lines.splice(index, 1)"
           />
         </div>

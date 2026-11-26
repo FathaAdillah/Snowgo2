@@ -48,10 +48,10 @@ const columns = [{ accessorKey: 'number', header: 'Nomor' }, { accessorKey: 'ord
         </UFormField>
       </template>
       <template #actions="{ item }">
-        <UButton
-          label="Detail"
-          variant="outline"
+        <AdminRowAction
           :to="`/returns/${item.number}`"
+          :label="`Lihat retur ${item.number}`"
+          icon="i-lucide-eye"
         />
       </template>
     </InventoryListTable>

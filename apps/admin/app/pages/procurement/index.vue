@@ -79,13 +79,10 @@ async function saved() {
         </UBadge>
       </template>
       <template #actions="{ item }">
-        <UButton
-          icon="i-lucide-eye"
-          square
-          variant="outline"
+        <AdminRowAction
           :to="`/procurement/${item.number}`"
-          title="Lihat batch"
-          :aria-label="`Lihat batch ${item.number}`"
+          :label="`Lihat batch ${item.number}`"
+          icon="i-lucide-eye"
         />
       </template>
     </InventoryListTable>

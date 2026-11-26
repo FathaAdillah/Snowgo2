@@ -108,8 +108,9 @@ async function saved() {
           :items="['Semua', 'PENDING', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'FAILED', 'DELIVERED', 'RETURNED', 'CANCELLED']"
         />
       </template><template #actions="{ item }">
-        <UButton
-          label="Detail"
+        <AdminRowAction
+          :label="`Lihat paket ${item.number}`"
+          icon="i-lucide-eye"
           @click="select(item)"
         />
       </template>
@@ -196,10 +197,10 @@ async function saved() {
               min="1"
               required
             />
-          </UFormField><UButton
+          </UFormField><AdminRowAction
             v-if="lines.length > 1"
-            variant="ghost"
-            label="Hapus baris"
+            :label="`Hapus baris ${i + 1}`"
+            icon="i-lucide-trash-2"
             @click="lines.splice(i, 1)"
           />
         </div><UButton

@@ -51,10 +51,10 @@ async function download(id: string) {
       class="flex gap-2 items-center"
     >
       <span>{{ file.id }} · {{ file.status }}</span>
-      <UButton
+      <AdminRowAction
         v-if="file.status === 'READY' && can('foundation.file.download')"
-        label="Unduh bukti"
-        variant="outline"
+        :label="`Unduh bukti ${file.id}`"
+        icon="i-lucide-download"
         @click="download(file.id)"
       />
     </div>

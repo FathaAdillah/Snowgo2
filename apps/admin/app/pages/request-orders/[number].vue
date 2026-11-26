@@ -114,10 +114,10 @@ async function download(id: string) {
             class="flex flex-wrap items-center gap-2"
           >
             Lampiran {{ i + 1 }} · {{ file.mime }} · {{ file.status }}
-            <UButton
+            <AdminRowAction
               v-if="file.status === 'READY' && can('foundation.file.download')"
-              label="Unduh"
-              variant="outline"
+              :label="`Unduh lampiran ${i + 1}`"
+              icon="i-lucide-download"
               @click="download(file.id)"
             />
           </li>

@@ -58,11 +58,11 @@ async function saved() {
           Alasan: {{ p.reason_code }}
         </p>
         <template v-if="can('payments.proof.view') && can('foundation.file.view') && can('foundation.file.download')">
-          <UButton
+          <AdminRowAction
             v-for="(id, i) in p.proof_ids"
             :key="id"
-            variant="outline"
             :label="`Unduh bukti ${i + 1}`"
+            icon="i-lucide-download"
             @click="download(id)"
           />
         </template>

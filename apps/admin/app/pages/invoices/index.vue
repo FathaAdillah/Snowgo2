@@ -54,12 +54,10 @@ const columns: TableColumn<InvoicePage['data'][number] & { id: string }>[] = [
         </UFormField>
       </template>
       <template #actions="{ item }">
-        <UButton
-          icon="i-lucide-eye"
-          square
-          variant="outline"
+        <AdminRowAction
           :to="`/invoices/${item.number}`"
-          :aria-label="`Lihat invoice ${item.number}`"
+          :label="`Lihat invoice ${item.number}`"
+          icon="i-lucide-eye"
         />
       </template>
     </InventoryListTable>

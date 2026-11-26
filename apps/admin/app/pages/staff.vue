@@ -262,34 +262,24 @@ async function saved() {
             v-else-if="staff.manageable && (canUpdate || canRevoke)"
             class="flex items-center gap-2"
           >
-            <UButton
+            <AdminRowAction
               v-if="canUpdate"
+              :label="`Edit ${staff.email}`"
               icon="i-lucide-pencil"
-              :aria-label="`Edit ${staff.email}`"
-              title="Edit pengguna"
-              color="neutral"
-              variant="outline"
-              square
               @click="form(staff)"
             />
-            <UButton
+            <AdminRowAction
               v-if="canChangeStatus"
-              :icon="staff.active ? 'i-lucide-trash-2' : 'i-lucide-user-check'"
-              :aria-label="`${staff.active ? 'Nonaktifkan' : 'Aktifkan'} ${staff.email}`"
-              :title="staff.active ? 'Nonaktifkan pengguna' : 'Aktifkan pengguna'"
               :color="staff.active ? 'error' : 'success'"
-              variant="outline"
-              square
+              :label="`${staff.active ? 'Nonaktifkan' : 'Aktifkan'} ${staff.email}`"
+              :icon="staff.active ? 'i-lucide-trash-2' : 'i-lucide-user-check'"
               @click="status(staff)"
             />
-            <UButton
+            <AdminRowAction
               v-if="canRevoke && !canUpdate"
-              icon="i-lucide-log-out"
-              :aria-label="`Cabut sesi ${staff.email}`"
-              title="Cabut sesi"
               color="error"
-              variant="outline"
-              square
+              :label="`Cabut sesi ${staff.email}`"
+              icon="i-lucide-log-out"
               @click="revoke(staff)"
             />
           </div>

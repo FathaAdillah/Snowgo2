@@ -39,11 +39,10 @@ const states = ['UNPAID', 'WAITING_CONFIRMATION', 'UNDER_REVIEW', 'REJECTED', 'C
         </UFormField>
       </template>
       <template #actions="{ item }">
-        <UButton
-          variant="outline"
-          icon="i-lucide-eye"
+        <AdminRowAction
           :to="`/finance/payments/${item.number}`"
-          :aria-label="`Lihat ${item.number}`"
+          :label="`Lihat pembayaran ${item.number}`"
+          icon="i-lucide-eye"
         />
       </template>
     </InventoryListTable>

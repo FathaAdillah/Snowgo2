@@ -205,9 +205,10 @@ function transfer() {
                 required
               />
             </UFormField>
-            <UButton
+            <AdminRowAction
               v-if="allocations.length > 1"
-              label="Hapus alokasi"
+              :label="`Hapus alokasi ${index + 1}`"
+              icon="i-lucide-trash-2"
               @click="allocations.splice(index, 1)"
             />
           </div>
