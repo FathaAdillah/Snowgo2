@@ -32,7 +32,8 @@ useHead(() => ({ script: product.value
         :key="m.url"
         :src="m.url"
         :alt="m.alt"
-      ><div
+      >
+      <div
         v-if="!product.media.length"
         class="cover"
       >
@@ -40,7 +41,9 @@ useHead(() => ({ script: product.value
       </div>
     </div>
     <div>
-      <NuxtLink to="/shop">Shop</NuxtLink><h1>{{ product.name }}</h1><p class="prose-copy">
+      <NuxtLink to="/shop">Shop</NuxtLink>
+      <h1>{{ product.name }}</h1>
+      <p class="prose-copy">
         {{ product.description }}
       </p>
       <ul>
@@ -52,6 +55,34 @@ useHead(() => ({ script: product.value
         </li>
       </ul>
     </div>
+    <section class="panel stack">
+      <h2>Pilih varian</h2>
+      <div
+        v-for="v in product.variants"
+        :key="v.sku"
+        class="stack"
+      >
+        <h3>{{ v.name }}</h3>
+        <small>{{ v.sku }} · {{ v.weight_g }} g</small>
+        <div
+          v-for="o in v.offers"
+          :key="o.campaign_slug || o.method"
+        >
+          <p>{{ o.method === 'RTS' ? 'Siap kirim' : 'Preorder' }} · {{ rupiah(o.unit_amount) }}</p>
+          <p v-if="!o.available">
+            Belum tersedia
+          </p>
+          <NuxtLink
+            v-else-if="o.campaign_slug"
+            :to="'/drops/' + o.campaign_slug"
+          >Pilih termin &amp; lihat jadwal preorder →</NuxtLink>
+          <AddToCart
+            v-else
+            :sku="v.sku"
+          />
+        </div>
+      </div>
+    </section>
     <FavoriteButton :slug="product.slug" />
   </article>
 </template>

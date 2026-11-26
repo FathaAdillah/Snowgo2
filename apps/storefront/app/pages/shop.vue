@@ -33,19 +33,29 @@ useSeoMeta({ robots: () => Object.keys(filters.value).some(k => k !== 'page') ? 
         v-model="q"
         type="search"
         maxlength="120"
-      ></label>
+      >
+      </label>
       <label>Kategori<select
         :value="filters.category || ''"
         @change="filter('category', ($event.target as HTMLSelectElement).value)"
-      ><option value="">Semua kategori</option><option
-        v-for="c in categories?.data"
-        :key="c.slug"
-        :value="c.slug"
-      >{{ c.name }}</option></select></label>
+      >
+        <option value="">Semua kategori</option>
+        <option
+          v-for="c in categories?.data"
+          :key="c.slug"
+          :value="c.slug"
+        >{{ c.name }}</option>
+      </select>
+      </label>
       <label>Cara beli<select
         :value="filters.method || ''"
         @change="filter('method', ($event.target as HTMLSelectElement).value)"
-      ><option value="">Semua</option><option value="RTS">Siap kirim</option><option value="PO">Preorder</option></select></label>
+      >
+        <option value="">Semua</option>
+        <option value="RTS">Siap kirim</option>
+        <option value="PO">Preorder</option>
+      </select>
+      </label>
       <button>Cari</button>
     </form>
     <p
@@ -78,7 +88,9 @@ useSeoMeta({ robots: () => Object.keys(filters.value).some(k => k !== 'page') ? 
       <NuxtLink
         v-if="data.meta.page > 1"
         :to="{ query: { ...filters, page: data.meta.page - 1 } }"
-      >Sebelumnya</NuxtLink><span>{{ data.meta.page }} / {{ data.meta.last_page }}</span><NuxtLink
+      >Sebelumnya</NuxtLink>
+      <span>{{ data.meta.page }} / {{ data.meta.last_page }}</span>
+      <NuxtLink
         v-if="data.meta.page < data.meta.last_page"
         :to="{ query: { ...filters, page: data.meta.page + 1 } }"
       >Berikutnya</NuxtLink>

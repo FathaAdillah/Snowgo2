@@ -26,6 +26,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::table('content_entries')->exists()) {
+            throw new RuntimeException('Keep content entries and publications when rolling back the application.');
+        }
         DB::unprepared('DROP TABLE content_publications, content_entries');
     }
 };

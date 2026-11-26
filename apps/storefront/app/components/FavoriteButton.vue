@@ -23,12 +23,14 @@ async function favorite() {
       @click="run(favorite, 'Produk tersimpan di favorit.')"
     >
       <SnowIcon name="heart" /> Simpan ke favorit
-    </button><p
+    </button>
+    <p
       v-if="problem"
       role="alert"
     >
       {{ problem }}
-    </p><p
+    </p>
+    <p
       v-if="notice"
       role="status"
     >

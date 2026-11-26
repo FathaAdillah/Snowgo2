@@ -13,14 +13,17 @@ async function remove(slug: string) {
 
 <template>
   <section class="stack">
-    <h1>Favorit saya</h1><CustomerLinks /><p
+    <h1>Favorit saya</h1>
+    <CustomerLinks />
+    <p
       v-if="error"
       role="alert"
     >
       Favorit gagal dimuat. <button @click="refresh()">
         Coba lagi
       </button>
-    </p><template v-else-if="data">
+    </p>
+    <template v-else-if="data">
       <p v-if="!data.data.length">
         Belum ada produk favorit. <NuxtLink to="/shop">Jelajahi Shop</NuxtLink>
       </p>
@@ -29,7 +32,8 @@ async function remove(slug: string) {
         :key="p.slug"
         class="list-row"
       >
-        <NuxtLink :to="'/produk/' + p.slug">{{ p.name }}</NuxtLink><button
+        <NuxtLink :to="'/produk/' + p.slug">{{ p.name }}</NuxtLink>
+        <button
           :disabled="busy"
           class="subtle"
           @click="remove(p.slug)"
@@ -43,14 +47,16 @@ async function remove(slug: string) {
           @click="page--"
         >
           Sebelumnya
-        </button><button
+        </button>
+        <button
           v-if="page < data.meta.last_page"
           @click="page++"
         >
           Berikutnya
         </button>
       </div>
-    </template><p
+    </template>
+    <p
       v-if="problem"
       role="alert"
     >

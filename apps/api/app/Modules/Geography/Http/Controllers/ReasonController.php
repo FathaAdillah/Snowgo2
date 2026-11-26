@@ -4,15 +4,26 @@ namespace App\Modules\Geography\Http\Controllers;
 
 use App\Modules\Geography\Master;
 use App\Modules\Geography\References;
+use App\Support\Http\ApiInput;
 use App\Support\Http\ApiResponse;
 use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\IgnoreResponse;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 final class ReasonController
 {
+    #[Response(200, 'Active customer reason choices', type: 'array{success:bool,message:string,data:list<array{code:string,label:string}>,meta:array{request_id:string}}')]
+    public function choices(Request $request): JsonResponse
+    {
+        $data = $request->validate(['domain' => 'required|string|in:refunds,returns,orders,request_orders']);
+        ApiInput::fields($request, $data);
+
+        return ApiResponse::success(DB::table('reason_codes')->where(['active' => true, 'domain' => $data['domain']])->orderBy('label')->get(['code', 'label']));
+    }
+
     private const ROW = 'array{id:int,domain:string,code:string,label:string,active:bool}';
 
     private const ONE = 'array{success:bool,message:string,data:'.self::ROW.',meta:array{request_id:string}}';

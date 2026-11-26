@@ -21,7 +21,9 @@ async function logout() {
 
 <template>
   <section class="stack">
-    <h1>Akun saya</h1><CustomerLinks /><div class="panel stack">
+    <h1>Akun saya</h1>
+    <CustomerLinks />
+    <div class="panel stack">
       <p
         v-if="error"
         role="alert"
@@ -34,18 +36,27 @@ async function logout() {
         v-else-if="data"
         @submit.prevent="save"
       >
-        <p>{{ data.data.email }}</p><label>Nama<input
+        <p>{{ data.data.email }}</p>
+        <label>Nama<input
           v-model="profile.display_name"
           required
           autocomplete="name"
-        ></label><label>Telepon<input
+        >
+        </label>
+        <label>Telepon<input
           v-model="profile.phone"
           type="tel"
           autocomplete="tel"
-        ></label><label><span><input
-          v-model="profile.marketing_opt_in"
-          type="checkbox"
-        > Saya ingin menerima kabar promosi</span></label><div>
+        >
+        </label>
+        <label>
+          <span>
+            <input
+              v-model="profile.marketing_opt_in"
+              type="checkbox"
+            > Saya ingin menerima kabar promosi</span>
+        </label>
+        <div>
           <button :disabled="busy">
             Simpan profil
           </button>
@@ -62,12 +73,14 @@ async function logout() {
         role="alert"
       >
         {{ problem }}
-      </p><p
+      </p>
+      <p
         v-if="notice"
         role="status"
       >
         {{ notice }}
-      </p><div>
+      </p>
+      <div>
         <button
           class="subtle"
           :disabled="busy"

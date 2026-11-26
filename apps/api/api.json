@@ -29632,6 +29632,92 @@
                 }
             }
         },
+        "/customer-reasons": {
+            "get": {
+                "operationId": "customers.reasons",
+                "tags": [
+                    "Reason"
+                ],
+                "parameters": [
+                    {
+                        "name": "domain",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "refunds",
+                                "returns",
+                                "orders",
+                                "request_orders"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Active customer reason choices",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "code",
+                                                    "label"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/reason-codes": {
             "get": {
                 "operationId": "geography.reason-codes.index",

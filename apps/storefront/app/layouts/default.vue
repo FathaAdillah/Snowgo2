@@ -26,12 +26,13 @@ const policies = computed(() => pages.value?.data.filter(p => p.type === 'PAGE' 
           to="/"
           class="brand"
           aria-label="Snowe GO, beranda"
-        ><img
-          src="/brand/snow-logo.webp"
-          alt=""
-          width="56"
-          height="56"
-        >Snowe GO</NuxtLink>
+        >
+          <img
+            src="/brand/snow-logo.webp"
+            alt=""
+            width="56"
+            height="56"
+          >Snowe GO</NuxtLink>
         <form
           class="search-bar"
           role="search"
@@ -43,7 +44,8 @@ const policies = computed(() => pages.value?.data.filter(p => p.type === 'PAGE' 
             type="search"
             maxlength="120"
             placeholder="Cari produk, karakter, atau kategori…"
-          ><button aria-label="Cari">
+          >
+          <button aria-label="Cari">
             <SnowIcon name="search" />
           </button>
         </form>
@@ -55,21 +57,26 @@ const policies = computed(() => pages.value?.data.filter(p => p.type === 'PAGE' 
             v-for="link in links"
             :key="link.path"
             :to="link.path"
-          ><SnowIcon :name="link.icon" /><span>{{ link.label }}</span></NuxtLink>
+          >
+            <SnowIcon :name="link.icon" />
+            <span>{{ link.label }}</span>
+          </NuxtLink>
         </nav>
       </div>
       <nav
         class="category-bar"
         aria-label="Kategori dan layanan"
       >
-        <NuxtLink to="/shop"><SnowIcon name="menu" /> Semua Kategori</NuxtLink>
+        <NuxtLink to="/shop">
+          <SnowIcon name="menu" /> Semua Kategori</NuxtLink>
         <NuxtLink
           v-for="c in categories?.data.slice(0, 6)"
           :key="c.slug"
           :to="{ path: '/shop', query: { category: c.slug } }"
         >{{ c.name }}</NuxtLink>
         <template v-if="!categories?.data.length">
-          <NuxtLink to="/shop?method=RTS">Siap Kirim</NuxtLink><NuxtLink to="/drops">Preorder</NuxtLink>
+          <NuxtLink to="/shop?method=RTS">Siap Kirim</NuxtLink>
+          <NuxtLink to="/drops">Preorder</NuxtLink>
         </template>
         <NuxtLink to="/request-order">Request Order</NuxtLink>
       </nav>
@@ -87,23 +94,37 @@ const policies = computed(() => pages.value?.data.filter(p => p.type === 'PAGE' 
           <NuxtLink
             class="brand"
             to="/"
-          ><img
-            src="/brand/snow-logo.webp"
-            alt=""
-            width="48"
-            height="48"
-          >Snowe GO</NuxtLink><p>Layanan belanja produk pilihan melalui stok Indonesia, pre-order atau group order, dan request produk dari luar negeri.</p>
+          >
+            <img
+              src="/brand/snow-logo.webp"
+              alt=""
+              width="48"
+              height="48"
+            >Snowe GO</NuxtLink>
+          <p>Layanan belanja produk pilihan melalui stok Indonesia, pre-order atau group order, dan request produk dari luar negeri.</p>
         </section>
-        <section><h2>Belanja</h2><NuxtLink to="/shop">Siap Kirim</NuxtLink><NuxtLink to="/drops">Preorder</NuxtLink><NuxtLink to="/request-order">Request Order</NuxtLink></section>
+        <section>
+          <h2>Belanja</h2>
+          <NuxtLink to="/shop">Siap Kirim</NuxtLink>
+          <NuxtLink to="/drops">Preorder</NuxtLink>
+          <NuxtLink to="/request-order">Request Order</NuxtLink>
+        </section>
         <section v-if="policies.length">
-          <h2>Informasi & Kebijakan</h2><NuxtLink
+          <h2>Informasi & Kebijakan</h2>
+          <NuxtLink
             v-for="p in policies"
             :key="p.slug"
             :to="'/konten/' + p.slug"
           >{{ p.title }}</NuxtLink>
         </section>
-        <section><h2>Akun</h2><NuxtLink to="/akun">Profil</NuxtLink><NuxtLink to="/pesanan">Pesanan saya</NuxtLink><NuxtLink to="/favorit">Favorit</NuxtLink></section>
-      </div><small>© {{ new Date().getFullYear() }} Snowe GO</small>
+        <section>
+          <h2>Akun</h2>
+          <NuxtLink to="/akun">Profil</NuxtLink>
+          <NuxtLink to="/pesanan">Pesanan saya</NuxtLink>
+          <NuxtLink to="/favorit">Favorit</NuxtLink>
+        </section>
+      </div>
+      <small>© {{ new Date().getFullYear() }} Snowe GO</small>
     </footer>
   </div>
 </template>

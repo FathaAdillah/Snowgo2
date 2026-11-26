@@ -1,7 +1,8 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'customer' })
 type Address = StoreRead<'/addresses'>['data'][number]
-const { data, error, refresh } = await useFetch<StoreRead<'/addresses'>>('/api/v1/addresses', { server: false, query: { per_page: 100 } })
+const page = ref(1)
+const { data, error, refresh } = await useFetch<StoreRead<'/addresses'>>('/api/v1/addresses', { server: false, query: { page } })
 const edit = ref<Address>()
 const { busy, notice, problem, run } = useCustomerAction()
 function open(a?: Address) {
@@ -28,7 +29,8 @@ async function remove(id: string) {
 
 <template>
   <section class="stack">
-    <h1>Alamat pengiriman</h1><CustomerLinks />
+    <h1>Alamat pengiriman</h1>
+    <CustomerLinks />
     <p
       v-if="error"
       role="alert"
@@ -43,20 +45,46 @@ async function remove(id: string) {
         :key="a.id"
         class="list-row"
       >
-        <div><h3>{{ a.recipient }} {{ a.is_default ? '· Utama' : '' }}</h3><p>{{ a.line1 }} {{ a.line2 }}, {{ a.postal_code }}</p></div><div class="actions">
+        <div>
+          <h3>{{ a.recipient }} {{ a.is_default ? '· Utama' : '' }}</h3>
+          <p>{{ a.line1 }} {{ a.line2 }}, {{ a.postal_code }}</p>
+        </div>
+        <div class="actions">
           <button @click="open(a)">
             Ubah
-          </button><button
+          </button>
+          <button
             class="subtle"
             @click="remove(a.id)"
           >
             Hapus
           </button>
         </div>
-      </article><p v-if="!data.data.length">
+      </article>
+      <p v-if="!data.data.length">
         Belum ada alamat tersimpan.
       </p>
+      <nav class="actions">
+        <button
+          v-if="page > 1"
+          @click="page--"
+        >
+          Sebelumnya
+        </button>
+        <button
+          v-if="page < data.meta.last_page"
+          @click="page++"
+        >
+          Berikutnya
+        </button>
+      </nav>
     </template>
+    <p
+      v-else
+      role="status"
+    >
+      Memuat alamat…
+    </p>
     <div>
       <button @click="open()">
         Tambah alamat
@@ -71,24 +99,40 @@ async function remove(id: string) {
         <label>Penerima<input
           v-model="edit.recipient"
           required
-        ></label><label>Telepon<input
+        >
+        </label>
+        <label>Telepon<input
           v-model="edit.phone"
           required
           type="tel"
-        ></label><label>Jalan dan nomor rumah<input
+        >
+        </label>
+        <label>Jalan dan nomor rumah<input
           v-model="edit.line1"
           required
-        ></label><label>Detail tambahan<input v-model="edit.line2"></label><DistrictPicker v-model="edit.district_code" /><label>Kode pos<input
+        >
+        </label>
+        <label>Detail tambahan<input v-model="edit.line2">
+        </label>
+        <DistrictPicker v-model="edit.district_code" />
+        <label>Kode pos<input
           v-model="edit.postal_code"
           required
-        ></label>
-      </div><label><span><input
-        v-model="edit.is_default"
-        type="checkbox"
-      > Gunakan sebagai alamat utama</span></label><div class="actions">
+        >
+        </label>
+      </div>
+      <label>
+        <span>
+          <input
+            v-model="edit.is_default"
+            type="checkbox"
+          > Gunakan sebagai alamat utama</span>
+      </label>
+      <div class="actions">
         <button :disabled="busy">
           Simpan
-        </button><button
+        </button>
+        <button
           type="button"
           class="subtle"
           @click="edit = undefined"
@@ -102,7 +146,8 @@ async function remove(id: string) {
       role="alert"
     >
       {{ problem }}
-    </p><p
+    </p>
+    <p
       v-if="notice"
       role="status"
     >

@@ -20,31 +20,39 @@ useStoreSeo(() => 'Snowe GO · Siap Kirim, Preorder & Request Order', () => 'Bel
     <NuxtLink
       class="hero"
       :to="banner ? '/konten/' + banner.slug : '/shop'"
-    ><img
-      :src="banner?.media_url || '/brand/snow-hero.jpeg'"
-      :alt="banner?.title || 'Selamat datang di Snowe GO. Belanja sekarang.'"
-      fetchpriority="high"
-      width="1280"
-      height="720"
-    ></NuxtLink>
+    >
+      <img
+        :src="banner?.media_url || '/brand/snow-hero.jpeg'"
+        :alt="banner?.title || 'Selamat datang di Snowe GO. Belanja sekarang.'"
+        fetchpriority="high"
+        width="1280"
+        height="720"
+      >
+    </NuxtLink>
     <div class="service-strip">
       <div
         v-for="s in services"
         :key="s.title"
       >
-        <SnowIcon :name="s.icon" /><span><strong>{{ s.title }}</strong><small>{{ s.detail }} ♡</small></span>
+        <SnowIcon :name="s.icon" />
+        <span>
+          <strong>{{ s.title }}</strong>
+          <small>{{ s.detail }} ♡</small>
+        </span>
       </div>
     </div>
     <section v-if="categories?.data.length">
       <div class="section-title">
-        <h2>Belanja Berdasarkan Kategori ♡</h2><NuxtLink to="/shop">Lihat semua →</NuxtLink>
+        <h2>Belanja Berdasarkan Kategori ♡</h2>
+        <NuxtLink to="/shop">Lihat semua →</NuxtLink>
       </div>
       <div class="category-tiles">
         <NuxtLink
           v-for="c in categories.data.slice(0, 8)"
           :key="c.slug"
           :to="{ path: '/shop', query: { category: c.slug } }"
-        ><SnowIcon name="shopping-bag" />{{ c.name }}</NuxtLink>
+        >
+          <SnowIcon name="shopping-bag" />{{ c.name }}</NuxtLink>
       </div>
     </section>
     <section
@@ -54,15 +62,17 @@ useStoreSeo(() => 'Snowe GO · Siap Kirim, Preorder & Request Order', () => 'Bel
       <NuxtLink
         class="feature-link"
         :to="'/konten/' + p.slug"
-      ><img
-        v-if="p.media_url"
-        :src="p.media_url"
-        alt=""
-      >{{ p.title }} →</NuxtLink>
+      >
+        <img
+          v-if="p.media_url"
+          :src="p.media_url"
+          alt=""
+        >{{ p.title }} →</NuxtLink>
     </section>
     <section>
       <div class="section-title">
-        <h2>Produk Terbaru</h2><NuxtLink to="/shop">Lihat semua →</NuxtLink>
+        <h2>Produk Terbaru</h2>
+        <NuxtLink to="/shop">Lihat semua →</NuxtLink>
       </div>
       <p
         v-if="error"

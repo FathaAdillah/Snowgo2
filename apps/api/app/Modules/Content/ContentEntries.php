@@ -33,14 +33,15 @@ final class ContentEntries
         if ($old && (int) $data['version'] !== $old->version) {
             throw new ApiProblem(409, 'STALE_VERSION', 'Muat ulang versi konten terbaru.');
         }
-        $status = $data['status'] ?? $old?->status ?? 'DRAFT';
+        $status = $data['status'] ?? $old->status ?? 'DRAFT';
         if ($status === 'PUBLISHED' || $status === 'ARCHIVED') {
             abort_unless($actor->can('content.entry.'.($status === 'PUBLISHED' ? 'publish' : 'archive')), 403);
         }
         if ($old && isset($data['slug']) && $data['slug'] !== $old->slug) {
             throw ValidationException::withMessages(['slug' => 'Slug tersimpan tidak dapat diubah.']);
         }
-        if (isset($data['media_id']) && self::mediaUrl($data['media_id']) === null) {
+        $media = array_key_exists('media_id', $data) ? $data['media_id'] : ($old->media_id ?? null);
+        if ($media !== null && self::mediaUrl($media) === null && ($status === 'PUBLISHED' || isset($data['media_id']))) {
             throw ValidationException::withMessages(['media_id' => 'Pilih gambar katalog yang sudah terbit.']);
         }
         if (isset($data['body'])) {
@@ -49,7 +50,7 @@ final class ContentEntries
             $data['body'] = preg_replace('~&lt;(/?(?:p|br|strong|em|ul|ol|li|h2|h3))&gt;~', '<$1>', $escaped);
         }
         $data['status'] = $status;
-        $data['version'] = ($old?->version ?? 0) + 1;
+        $data['version'] = ($old->version ?? 0) + 1;
         try {
             if ($id === null) {
                 $id = DB::table('content_entries')->insertGetId($data);
@@ -63,11 +64,9 @@ final class ContentEntries
         $publications = DB::table('content_publications')->where('entry_id', $id);
         if ($status === 'ARCHIVED') {
             $publications->delete();
-        } else {
+        } elseif ($status === 'PUBLISHED') {
             $publications->where('effective_at', '>', now())->delete();
-            if ($status === 'PUBLISHED') {
-                DB::table('content_publications')->insert(['entry_id' => $id, 'version' => $saved['version'], 'effective_at' => $saved['publish_at'] ?? now(), 'snapshot' => json_encode($saved, JSON_THROW_ON_ERROR)]);
-            }
+            DB::table('content_publications')->insert(['entry_id' => $id, 'version' => $saved['version'], 'effective_at' => $saved['publish_at'] ?? now(), 'snapshot' => json_encode($saved, JSON_THROW_ON_ERROR)]);
         }
         app(Journal::class)->audit('content.changed', Subject::ContentEntry, $id, $actor->id, $old ? (array) $old : null, $saved);
         app(Outbox::class)->record('ContentChanged', 'content_entry', $id, ['version' => $saved['version'], 'status' => $status]);

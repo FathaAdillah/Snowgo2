@@ -44,14 +44,21 @@ function choose(index: number) {
     >{{ names[i] }}<select
       v-model="selected[i]"
       @change="choose(i)"
-    ><option value="">Pilih {{ names[i] }}</option><option
-      v-for="r in options[i]"
-      :key="r.code"
-      :value="r.code"
-    >{{ r.name }}</option></select></label><label>Kode kecamatan<input
+    >
+      <option value="">Pilih {{ names[i] }}</option>
+      <option
+        v-for="r in options[i]"
+        :key="r.code"
+        :value="r.code"
+      >{{ r.name }}</option>
+    </select>
+    </label>
+    <label>Kode kecamatan<input
       v-model="model"
       required
-    ></label><p
+    >
+    </label>
+    <p
       v-if="problem"
       role="alert"
     >

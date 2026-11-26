@@ -35,20 +35,23 @@ useSeoMeta({ title: 'Akun · Snowe GO', robots: 'noindex' })
         v-model="name"
         required
         autocomplete="name"
-      ></label>
+      >
+      </label>
       <label>Email<input
         v-model="email"
         type="email"
         required
         autocomplete="email"
-      ></label>
+      >
+      </label>
       <label v-if="tab !== 'reset'">Password<input
         v-model="password"
         type="password"
         required
         :minlength="tab === 'register' ? 12 : 1"
         :autocomplete="tab === 'login' ? 'current-password' : 'new-password'"
-      ></label>
+      >
+      </label>
       <button :disabled="busy">
         {{ tab === 'reset' ? 'Kirim tautan' : title }}
       </button>
@@ -58,7 +61,8 @@ useSeoMeta({ title: 'Akun · Snowe GO', robots: 'noindex' })
       role="alert"
     >
       {{ problem }}
-    </p><p
+    </p>
+    <p
       v-if="notice"
       role="status"
     >
@@ -70,12 +74,14 @@ useSeoMeta({ title: 'Akun · Snowe GO', robots: 'noindex' })
         @click="tab = tab === 'login' ? 'register' : 'login'"
       >
         {{ tab === 'login' ? 'Buat akun' : 'Masuk' }}
-      </button><button
+      </button>
+      <button
         class="subtle"
         @click="tab = 'reset'"
       >
         Lupa password
-      </button><a href="/api/v1/auth/google/redirect">Masuk dengan Google</a>
+      </button>
+      <a href="/api/v1/auth/google/redirect">Masuk dengan Google</a>
     </nav>
   </section>
 </template>

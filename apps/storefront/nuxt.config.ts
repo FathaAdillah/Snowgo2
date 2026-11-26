@@ -26,6 +26,7 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    ...Object.fromEntries(['/akun', '/akun/**', '/favorit', '/keranjang', '/pesanan', '/pesanan/**', '/invoice/**', '/pembayaran/**', '/pengiriman/**', '/purnajual', '/purnajual/**', '/request-order', '/request-order/**', '/masuk', '/verify-email', '/reset-password', '/auth/**'].map(path => [path, { ssr: false, headers: { 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex', 'referrer-policy': 'no-referrer' } }])),
     '/**': { headers: { 'x-frame-options': 'DENY', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' } }
   },
 

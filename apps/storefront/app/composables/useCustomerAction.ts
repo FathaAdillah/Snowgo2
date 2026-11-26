@@ -5,6 +5,24 @@ export async function customerWrite<T = unknown>(path: string, method: 'POST' | 
   const token = decodeURIComponent(document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)?.[1] ?? '')
   return await $fetch<T>('/api/v1' + path, { method, body, credentials: 'same-origin', retry: 0, headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': token, 'Idempotency-Key': key } }) as T
 }
+// Reuse the key when a committed response was lost. Each form owns its retry state.
+export function useRetryableCustomerWrite() {
+  let pending: { signature: string, key: ReturnType<typeof crypto.randomUUID> } | undefined
+  return async function write<T = unknown>(path: string, body: Record<string, unknown>) {
+    const signature = JSON.stringify([path, body])
+    if (!pending || signature !== pending.signature) pending = { signature, key: crypto.randomUUID() }
+    try {
+      const result = await customerWrite<T>(path, 'POST', body, pending.key)
+      pending = undefined
+      return result
+    } catch (err) {
+      const failure = err as { status?: number, data?: { code?: string } }
+      if (failure.status && failure.status < 500 && failure.data?.code !== 'REQUEST_IN_PROGRESS') pending = undefined
+      throw err
+    }
+  }
+}
+
 export function useCustomerAction() {
   const busy = ref(false)
   const notice = ref('')

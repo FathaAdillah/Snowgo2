@@ -230,3 +230,15 @@ it('keeps staged images private, binds READY media to its actual owner, and reco
     $runConsumers();
     $public->assertMissing($key);
 });
+
+it('serves only published products in storefront search and sitemap', function () {
+    $this->actor->assignRole('product_manager');
+    $category = ($this->create)('categories', ['name' => 'Pins', 'slug' => 'pins', 'active' => true]);
+    $published = ($this->create)('products', $this->item);
+    ($this->create)('variants', ['product_id' => $published] + $this->variant);
+    ($this->api)('PATCH', "products/$published", ['status' => 'PUBLISHED', 'category_ids' => [$category]])->assertOk();
+    ($this->create)('products', ['slug' => 'draft-pin', 'name' => 'Draft Pin'] + $this->item);
+    $this->getJson('/api/v1/search?q=pin&category=pins&method=RTS')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.slug', 'kopi-pin');
+    $this->getJson('/api/v1/search?q=draft')->assertOk()->assertJsonCount(0, 'data');
+    $this->getJson('/api/v1/sitemap/products')->assertOk()->assertJsonPath('data', ['kopi-pin']);
+});

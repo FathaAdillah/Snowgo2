@@ -33,10 +33,10 @@ final class ContentController
         $entries = $page->getCollection()->map(function ($row) {
             $entry = json_decode($row->snapshot, true, flags: JSON_THROW_ON_ERROR);
 
-            return array_intersect_key($entry,array_flip(['slug','type','title'])) + ['media_url'=>ContentEntries::mediaUrl($entry['media_id'])];
+            return array_intersect_key($entry, array_flip(['slug', 'type', 'title'])) + ['media_url' => ContentEntries::mediaUrl($entry['media_id'])];
         });
 
-        return ApiResponse::success($entries, meta: ['page'=>$page->currentPage(), 'last_page'=>$page->lastPage()]);
+        return ApiResponse::success($entries, meta: ['page' => $page->currentPage(), 'last_page' => $page->lastPage()]);
     }
 
     #[Response(200, 'Effective publication', type: 'array{success:bool,message:string,data:array{slug:string,type:string,title:string,body:string,media_url:string|null},meta:array{request_id:string}}')]
@@ -77,6 +77,6 @@ final class ContentController
     {
         $data = $request->validate([...self::RULES, 'version' => 'required|integer|min:1']);
 
-        return CaseResponses::write($request, $data, fn () => ContentEntries::save($request->user(),$id,$data));
+        return CaseResponses::write($request, $data, fn () => ContentEntries::save($request->user(), $id, $data));
     }
 }

@@ -34,20 +34,24 @@ async function submit() {
           type="email"
           required
           autocomplete="email"
-        ></label><label>Password baru<input
+        >
+        </label>
+        <label>Password baru<input
           v-model="password"
           required
           minlength="12"
           type="password"
           autocomplete="new-password"
-        ></label>
+        >
+        </label>
       </template>
       <button :disabled="busy || !token">
         {{ reset ? 'Simpan password' : 'Verifikasi alamat email' }}
       </button>
     </form>
     <template v-else-if="!done">
-      <p>Buka tautan verifikasi dalam email untuk mengaktifkan akun.</p><button
+      <p>Buka tautan verifikasi dalam email untuk mengaktifkan akun.</p>
+      <button
         :disabled="busy"
         @click="run(() => customerWrite('/auth/email-verification-requests', 'POST'), 'Email verifikasi diminta.')"
       >
@@ -59,11 +63,13 @@ async function submit() {
       role="alert"
     >
       {{ problem }}
-    </p><p
+    </p>
+    <p
       v-if="notice"
       role="status"
     >
       {{ notice }}
-    </p><NuxtLink to="/masuk">Kembali ke login</NuxtLink>
+    </p>
+    <NuxtLink to="/masuk">Kembali ke login</NuxtLink>
   </section>
 </template>

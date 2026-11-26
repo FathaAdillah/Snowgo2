@@ -10,11 +10,13 @@ useStoreSeo(() => (data.value?.data.title ?? 'Informasi') + ' · Snowe GO', () =
     v-if="data"
     class="panel content-body"
   >
-    <h1>{{ data.data.title }}</h1><img
+    <h1>{{ data.data.title }}</h1>
+    <img
       v-if="data.data.media_url"
       :src="data.data.media_url"
       alt=""
-    ><div v-html="data.data.body" />
+    >
+    <div v-html="data.data.body" />
   </article>
   <p
     v-else

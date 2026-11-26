@@ -8,5 +8,7 @@ defineProps<{ name: string }>()
     aria-hidden="true"
     focusable="false"
     viewBox="0 0 24 24"
-  ><use :href="'/brand/icons.svg#' + name" /></svg>
+  >
+    <use :href="'/brand/icons.svg#' + name" />
+  </svg>
 </template>

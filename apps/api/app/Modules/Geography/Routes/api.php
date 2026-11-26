@@ -11,6 +11,7 @@ use App\Modules\Identity\Http\Middleware\EnsureIdentity;
 use App\Modules\Identity\Http\Middleware\StaffOrigin;
 use Illuminate\Support\Facades\Route;
 
+Route::get('customer-reasons', [ReasonController::class, 'choices'])->middleware(['auth:web', EnsureIdentity::class.':customer'])->name('customers.reasons');
 Route::get('regions', PublicRegionsController::class)->name('public.regions');
 Route::prefix('admin')->middleware([StaffOrigin::class, 'auth:web', EnsureIdentity::class.':staff'])->group(function () {
     foreach ([

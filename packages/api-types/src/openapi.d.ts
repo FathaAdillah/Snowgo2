@@ -2639,6 +2639,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/customer-reasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["customers.reasons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files": {
         parameters: {
             query?: never;
@@ -19607,6 +19623,41 @@ export interface operations {
                 };
             };
             404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "customers.reasons": {
+        parameters: {
+            query: {
+                domain: "refunds" | "returns" | "orders" | "request_orders";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active customer reason choices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            code: string;
+                            label: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            401: components["responses"]["AuthenticationException"];
+            422: components["responses"]["ValidationException"];
         };
     };
     "customer.files.upload": {

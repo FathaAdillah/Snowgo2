@@ -10,15 +10,19 @@ defineProps<{ filtered?: boolean }>()
     <span
       class="empty-icon"
       aria-hidden="true"
-    ><svg
-      viewBox="0 0 24 24"
-      width="30"
-      height="30"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8"
-      stroke-linejoin="round"
-    ><path d="m12 6 6-3 4 3-6 4-4-4-4 4-6-4 4-3 6 3Zm0 0 6 3 4 3-6 4-4-4-4 4-6-4 4-3m-2 6v4l8 4 8-4v-4m-8-2v10" /></svg></span>
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="30"
+        height="30"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+      >
+        <path d="m2 6 6-3 4 3-6 3-4-3Zm10 0 4-3 6 3-4 3-6-3Zm-6 3 6 3-4 3-6-3 4-3Zm12 0 4 3-6 3-4-3 6-3ZM4 14v4l8 4 8-4v-4m-8-2v10" />
+      </svg>
+    </span>
     <h2>{{ filtered ? 'Produk tidak ditemukan' : 'Produk belum tersedia' }}</h2>
     <p>{{ filtered ? 'Coba kata kunci atau kategori lain.' : 'Produk aktif akan muncul di halaman ini.' }}</p>
     <NuxtLink

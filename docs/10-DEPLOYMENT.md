@@ -356,3 +356,9 @@ Pada Finance → Refund, grant `refunds.shortage.review` menampilkan kekurangan 
 ### Mengaktifkan konten storefront (TASK-031)
 
 Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di container API dan build ulang admin. Dari **Konten & Promo → Konten Storefront**, buat halaman, FAQ, banner atau kurasi. Berikan izin content.entry per aksi pada role lama. Gunakan media katalog yang sudah terbit. Draf tersimpan dapat dipratinjau staf, sedangkan publikasi terjadwal menggantikan versi publik pada waktu efektifnya. Arsip menarik halaman dari publik.
+
+### Mengaktifkan storefront Snowe GO (TASK-032–034)
+
+Set APP_URL ke origin toko yang dibuka pembeli. Compose meneruskannya sebagai NUXT_PUBLIC_SITE_URL untuk canonical dan sitemap. Jalankan migrasi API, build ulang storefront dan admin, lalu akses host storefront. Halaman Home dan Shop membaca katalog aktif, termasuk saat katalog masih kosong.
+
+Pesanan siap kirim membutuhkan SKU dengan stok, alamat kecamatan dan tarif aktif. Untuk preorder buka kampanye dan pilih termin. Request Order dimulai dari pengajuan pelanggan dan penawaran staf. Aktifkan rekening tujuan untuk transfer, isi kode alasan aktif pada master untuk pengajuan purnajual, dan jalankan worker pemindaian serta PDF. Pembeli membuka invoice, transfer dan paket dari detail pesanan, refund dari pesanan, serta retur dari paket terkirim.
