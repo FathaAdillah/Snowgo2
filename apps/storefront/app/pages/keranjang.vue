@@ -153,7 +153,7 @@ async function checkout() {
                 v-for="o in preview.shipping_quotes"
                 :key="o.id"
                 :value="o.id"
-              >{{ o.carrier_label }} · {{ o.service_code }} · {{ rupiah(o.amount) }} · {{ o.estimated_days_from }}–{{ o.estimated_days_to }} hari</option>
+              >{{ o.carrier_label }} · {{ o.service_code }} · {{ rupiah(o.amount) }} · {{ o.estimated_days_from }}–{{ o.estimated_days_to }} hari · {{ o.source === 'MANUAL' ? 'Tarif toko' : 'Tarif kurir' }}</option>
             </select>
             </label>
             <article

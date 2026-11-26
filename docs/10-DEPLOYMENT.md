@@ -362,3 +362,38 @@ Jalankan migrasi, `php artisan db:seed --class=PermissionSeeder --force` di cont
 Set APP_URL ke origin toko yang dibuka pembeli. Compose meneruskannya sebagai NUXT_PUBLIC_SITE_URL untuk canonical dan sitemap. Jalankan migrasi API, build ulang storefront dan admin, lalu akses host storefront. Halaman Home dan Shop membaca katalog aktif, termasuk saat katalog masih kosong.
 
 Pesanan siap kirim membutuhkan SKU dengan stok, alamat kecamatan dan tarif aktif. Untuk preorder buka kampanye dan pilih termin. Request Order dimulai dari pengajuan pelanggan dan penawaran staf. Aktifkan rekening tujuan untuk transfer, isi kode alasan aktif pada master untuk pengajuan purnajual, dan jalankan worker pemindaian serta PDF. Pembeli membuka invoice, transfer dan paket dari detail pesanan, refund dari pesanan, serta retur dari paket terkirim.
+
+## Mengaktifkan ongkir API.co.id
+
+Master wilayah, kurir, layanan dan alamat tetap lokal. Hanya Laravel yang membutuhkan `API_CO_ID_KEY`. Isi secret ini di environment backend, bukan di `NUXT_PUBLIC_*`. Setelah memperbarui image, jalankan migrasi dan `PermissionSeeder`, lalu buat ulang API, worker dan scheduler agar membaca environment baru. Tanpa key aplikasi tetap menggunakan tarif manual.
+
+### Sinkronisasi sebelum membuka checkout
+
+1. Di **Pengiriman → Kurir**, pilih **Master API.co.id** lalu **Sinkronkan master**. Ambil **Kurir** dan **Provinsi**, lalu **Kabupaten/kota** per kode provinsi dan **Kecamatan** per kode kota/kabupaten. Sinkronkan kedua sisi rute: kecamatan gudang dan kecamatan pelanggan. Tidak perlu menarik seluruh Indonesia untuk membuka satu rute.
+2. Berikan staf `shipping.provider.sync` dan `shipping.courier.view`. Impor wilayah memerlukan `geography.region.import`; impor kurir memerlukan `shipping.courier.manage`, `.create` dan `.update`. Tanpa izin tombol terkait tidak muncul dan akses langsung ditolak. Izin baru tidak otomatis diberikan ke role lama.
+3. Alternatif untuk operator deployment:
+
+   ```sh
+   docker compose exec api php artisan shipping:sync-master couriers
+   docker compose exec api php artisan shipping:sync-master provinces
+   docker compose exec api php artisan shipping:sync-master cities 31
+   docker compose exec api php artisan shipping:sync-master districts 3174
+   docker compose exec api php artisan shipping:sync-master districts 3173
+   ```
+
+4. ID lama dan status arsip dipertahankan. Sinkronisasi memakai pemetaan yang sudah ada atau nama unik **di bawah induk dan jenis yang sama**. Wilayah baru mendapat kode lokal `APICO-<kode>`. Jika angka kode tampak sama tetapi nama berbeda, sinkronisasi berhenti. Setelah memeriksa identitas wilayah, operator bisa menjalankan misalnya `shipping:sync-master districts 3174 --bind=317405:31.74.05` **hanya jika ID lokal tersebut benar**. Gunakan `--bind` sebelum impor pertama bila nama lokal berbeda; pemetaan lama tidak dapat dipindahkan dengan opsi ini. Layanan provider ditemukan dari hasil `/rates`, dipetakan per kurir, dan layanan yang diarsipkan tidak ditawarkan.
+
+### Harga dan pemulihan
+
+| Keadaan | Perilaku |
+|---|---|
+| Ready Stock | **Hitung tagihan & ongkir** memakai berat barang siap kirim saja. Pilihan terikat pada pemilik, keranjang/versi, alamat, gudang, berat dan layanan. Konfirmasi dan replay tidak memanggil API lagi. |
+| Preorder / Request Order | Tidak ada ongkir domestik saat checkout awal. Di **Pengiriman → Paket & Dispatch**, isi pesanan, gudang dan berat aktual (gram), cek layanan, lalu pilih dan buat paket. Ajukan proposal sebelum quote berakhir; invoice ongkir baru terbit setelah pelanggan menerima. Bila quote provider kedaluwarsa sebelum diterima, batalkan paket belum ditagih dan rencanakan ulang. |
+| Satuan dan harga | `1250 g` dikirim sebagai `weight=1.25` kg. Gunakan `total_price` tanpa menambah biaya lagi. Tanpa total eksplisit, gunakan `price` hanya jika tidak ada biaya tambahan nonnol. Harga ambigu, negatif, kosong atau total provider nol tidak ditawarkan. Tidak memesan pickup atau asuransi. |
+| Masa berlaku | Penawaran provider disimpan di PostgreSQL selama masa penawaran 15 menit untuk rute dan gram yang sama. Snapshot menyimpan ID quote, layanan, komponen harga, berat, ETA dan waktu. Harga transaksi yang sudah diterima tidak dihitung ulang. |
+| `400` / `401` provider | Adapter menghasilkan `{"is_success":false,"message":"…"}`. Sinkronisasi memberi HTTP `503` ke admin: kesalahan kredensial provider bukan sesi pengguna kedaluwarsa. Checkout tidak menampilkan kredensial atau respons mentah. |
+| `429` atau gangguan | Gunakan snapshot yang masih berlaku; pada `429` hentikan permintaan tarif hingga `reset_at` (1 menit jika waktu tidak valid). Jika tidak tersedia, periksa tarif manual aktif untuk rute yang sama, memakai rumus per kg lokal. Pelanggan melihat **Tarif toko**; jika tidak ada tarif yang cocok, tampilkan **Ongkir belum tersedia**, bukan gratis. |
+
+**Rollback:** menonaktifkan key menghentikan pengambilan harga baru. Pertahankan schema selama masih ada quote atau paket yang mengacu pada snapshot provider. Migrasi mundur menolak menghapus referensi transaksi tersebut; jangan menggantinya dengan tarif manual fiktif.
+
+[Referensi API dan kuota provider](https://docs.api.co.id/products/indonesia-courier-rates/)

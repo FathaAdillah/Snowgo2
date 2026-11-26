@@ -89,6 +89,10 @@ Schedule::call(function () {
     DB::table('shipping_quotes')->whereNull('used_at')->where('expires_at', '<', now()->subDay())
         ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('order_charge_consents')->whereColumn('quote_id', 'shipping_quotes.id'))->delete();
 })->name('prune-checkout-quotes')->hourly();
+Schedule::call(fn () => DB::table('provider_freights')->where('expires_at', '<', now()->subDay())
+    ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('shipping_quotes')->whereColumn('provider_freight_id', 'provider_freights.id'))
+    ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('shipments')->whereColumn('provider_freight_id', 'provider_freights.id'))->delete())
+    ->name('prune-unused-provider-freights')->daily();
 Schedule::call(fn () => DB::table('staff_email_changes')->where('expires_at', '<=', now())->delete())
     ->name('prune-staff-email-changes')->hourly();
 Schedule::call(fn () => DB::table('staff_invitations')->where('expires_at', '<=', now())->delete())

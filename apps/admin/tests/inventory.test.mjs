@@ -23,6 +23,20 @@ for (const name of ['InventoryListTable', 'InventoryWarehouseList', 'InventoryAd
 }
 const wh = { id: 9, code: 'BDG', name: 'Bandung', active: true, is_default: false, district_code: '11.01.01', address: 'Jalan A' }
 
+test('API.co.id sync only exposes reference lists covered by the operator grants', async () => {
+  const view = 'shipping.courier.view'
+  const sync = 'shipping.provider.sync'
+  const courier = ['manage', 'create', 'update'].map(a => `shipping.courier.${a}`)
+  for (const [grants, groups] of [
+    [[view, ...courier], []], [[view, sync, ...courier.slice(0, 2)], []],
+    [[view, sync, ...courier], ['couriers']], [[view, sync, 'geography.region.import'], ['provinces', 'cities', 'districts']]
+  ]) {
+    const page = await render('pages/shipping/couriers', grants)
+    assert.equal(page.html.includes('Sinkronkan master'), groups.length > 0)
+    if (groups.length) assert.deepEqual(page.state.groups.value.map(g => g.value), groups)
+  }
+})
+
 test('quotation controls follow per-action grants and cannot edit a frozen version', async () => {
   const quote = { number: 'QUO-1', version: 1, revision: 3, term: 'FULL', total_amount: 100, valid_until: '2027-01-01T00:00:00Z', items: [], terms: 'Goods only' }
   const show = (status, ...actions) => render('components/RequestQuotations', actions.map(a => `request_orders.quotation.${a}`), {},
@@ -72,7 +86,7 @@ async function render(path, grants, fixture = {}, props = {}) {
   const component = await load(`${path}.vue`)
   const app = createSSRApp({ ...component, setup: (p, ctx) => (state = component.setup(p, ctx)) }, props)
   for (const [name, value] of Object.entries(components)) app.component(name, value)
-  for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction', 'ProcurementCreate', 'CaseEvidence', 'CaseCreate']) {
+  for (const name of ['UCard', 'UFormField', 'UBadge', 'UInput', 'USelect', 'USelectMenu', 'UCheckbox', 'UTextarea', 'ConfirmAdminAction', 'ShippingMasterTable', 'ProcurementCreate', 'CaseEvidence', 'CaseCreate']) {
     app.component(name, (_, { attrs, slots }) => h('div', [attrs.label, slots.header?.(), slots.default?.()]))
   }
   app.component('UAlert', (_, { attrs }) => {

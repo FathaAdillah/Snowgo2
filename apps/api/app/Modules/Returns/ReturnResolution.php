@@ -68,7 +68,7 @@ final class ReturnResolution
         if ($existing) {
             return $existing->status === 'DELIVERED';
         }
-        $source = DB::table('shipments')->where('id', $r->shipment_id)->firstOrFail(['order_id', 'warehouse_id', 'weight_g', 'rate_id', 'service_id', 'carrier_id', 'carrier_label', 'service_code', 'eta_min_days', 'eta_max_days']);
+        $source = DB::table('shipments')->where('id', $r->shipment_id)->firstOrFail(['order_id', 'warehouse_id', 'weight_g', 'rate_id', 'provider_freight_id', 'service_id', 'carrier_id', 'carrier_label', 'service_code', 'eta_min_days', 'eta_max_days']);
         $number = sprintf('SHP-%s-%06d', now()->format('Ymd'), DB::scalar("SELECT nextval('shipment_number_seq')"));
         $id = DB::table('shipments')->insertGetId((array) $source + ['number' => $number, 'shipping_amount' => 0, 'replacement_return_id' => $r->id]);
         foreach (DB::table('return_items as l')->join('shipment_items as s', 's.id', '=', 'l.shipment_item_id')->where('return_id', $r->id)->where('accepted_qty', '>', 0)

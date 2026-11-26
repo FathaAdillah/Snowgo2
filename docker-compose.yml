@@ -3,6 +3,7 @@ name: ${COMPOSE_PROJECT_NAME:-snowego}
 
 x-api-env: &api-env
   APP_NAME: Snowego
+  API_CO_ID_KEY: ${API_CO_ID_KEY:-}
   APP_ENV: ${APP_ENV:-local}
   APP_DEBUG: ${APP_DEBUG:-true}
   APP_KEY: ${APP_KEY:?run make setup}
