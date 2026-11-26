@@ -1,25 +1,82 @@
 <script setup lang="ts">
-const { data } = await useApiHealth()
+const { data: products, error, refresh } = await useFetch<StoreRead<'/products'>>('/api/v1/products', { query: { per_page: 8 } })
+const { data: categories } = await useFetch<StoreRead<'/categories'>>('/api/v1/categories', { query: { per_page: 100 } })
+const { data: content } = await useFetch<StoreRead<'/content'>>('/api/v1/content')
+const banner = computed(() => content.value?.data.find(e => e.type === 'BANNER' && e.media_url))
+const featured = computed(() => content.value?.data.filter(e => e.type === 'FEATURED') ?? [])
+const services = [
+  { icon: 'truck', title: 'Pengiriman Cepat', detail: 'Dari luar negeri ke Indonesia' },
+  { icon: 'package', title: 'Packing Aman', detail: 'Dengan extra protection' },
+  { icon: 'headphones', title: 'CS Ramah', detail: 'Siap membantu kamu' }
+]
+useStoreSeo(() => 'Snowe GO · Siap Kirim, Preorder & Request Order', () => 'Belanja koleksi pilihan dari Indonesia dan luar negeri di Snowe GO.', () => '/')
 </script>
 
 <template>
-  <section class="space-y-6">
-    <h1 class="text-3xl font-semibold">
-      Siap kirim, preorder dan request order
+  <div class="home">
+    <h1 class="sr-only">
+      Snowe GO
     </h1>
-    <p class="max-w-2xl text-slate-600">
-      Kerangka storefront Snowego. Katalog, keranjang dan checkout dibangun pada E03–E13.
-    </p>
     <NuxtLink
-      to="/auth/google"
-      class="underline"
-    >Masuk dengan Google</NuxtLink>
-    <p
-      class="text-sm"
-      :class="data?.data.status === 'ok' ? 'text-emerald-700' : 'text-red-700'"
-      role="status"
+      class="hero"
+      :to="banner ? '/konten/' + banner.slug : '/shop'"
+    ><img
+      :src="banner?.media_url || '/brand/snow-hero.jpeg'"
+      :alt="banner?.title || 'Selamat datang di Snowe GO. Belanja sekarang.'"
+      fetchpriority="high"
+      width="1280"
+      height="720"
+    ></NuxtLink>
+    <div class="service-strip">
+      <div
+        v-for="s in services"
+        :key="s.title"
+      >
+        <SnowIcon :name="s.icon" /><span><strong>{{ s.title }}</strong><small>{{ s.detail }} ♡</small></span>
+      </div>
+    </div>
+    <section v-if="categories?.data.length">
+      <div class="section-title">
+        <h2>Belanja Berdasarkan Kategori ♡</h2><NuxtLink to="/shop">Lihat semua →</NuxtLink>
+      </div>
+      <div class="category-tiles">
+        <NuxtLink
+          v-for="c in categories.data.slice(0, 8)"
+          :key="c.slug"
+          :to="{ path: '/shop', query: { category: c.slug } }"
+        ><SnowIcon name="shopping-bag" />{{ c.name }}</NuxtLink>
+      </div>
+    </section>
+    <section
+      v-for="p in featured"
+      :key="p.slug"
     >
-      {{ data?.data.status === 'ok' ? 'API sehat' : 'API tidak terjangkau' }}
-    </p>
-  </section>
+      <NuxtLink
+        class="feature-link"
+        :to="'/konten/' + p.slug"
+      ><img
+        v-if="p.media_url"
+        :src="p.media_url"
+        alt=""
+      >{{ p.title }} →</NuxtLink>
+    </section>
+    <section>
+      <div class="section-title">
+        <h2>Produk Terbaru</h2><NuxtLink to="/shop">Lihat semua →</NuxtLink>
+      </div>
+      <p
+        v-if="error"
+        role="alert"
+      >
+        Produk belum dapat dimuat. <button @click="refresh()">
+          Coba lagi
+        </button>
+      </p>
+      <ProductGrid
+        v-else-if="products?.data.length"
+        :products="products.data"
+      />
+      <StoreEmpty v-else />
+    </section>
+  </div>
 </template>

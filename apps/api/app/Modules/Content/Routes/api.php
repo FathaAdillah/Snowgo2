@@ -5,6 +5,7 @@ use App\Modules\Identity\Http\Middleware\EnsureIdentity;
 use App\Modules\Identity\Http\Middleware\StaffOrigin;
 use Illuminate\Support\Facades\Route;
 
+Route::get('content',[ContentController::class,'directory'])->name('content.directory');
 Route::get('content/{slug}', [ContentController::class, 'published'])->name('content.published');
 Route::prefix('admin/content')->middleware([StaffOrigin::class, 'auth:web', EnsureIdentity::class.':staff'])->group(function () {
     Route::get('/', [ContentController::class, 'index'])->middleware('can:content.entry.view')->name('content.index');

@@ -21,6 +21,24 @@ final class ContentController
 
     public const RULES = ['slug' => 'sometimes|required|string|max:160|'.CatalogAdmin::SLUG, 'type' => 'sometimes|required|string|in:PAGE,FAQ,BANNER,FEATURED', 'title' => 'sometimes|required|string|max:160', 'body' => 'sometimes|required|string|max:20000', 'status' => 'sometimes|required|string|in:DRAFT,PUBLISHED,ARCHIVED', 'sort_order' => 'sometimes|integer|min:0|max:100000', 'publish_at' => 'nullable|date', 'media_id' => 'nullable|string|ulid'];
 
+    #[Response(200, 'Published navigation and homepage entries', type: 'array{success:bool,message:string,data:list<array{slug:string,type:string,title:string,media_url:string|null}>,meta:array{request_id:string,page:int,last_page:int}}')]
+    public function directory(Request $request): JsonResponse
+    {
+        $filters = $request->validate(ApiInput::PAGE);
+        ApiInput::fields($request, $filters);
+        $effective = DB::table('content_publications')->selectRaw('DISTINCT ON (entry_id) entry_id, snapshot')
+            ->where('effective_at', '<=', now())->orderBy('entry_id')->orderByDesc('version');
+        $page = DB::query()->fromSub($effective, 'effective')
+            ->orderByRaw("(snapshot->>'sort_order')::int, entry_id")->paginate((int) ($filters['per_page'] ?? 50));
+        $entries = $page->getCollection()->map(function ($row) {
+            $entry = json_decode($row->snapshot, true, flags: JSON_THROW_ON_ERROR);
+
+            return array_intersect_key($entry,array_flip(['slug','type','title'])) + ['media_url'=>ContentEntries::mediaUrl($entry['media_id'])];
+        });
+
+        return ApiResponse::success($entries, meta: ['page'=>$page->currentPage(), 'last_page'=>$page->lastPage()]);
+    }
+
     #[Response(200, 'Effective publication', type: 'array{success:bool,message:string,data:array{slug:string,type:string,title:string,body:string,media_url:string|null},meta:array{request_id:string}}')]
     public function published(string $slug): JsonResponse
     {

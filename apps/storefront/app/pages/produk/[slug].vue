@@ -52,5 +52,6 @@ useHead(() => ({ script: product.value
         </li>
       </ul>
     </div>
+    <FavoriteButton :slug="product.slug" />
   </article>
 </template>

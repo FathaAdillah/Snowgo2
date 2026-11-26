@@ -2607,6 +2607,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content.directory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/content/{slug}": {
         parameters: {
             query?: never;
@@ -19515,6 +19531,45 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "content.directory": {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published navigation and homepage entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            media_url: string | null;
+                            slug: string;
+                            title: string;
+                            type: string;
+                        }[];
+                        message: string;
+                        meta: {
+                            last_page: number;
+                            page: number;
+                            request_id: string;
+                        };
+                        /** @constant */
+                        success: true;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationException"];
         };
     };
     "content.published": {
