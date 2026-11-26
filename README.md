@@ -2,7 +2,7 @@
 
 Snowgo2 adalah platform perdagangan untuk **Ready Stock, Open Preorder, dan Request Order**. Pembeli memilih barang atau mengajukan permintaan di storefront Snowe GO. Staf toko, finance, pengadaan, dan gudang menggunakan panel admin untuk menindaklanjuti transaksi, dari pesanan pertama sampai pengiriman atau pengembalian dana.
 
-**Status: MVP dalam pengujian, belum dinyatakan siap produksi.** [Progres pengembangan](#progres-pengembangan) · [Panduan pembeli dan staf](docs/PANDUAN-OPERASIONAL-PEMBELIAN.md) · [Jalankan lokal](#jalankan-lokal) · [Deploy dengan Dokploy](docs/DEPLOY-DOKPLOY.md)
+**Status MVP storefront: verifikasi selesai sampai TASK-034. Validasi rilis produksi masih terbuka.** [Progres pengembangan](#progres-pengembangan) · [Panduan pembeli dan staf](docs/PANDUAN-OPERASIONAL-PEMBELIAN.md) · [Jalankan lokal](#jalankan-lokal) · [Deploy dengan Dokploy](docs/DEPLOY-DOKPLOY.md)
 
 ## Tiga cara membeli
 
@@ -29,12 +29,12 @@ Ketiganya memakai **transfer bank manual**. Mengunggah bukti tidak mengubah invo
 
 ## Progres pengembangan
 
-**Per 26 November 2026: 32 dari 46 task selesai, 2 dalam pengujian, dan 12 belum dimulai.** Ini hitungan task, bukan persentase kesiapan produksi.
+**34 dari 46 task selesai dan 12 belum dimulai.**
 
 | Status | Cakupan |
 |---|---|
-| Selesai · TASK-001–032 | Fondasi, identitas, katalog, stok, tiga jalur transaksi, operasi staf, konten dan pencarian. Di [snapshot tracker](https://github.com/FathaAdillah/Snowgo2/blob/69e4776e02169d0f69df82344074ec5aa9d2d85f/docs/11-TASK-PROGRESS-TRACKER.md), lima task operasional masih tertulis 75%. Hitungan di atas memasukkan implementasi yang sudah digabung di [PR #47](https://github.com/FathaAdillah/Snowgo2/pull/47); [PR #48](https://github.com/FathaAdillah/Snowgo2/pull/48) menyelaraskan centangnya. |
-| Dalam pengujian · TASK-033–034 | UI akun, katalog, checkout, dan purnajual sudah ada. Yang belum ditutup: verifikasi visual desktop/ponsel serta perjalanan pembeli dengan keyboard di browser. |
+| Selesai · TASK-001–032 | Fondasi, identitas, katalog, stok, tiga jalur transaksi, operasi staf, konten dan pencarian. |
+| Selesai · TASK-033–034 | Akun, katalog, tiga jalur pembelian, dan purnajual di storefront. Tampilan desktop dan ponsel serta checkout Ready Stock dengan keyboard sudah diuji di browser. |
 | Belum dimulai · TASK-000, 035–039 | Persetujuan keputusan bisnis; notifikasi transaksi dan inbox; pemeriksaan keamanan/aksesibilitas dan uji beban menyeluruh; latihan pemulihan di staging serta persetujuan go-live. Adanya runbook deploy belum menutup pekerjaan staging. |
 | Direncanakan · TASK-040–045 | Promosi/kupon, payment gateway, pelacakan kurir otomatis dan integrasi Shopee, keranjang tamu, transfer stok antargudang, serta laporan lanjutan. **Dashboard penerimaan/piutang dan laporan laba rugi berbasis HPP serta biaya operasional belum tersedia.** |
 

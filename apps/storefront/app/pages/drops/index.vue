@@ -6,7 +6,7 @@ useStoreSeo(() => 'Drops & Preorder · Snowe GO', () => 'Jadwal dan koleksi preo
 
 <template>
   <section class="stack">
-    <header>
+    <header class="drops-header">
       <h1>Drop tersedia</h1>
       <p>Lihat jadwal dan ketentuan tiap preorder.</p>
     </header>
@@ -61,6 +61,11 @@ useStoreSeo(() => 'Drops & Preorder · Snowe GO', () => 'Jadwal dan koleksi preo
 </template>
 
 <style scoped>
+.drops-header h1 {
+  font-size: 26px;
+  font-weight: 400;
+}
+
 .drop-empty {
   display: grid;
   justify-items: center;
