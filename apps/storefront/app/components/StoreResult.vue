@@ -21,8 +21,11 @@ defineEmits<{ retry: [] }>()
       Coba lagi
     </button>
   </p>
-  <p v-else-if="empty">
-    {{ emptyLabel }}
-  </p>
+  <slot
+    v-else-if="empty"
+    name="empty"
+  >
+    <p>{{ emptyLabel }}</p>
+  </slot>
   <slot v-else />
 </template>

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import vue from '@vitejs/plugin-vue'
 import { createServer } from 'vite'
-import { createSSRApp, h } from 'vue'
+import { createSSRApp, h, ref } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
 const server = await createServer({
@@ -36,6 +36,41 @@ test('a slow or failed read cannot render the successful empty state', async () 
   assert.doesNotMatch(failed, /Belum ada pesanan/)
   assert.match(await render('StoreResult', { ...props, status: 'success' }), /Belum ada pesanan/)
   assert.match(await render('StoreResult', { empty: false, status: 'success' }, 'Pesanan siap'), /Pesanan siap/)
+})
+
+test('Drops shows the illustrated panel only after a successful empty read', async (t) => {
+  const { default: Drops } = await server.ssrLoadModule('/app/pages/drops/index.vue')
+  const { default: StoreResult } = await server.ssrLoadModule('/app/components/StoreResult.vue')
+  const status = ref('success')
+  const data = ref({ data: [], meta: { last_page: 1 } })
+  t.after(() => {
+    delete globalThis.ref
+    delete globalThis.useFetch
+    delete globalThis.useStoreSeo
+  })
+  Object.assign(globalThis, { ref, useStoreSeo: () => {}, useFetch: () => ({ data, status, refresh: () => {} }) })
+  function renderDrops() {
+    const app = createSSRApp(Drops)
+    app.component('StoreResult', StoreResult)
+    app.component('NuxtLink', { props: ['to'], setup: (props, { slots }) => () => h('a', { href: props.to }, slots.default()) })
+    return renderToString(app)
+  }
+
+  const empty = await renderDrops()
+  assert.match(empty, /Belum ada drop/)
+  assert.match(empty, /Drop aktif akan muncul di halaman ini\./)
+  assert.match(empty, /src="\/brand\/drop-cat\.webp"/)
+  for (const [state, message] of [['pending', /Memuat/], ['error', /Coba lagi/]]) {
+    status.value = state
+    const result = await renderDrops()
+    assert.match(result, message)
+    assert.doesNotMatch(result, /drop-cat|Belum ada drop/)
+  }
+  status.value = 'success'
+  data.value.data = [{ slug: 'spring', name: 'Spring', starts_at: '2026-03-01', ends_at: '2026-03-31', status: 'OPEN' }]
+  const populated = await renderDrops()
+  assert.match(populated, /href="\/drops\/spring"/)
+  assert.doesNotMatch(populated, /drop-cat|Belum ada drop/)
 })
 
 test('retrying an ambiguous checkout reuses its key and forwards the same CSRF-protected body', async () => {
