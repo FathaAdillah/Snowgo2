@@ -9,25 +9,31 @@ const props = defineProps<{
   disabled?: boolean
 }>()
 const emit = defineEmits<{ click: [event: MouseEvent] }>()
-const open = ref(false)
+const tooltip = ref<'closed' | 'hint' | 'touch-preview'>('closed')
 const touch = ref(false)
 
+function onTooltipChange(open: boolean) {
+  if (!open) tooltip.value = 'closed'
+  else if (tooltip.value === 'closed') tooltip.value = 'hint'
+}
+
 function activate(event: MouseEvent) {
-  if (touch.value && event.detail > 0 && !open.value) {
+  if (touch.value && event.detail > 0 && tooltip.value !== 'touch-preview') {
     event.preventDefault()
-    open.value = true
+    tooltip.value = 'touch-preview'
     return
   }
-  open.value = false
+  tooltip.value = 'closed'
   if (!props.disabled) emit('click', event)
 }
 </script>
 
 <template>
   <UTooltip
-    v-model:open="open"
-    :text="touch && !disabled ? `${label} · Ketuk lagi untuk menjalankan` : label"
+    :open="tooltip !== 'closed'"
+    :text="tooltip === 'touch-preview' && !disabled ? `${label} · Ketuk lagi untuk menjalankan` : label"
     disable-closing-trigger
+    @update:open="onTooltipChange"
   >
     <UButton
       type="button"

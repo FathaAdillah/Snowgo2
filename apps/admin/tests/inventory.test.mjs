@@ -67,11 +67,12 @@ test('touch previews before activation, including links; keyboard and mouse acti
     button.onClick(event)
     return event.defaultPrevented
   }
+  state.onTooltipChange(true) // Hovering with a trackpad is not a first tap.
   assert.equal(tap(), true)
-  assert.equal(state.open.value, true)
+  state.onTooltipChange(false) // Dismissing a touch preview disarms the action.
+  assert.equal(tap(), true)
   assert.equal(clicks, 0)
   assert.equal(tap(), false)
-  assert.equal(state.open.value, false)
   assert.equal(clicks, 1)
   button.onKeydown()
   button.onClick({ detail: 0 })
