@@ -14,6 +14,7 @@ async function render(name, props, content) {
   const { default: component } = await server.ssrLoadModule('/app/components/' + name + '.vue')
   const app = createSSRApp({ render: () => h(component, props, () => content) })
   app.component('NuxtLink', { props: ['to'], setup: (props, { slots }) => () => h('a', { href: props.to }, slots.default()) })
+  app.component('SnowIcon', () => null)
   return renderToString(app)
 }
 
@@ -71,6 +72,23 @@ test('Drops shows the illustrated panel only after a successful empty read', asy
   const populated = await renderDrops()
   assert.match(populated, /href="\/drops\/spring"/)
   assert.doesNotMatch(populated, /drop-cat|Belum ada drop/)
+})
+
+test('add to cart defaults to full payment and respects deposit-only preorder terms', async (t) => {
+  Object.assign(globalThis, { ref, useCustomerAction: () => ({}), useRoute: () => ({}) })
+  t.after(() => {
+    delete globalThis.ref
+    delete globalThis.useCustomerAction
+    delete globalThis.useRoute
+  })
+
+  const offer = { sku: 'A1', campaign: 'spring' }
+  assert.match(await render('AddToCart', offer), /value="FULL" selected/)
+  assert.match(await render('AddToCart', { ...offer, deposit: true }), /value="FULL" selected/)
+
+  const depositOnly = await render('AddToCart', { ...offer, full: false, deposit: true })
+  assert.match(depositOnly, /value="DEPOSIT" selected/)
+  assert.doesNotMatch(depositOnly, /value="FULL"/)
 })
 
 test('retrying an ambiguous checkout reuses its key and forwards the same CSRF-protected body', async () => {
