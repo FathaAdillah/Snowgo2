@@ -17,6 +17,36 @@ const order = ref('')
 const warehouse = ref<number>()
 const service = ref('')
 const weight = ref<number>()
+type RateOption = { service_id: number, service_code: string, carrier_label: string, amount: number, source: string }
+const options = ref<RateOption[]>([])
+const rateProblem = ref('')
+const loadingRates = ref(false)
+watch([order, warehouse, weight], () => {
+  if (options.value.length) {
+    service.value = ''
+    serviceId.value = undefined
+  }
+  options.value = []
+  rateProblem.value = ''
+})
+async function lookup() {
+  const query = { order_number: order.value, warehouse_id: warehouse.value, measured_weight_g: weight.value }
+  loadingRates.value = true
+  options.value = []
+  rateProblem.value = ''
+  try {
+    const result = await $fetch<{ data: RateOption[] }>(`${inventoryApi}/shipment-rate-options`, { query })
+    if (order.value === query.order_number && warehouse.value === query.warehouse_id && weight.value === query.measured_weight_g) options.value = result.data
+  } catch (err) {
+    rateProblem.value = authErrorMessage(err)
+  } finally {
+    loadingRates.value = false
+  }
+}
+function chooseRate(rate: RateOption) {
+  service.value = rate.service_code
+  serviceId.value = rate.service_id
+}
 const serviceId = ref<number>()
 const lines = ref([{ order_item_id: '', qty: 1 }])
 const selected = ref<Package>()
@@ -117,7 +147,34 @@ async function saved() {
               required
             />
           </UFormField>
-        </div><div
+        </div>
+        <div
+          v-if="can('shipping.rate.view') && can('shipping.quote.create')"
+          class="space-y-2"
+        >
+          <UButton
+            label="Cek layanan dan ongkir PO/RO"
+            :disabled="!order || !warehouse || !weight"
+            :loading="loadingRates"
+            @click="lookup"
+          />
+          <UAlert
+            v-if="rateProblem"
+            color="error"
+            :title="rateProblem"
+          />
+          <div
+            v-for="rate in options"
+            :key="rate.service_id"
+          >
+            <UButton
+              variant="outline"
+              :label="`${rate.carrier_label} · ${rate.service_code} · Rp ${rate.amount.toLocaleString('id-ID')} (${rate.source === 'MANUAL' ? 'Manual' : 'API.co.id'})`"
+              @click="chooseRate(rate)"
+            />
+          </div>
+        </div>
+        <div
           v-for="(line, i) in lines"
           :key="i"
           class="flex gap-2 items-end"
