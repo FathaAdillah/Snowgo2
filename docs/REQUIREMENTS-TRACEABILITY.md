@@ -46,3 +46,5 @@ Rantai bisnis → fitur → data → API → task → test. Rentang inklusif men
 | NFR-NTF-001 | DB-FND-006…DB-FND-007, DB-NTF-001…DB-NTF-002, API-NTF-001…API-NTF-002 | TASK-002, TASK-035 | TC-NTF-001 |
 
 [BRD](01-BRD.md) · [PRD](02-PRD.md) · [Database](04-DATABASE-SCHEMA.md) · [API](05-API-CONTRACT.md) · [Task](11-TASK-PROGRESS-TRACKER.md) · [Test](09-TESTING-STRATEGY.md)
+
+**FR-SHP-001 / TC-EXT-001:** master lokal, tarif distrik API.co.id saat checkout RTS atau penimbangan paket PO/RO, snapshot dan fallback manual diuji di `CourierRatesTest`. [Aktivasi dan kebijakan harga](10-DEPLOYMENT.md#mengaktifkan-ongkir-apicoid). Tracking/pickup provider dan marketplace tidak termasuk.

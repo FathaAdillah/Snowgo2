@@ -19,7 +19,7 @@ final class CheckoutController
     public const INPUT = ['cart_version' => 'required|integer|between:0,2147483647', 'address_id' => 'required|string|ulid',
         'shipping_quote_id' => 'sometimes|required|string|ulid'];
 
-    private const PREVIEW = "array{success:bool,message:string,data:array{cart_version:int,quote_hash?:string,expires_at:string,shipping_quotes:list<array{id:string,service_code:string,carrier_label:string,amount:int,estimated_days_from:int,estimated_days_to:int,expires_at:string}>,groups:list<array{method:'READY_TO_SHIP'|'PREORDER',campaign_slug?:string,subtotal_amount:int,discount_amount:int,tax_amount:int,shipping_amount:int,total_amount:int,due_now_amount:int}>},meta:array{request_id:string}}";
+    private const PREVIEW = "array{success:bool,message:string,data:array{cart_version:int,quote_hash?:string,expires_at:string,shipping_quotes:list<array{id:string,source:'API_CO_ID'|'MANUAL',service_code:string,carrier_label:string,amount:int,estimated_days_from:int,estimated_days_to:int,expires_at:string}>,groups:list<array{method:'READY_TO_SHIP'|'PREORDER',campaign_slug?:string,subtotal_amount:int,discount_amount:int,tax_amount:int,shipping_amount:int,total_amount:int,due_now_amount:int}>},meta:array{request_id:string}}";
 
     private const CHECKOUT = 'array{success:bool,message:string,data:array{id:string,order_numbers:list<string>,invoice_numbers:list<string>,completed_at:string},meta:array{request_id:string}}';
 

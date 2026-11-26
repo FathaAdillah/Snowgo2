@@ -2,12 +2,15 @@
 
 use App\Modules\Identity\Http\Middleware\EnsureIdentity;
 use App\Modules\Identity\Http\Middleware\StaffOrigin;
+use App\Modules\Shipping\Http\CourierSyncController;
 use App\Modules\Shipping\Http\ShipmentController;
 use App\Modules\Shipping\Http\ShippingMasters;
 use Illuminate\Support\Facades\Route;
 
 Route::get('shipments/{number}', [ShipmentController::class, 'show'])->middleware(['auth:web', EnsureIdentity::class.':customer'])->name('shipping.customer');
 Route::prefix('admin')->middleware([StaffOrigin::class, 'auth:web', EnsureIdentity::class.':staff'])->name('shipping.')->group(function () {
+    Route::post('courier-master-syncs', CourierSyncController::class)->middleware(['can:shipping.courier.view', 'can:shipping.provider.sync', 'throttle:10,1'])->name('provider.sync');
+    Route::get('shipment-rate-options', [ShipmentController::class, 'options'])->middleware(['can:shipping.shipment.view', 'can:shipping.rate.view', 'can:shipping.quote.create', 'throttle:30,1'])->name('provider.options');
     Route::get('couriers', [ShippingMasters::class, 'listCourier'])->middleware(['can:shipping.courier.view'])->name('courier.list');
     Route::get('couriers/{id}', [ShippingMasters::class, 'showCourier'])->middleware(['can:shipping.courier.view'])->whereNumber('id')->name('courier.show');
     Route::post('couriers', [ShippingMasters::class, 'createCourier'])->middleware(['can:shipping.courier.view', 'can:shipping.courier.manage', 'can:shipping.courier.create'])->name('courier.create');

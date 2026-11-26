@@ -17,6 +17,39 @@ const order = ref('')
 const warehouse = ref<number>()
 const service = ref('')
 const weight = ref<number>()
+type RateOption = paths['/admin/shipment-rate-options']['get']['responses'][200]['content']['application/json']['data'][number]
+const chosenRate = ref<RateOption>()
+const options = ref<RateOption[]>([])
+const rateProblem = ref('')
+const loadingRates = ref(false)
+watch([order, warehouse, weight], () => {
+  if (chosenRate.value) {
+    chosenRate.value = undefined
+    service.value = ''
+    serviceId.value = undefined
+  }
+  options.value = []
+  rateProblem.value = ''
+})
+async function lookup() {
+  const query = { order_number: order.value, warehouse_id: warehouse.value, measured_weight_g: weight.value }
+  loadingRates.value = true
+  options.value = []
+  rateProblem.value = ''
+  try {
+    const result = await $fetch<{ data: RateOption[] }>(`${inventoryApi}/shipment-rate-options`, { query })
+    if (order.value === query.order_number && warehouse.value === query.warehouse_id && weight.value === query.measured_weight_g) options.value = result.data
+  } catch (err) {
+    rateProblem.value = authErrorMessage(err)
+  } finally {
+    loadingRates.value = false
+  }
+}
+function chooseRate(rate: RateOption) {
+  chosenRate.value = rate
+  service.value = rate.service_code
+  serviceId.value = rate.service_id
+}
 const serviceId = ref<number>()
 const lines = ref([{ order_item_id: '', qty: 1 }])
 const selected = ref<Package>()
@@ -84,7 +117,7 @@ async function saved() {
     <UCard v-if="allowed('create')">
       <h2>Rencanakan paket</h2><form
         class="space-y-3"
-        @submit.prevent="ask('shipments', { order_number: order, service_code: service, warehouse_id: warehouse, ...(weight ? { measured_weight_g: weight } : {}), ...(serviceId ? { service_id: serviceId } : {}), items: lines.map(l => ({ ...l })) }, `Buat paket untuk ${order}`)"
+        @submit.prevent="ask('shipments', { order_number: order, service_code: service, warehouse_id: warehouse, ...(weight ? { measured_weight_g: weight } : {}), ...(serviceId ? { service_id: serviceId } : {}), ...(chosenRate ? { rate_key: chosenRate.rate_key } : {}), items: lines.map(l => ({ ...l })) }, `Buat paket untuk ${order}`)"
       >
         <div class="flex flex-wrap gap-3">
           <UFormField label="Nomor pesanan">
@@ -108,16 +141,45 @@ async function saved() {
           </UFormField><UFormField label="ID layanan jika kode sama">
             <UInput
               v-model="serviceId"
+              @update:model-value="chosenRate = undefined"
               type="number"
               min="1"
             />
           </UFormField><UFormField label="Kode layanan">
             <UInput
               v-model="service"
+              @update:model-value="chosenRate = undefined"
               required
             />
           </UFormField>
-        </div><div
+        </div>
+        <div
+          v-if="can('shipping.rate.view') && can('shipping.quote.create')"
+          class="space-y-2"
+        >
+          <UButton
+            label="Cek layanan dan ongkir PO/RO"
+            :disabled="!order || !warehouse || !weight"
+            :loading="loadingRates"
+            @click="lookup"
+          />
+          <UAlert
+            v-if="rateProblem"
+            color="error"
+            :title="rateProblem"
+          />
+          <div
+            v-for="rate in options"
+            :key="rate.service_id"
+          >
+            <UButton
+              variant="outline"
+              :label="`${rate.carrier_label} · ${rate.service_code} · Rp ${rate.amount.toLocaleString('id-ID')} (${rate.source === 'MANUAL' ? 'Manual' : 'API.co.id'})`"
+              @click="chooseRate(rate)"
+            />
+          </div>
+        </div>
+        <div
           v-for="(line, i) in lines"
           :key="i"
           class="flex gap-2 items-end"

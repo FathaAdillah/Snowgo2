@@ -4,6 +4,7 @@ name: snowego
 
 x-api-env: &api-env
   APP_NAME: Snowego
+  API_CO_ID_KEY: ${API_CO_ID_KEY:-}
   APP_ENV: production
   APP_DEBUG: "false"
   APP_KEY: ${APP_KEY:?}

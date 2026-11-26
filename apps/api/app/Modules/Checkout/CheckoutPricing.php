@@ -5,6 +5,7 @@ namespace App\Modules\Checkout;
 use App\Modules\Cart\CustomerCart;
 use App\Modules\Customers\Addresses\AddressSnapshot;
 use App\Modules\Shipping\DomesticQuotes;
+use App\Modules\Shipping\ProviderFreight;
 use App\Support\Http\ApiProblem;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
@@ -16,17 +17,17 @@ final class CheckoutPricing
      * @return array<string,mixed> */
     public function preview(int $owner, array $data): array
     {
-        return DB::transaction(fn () => $this->createPreview($owner, $data));
+        return ProviderFreight::withLookup(fn (bool $lookup) => DB::transaction(fn () => $this->createPreview($owner, $data, $lookup)));
     }
 
     /** @param array<string,mixed> $data
      * @return array<string,mixed> */
-    private function createPreview(int $owner, array $data): array
+    private function createPreview(int $owner, array $data, bool $lookup): array
     {
         $carts = app(CustomerCart::class);
         $carts->lockOwner($owner);
         $cart = $carts->checkoutCart($owner, (int) $data['cart_version']);
-        $plan = $this->calculate($cart, $data, false);
+        $plan = $this->calculate($cart, $data, false, $lookup);
         $groups = [];
         foreach ($plan['groups'] as $group) {
             $groups[] = array_filter(Arr::only($group, ['method', 'campaign_slug', 'subtotal_amount', 'discount_amount', 'tax_amount',
@@ -46,7 +47,7 @@ final class CheckoutPricing
 
     /** @param array<string,mixed> $data
      * @return array<string,mixed> */
-    public function calculate(object $cart, array $data, bool $submit): array
+    public function calculate(object $cart, array $data, bool $submit, bool $lookup = false): array
     {
         $address = app(AddressSnapshot::class)->capture($cart->user_id, $data['address_id']);
         $groups = app(GroupPricing::class)->groups($cart, $submit);
@@ -57,7 +58,7 @@ final class CheckoutPricing
             if ($submit && ! $selection) {
                 throw new ApiProblem(409, 'QUOTE_CHANGED', 'Select a domestic shipping quote.');
             }
-            $options = app(DomesticQuotes::class)->resolve($cart, $address, $groups['rts']['weight'], $selection, $expires);
+            $options = app(DomesticQuotes::class)->resolve($cart, $address, $groups['rts']['weight'], $selection, $expires, $lookup);
             if ($selection !== null) {
                 $rate = $options[0];
                 $expires = CarbonImmutable::parse($rate['expires_at']);
