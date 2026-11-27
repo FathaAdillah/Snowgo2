@@ -5,6 +5,7 @@
   >
     <NuxtLink to="/akun">Profil</NuxtLink>
     <NuxtLink to="/akun/alamat">Alamat</NuxtLink>
+    <NuxtLink to="/akun/notifikasi">Notifikasi</NuxtLink>
     <NuxtLink to="/favorit">Favorit</NuxtLink>
     <NuxtLink to="/pesanan">Pesanan</NuxtLink>
     <NuxtLink to="/request-order">Request Order</NuxtLink>
