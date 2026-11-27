@@ -58,6 +58,23 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'production' => [
+            'driver' => 'stack',
+            'channels' => env('OPERATOR_LOG_VIEWER_ENABLED', false) === true ? ['stderr', 'operator_daily'] : ['stderr'],
+            'ignore_exceptions' => false,
+        ],
+
+        'operator_daily' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/operator-events.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+            'permission' => 0660,
+            'locking' => true,
+            'tap' => [App\Support\Logging\OperatorSafeLog::class],
+            'replace_placeholders' => false,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

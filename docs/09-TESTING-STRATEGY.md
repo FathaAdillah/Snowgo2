@@ -66,3 +66,7 @@ Untuk merge: Pint, Larastan, web lint/typecheck dan unit, feature/API/PostgreSQL
 **TASK-015 / TC-ORD-001** · Jalankan `php artisan test --filter=OrderCoreTest` pada database PostgreSQL testing. Checkout nyata membentuk fixture RTS/PO; dua proses pembatalan PO hanya menghasilkan satu pelepasan. Guard completion diuji dengan proyeksi delivery, invoice dan dispute yang disiapkan sebagai fixture, bukan integrasi kurir atau bank. Akses staf diuji terpisah untuk lihat, lihat PII, cancel, complete, dan replay setelah izin dicabut.
 
 **TASK-016 / TC-RTS-001, TC-CHK-002** · `php artisan test --filter=CheckoutTest` pada PostgreSQL testing. Dua pembeli, dua koneksi dan satu unit terakhir: satu order menunggu pembayaran, satu invoice, satu reservasi aktif; pihak lain mendapat `409 OUT_OF_STOCK` dan keranjangnya tetap aktif. Uji rollback juga mencakup kegagalan konversi cart sesudah konsumsi quote: pilihan kirim tetap bisa dipakai saat retry. Mengubah master kurir, layanan atau tarif tidak mengubah detail kirim historis.
+
+## Regression: production operator tools
+
+TC-ADM-001 / TC-SEC-001 / TC-SEC-002: uji kedua feature flag secara independen, guest, staf biasa dengan explicit grant, superadmin dengan MFA, sesi dicabut/kedaluwarsa, host storefront, OmniDB, mutasi/unduh, penolakan detail payload Horizon, cache-control dan sanitization file log. Jalankan smoke staging lewat HTTPS/Cloudflare Access dan pastikan asset UI tersedia; jangan gunakan data pelanggan nyata.

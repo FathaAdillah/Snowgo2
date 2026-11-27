@@ -277,7 +277,8 @@ it('combines staff status and search without widening delegation or including cu
     ($this->send)('GET', $url.'unknown')->assertUnprocessable();
 });
 
-it('advertises operator actions only to a local MFA-authenticated superadmin', function (string $env, string $role) {
+it('advertises only enabled operator actions to an MFA-authenticated superadmin', function (string $env, string $role, bool $horizon = false, bool $logs = false) {
+    config(['operator-tools.horizon' => $horizon, 'operator-tools.logs' => $logs]);
     $user = ($this->staff)($role);
     if ($role !== StaffAccess::SUPER) {
         $user->givePermissionTo(StaffAccess::OPERATOR_TOOLS);
@@ -289,12 +290,13 @@ it('advertises operator actions only to a local MFA-authenticated superadmin', f
         $permissions = ($this->send)('GET', '/api/v1/admin/auth/me')->assertOk()->json('data.permissions');
         expect($permissions)->toContain('admin.profile.view');
         foreach (StaffAccess::OPERATOR_TOOLS as $ability) {
-            expect(in_array($ability, $permissions, true))->toBe($env === 'local' && $role === StaffAccess::SUPER);
+            $enabled = $env === 'local' || ($ability === StaffAccess::HORIZON && $horizon) || ($ability === StaffAccess::LOGS && $logs);
+            expect(in_array($ability, $permissions, true))->toBe($enabled && $role === StaffAccess::SUPER);
         }
     } finally {
         app()->detectEnvironment(fn () => $previousEnv);
     }
-})->with([['local', StaffAccess::SUPER], ['production', StaffAccess::SUPER], ['local', 'admin']]);
+})->with([['local', StaffAccess::SUPER], ['production', StaffAccess::SUPER], ['local', 'admin'], ['production', StaffAccess::SUPER, true, false], ['production', StaffAccess::SUPER, false, true], ['production', StaffAccess::SUPER, true, true], ['production', 'admin', true, true]]);
 
 it('guards each operator console even with explicit operator grants or basic credentials', function ($ability) {
     Route::get('/operator-check', fn () => response()->noContent())->middleware(['web', LocalOperatorAccess::class.':'.$ability]);
@@ -515,4 +517,32 @@ it('delivers a replacement for an expired login email request', function () {
     }
     app(Relay::class)->publish();
     expect(Mail::sent(StaffEmailChange::class)->sole()->hasTo('replacement@example.test'))->toBeTrue();
+});
+
+it('protects production operator access and leaves database console unavailable', function () {
+    foreach (StaffAccess::OPERATOR_TOOLS as $index => $ability) {
+        Route::get('/operator-production-'.$index, fn () => response()->noContent())->middleware(['web', LocalOperatorAccess::class.':'.$ability]);
+    }
+    config(['operator-tools.horizon' => true, 'operator-tools.logs' => true]);
+    $previousEnv = app()->environment();
+    app()->detectEnvironment(fn () => 'production');
+    try {
+        ($this->send)('GET', '/operator-production-0')->assertUnauthorized();
+        ($this->login)(($this->staff)('admin')->givePermissionTo(StaffAccess::OPERATOR_TOOLS));
+        ($this->send)('GET', '/operator-production-0')->assertForbidden();
+        ($this->login)(($this->staff)(StaffAccess::SUPER));
+        ($this->send)('GET', '/operator-production-0')->assertNoContent()->assertHeaderContains('Cache-Control', 'no-store');
+        ($this->send)('GET', '/operator-production-1')->assertNotFound();
+        ($this->send)('GET', '/operator-production-2')->assertNoContent();
+        ($this->send)('GET', '/operator-production-2', origin: 'http://localhost')->assertNotFound();
+        ($this->send)('GET', '/horizon/api/stats')->assertOk();
+        ($this->send)('GET', '/horizon/api/jobs/failed')->assertForbidden();
+        ($this->send)('GET', '/horizon/api/batches')->assertForbidden();
+        ($this->send)('GET', '/horizon/api/monitoring')->assertForbidden();
+        config(['operator-tools.horizon' => false, 'operator-tools.logs' => false]);
+        ($this->send)('GET', '/operator-production-0')->assertNotFound();
+        ($this->send)('GET', '/horizon/api/stats')->assertNotFound();
+    } finally {
+        app()->detectEnvironment(fn () => $previousEnv);
+    }
 });

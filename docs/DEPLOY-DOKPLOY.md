@@ -107,7 +107,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://shop.example.org/api/v1/intern
 curl -sS -o /dev/null -w '%{http_code}\n' https://admin.example.org/horizon
 ```
 
-Tiga probe pertama harus sukses, dua terakhir harus `404`. Verifikasi juga `/db` dan `/log-viewerx` tidak publik; produksi tidak mengekspos alat development. Untuk instalasi pertama, undang pemilik toko melalui `dc exec api php artisan staff:invite EMAIL_OPERATOR --role=super_admin`. Buka email produksi, aktifkan akun, daftarkan TOTP, dan uji login lewat host admin. Tidak ada password bawaan. Untuk staf lama, tinjau grant di **Role & Izin**; seeder tidak menimpa penugasan kustom.
+Tiga probe pertama harus sukses, dua terakhir harus `404` pada konfigurasi default. Verifikasi juga `/db` dan `/log-viewerx` mengembalikan `404` secara default. Jika operator tools diaktifkan, ikuti prosedur verifikasi khusus di bawah. Untuk instalasi pertama, undang pemilik toko melalui `dc exec api php artisan staff:invite EMAIL_OPERATOR --role=super_admin`. Buka email produksi, aktifkan akun, daftarkan TOTP, dan uji login lewat host admin. Tidak ada password bawaan. Untuk staf lama, tinjau grant di **Role & Izin**; seeder tidak menimpa penugasan kustom.
 
 Sebelum menerima transaksi, uji storefront dan login admin melalui HTTPS, email undangan, unggah → scan → unduh berkas privat dengan tautan bertanda tangan, serta ongkir pada satu rute. Uji alur tulis dengan data sintetis di staging, bukan dengan membuat transaksi pelanggan palsu di produksi. [Aktivasi fitur dan master bisnis](10-DEPLOYMENT.md#mengaktifkan-ongkir-apicoid).
 
@@ -124,3 +124,11 @@ Sebelum menerima transaksi, uji storefront dan login admin melalui HTTPS, email 
 Jika masalahnya pada kode, kembalikan **ketiga digest**, versi File Mounts dan konfigurasi yang cocok, lalu deploy ulang runtime melalui Dokploy **hanya jika skema masih kompatibel**. Jalankan tahap 6 dan, bila File Mounts dipulihkan, tahap 7. Periksa readiness, aturan kedua domain dan login lagi. Jika data/skema tidak kompatibel, tahan trafik dan worker; pilih perbaikan maju atau restore terkoordinasi PostgreSQL + objek + key dari titik yang konsisten, termasuk Redis/antrian dan outbox yang belum diproses. Jangan menimpa transaksi baru tanpa rekonsiliasi finance. [Backup dan pemulihan](10-DEPLOYMENT.md#backup-restore-dan-disaster-recovery).
 
 Referensi resmi: [Dokploy Docker Compose, Environment, Command dan File Mounts](https://docs.dokploy.com/docs/core/docker-compose) · [Domains dan Preview Compose](https://docs.dokploy.com/docs/core/docker-compose/domains).
+
+## Operator tools production (opt-in)
+
+Default kedua flag `false`. Setelah review security dan CI lulus, set `OPERATOR_HORIZON_ENABLED=true` dan/atau `OPERATOR_LOG_VIEWER_ENABLED=true` pada Environment. OmniDB tidak memiliki flag production. `APP_ENV=production` dan `APP_DEBUG=false` tidak berubah.
+
+Tambahkan File Mount keempat `nginx/admin-operator.conf` dari commit rilis dan perbarui `nginx/edge.conf`. Pertahankan tiga mount awal, header HTTPS yang sesuai ingress, dan jangan mount snippet `admin-dev`. Recreate edge setelah perubahan. Volume `operator_logs` menyimpan log metadata terbatas selama 14 hari, terpisah dari log stderr asli; tidak menyalin log historis. Cek ownership volume oleh www-data. Log Viewer menampilkan timestamp/level, bukan pesan atau context mentah. Detail diagnostik tetap lewat Dokploy/SSH dengan akses terbatas. Horizon production tidak membuka daftar/detail job, batches atau monitoring tags karena dapat memuat payload sensitif; stats/metrics tetap tersedia, dan retry dilakukan lewat CLI operator.
+
+Batasi kedua path operator beserta subpath dan API dengan Cloudflare Access atau VPN sebelum enable. Jangan cache respons operator. Verifikasi disabled=404, guest=401 (atau challenge di ingress), staff biasa=403, superadmin MFA aktif dapat melihat menu dan halaman read-only. Storefront dan `/db` tetap 404. Uji session timeout/revocation, mutasi, log download, asset loading, dan isolasi log sebelum membuka trafik. Jika gagal, set kedua flag false, redeploy, dan verifikasi 404.

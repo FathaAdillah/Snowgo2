@@ -48,3 +48,7 @@ Rantai bisnis → fitur → data → API → task → test. Rentang inklusif men
 [BRD](01-BRD.md) · [PRD](02-PRD.md) · [Database](04-DATABASE-SCHEMA.md) · [API](05-API-CONTRACT.md) · [Task](11-TASK-PROGRESS-TRACKER.md) · [Test](09-TESTING-STRATEGY.md)
 
 **FR-SHP-001 / TC-EXT-001:** master lokal, tarif distrik API.co.id saat checkout RTS atau penimbangan paket PO/RO, snapshot dan fallback manual diuji di `CourierRatesTest`. [Aktivasi dan kebijakan harga](10-DEPLOYMENT.md#mengaktifkan-ongkir-apicoid). Tracking/pickup provider dan marketplace tidak termasuk.
+
+## Change request: production operator tools
+
+FR-SEC-001 / NFR-SEC-001 dan FR-ADM-001: opt-in Horizon agregat serta Log Viewer metadata (host admin, MFA superadmin, audit, read-only, default-deny; OmniDB local-only). Regression coverage: TC-ADM-001, TC-SEC-001 dan TC-SEC-002; lihat change request di [tracker](11-TASK-PROGRESS-TRACKER.md#change-request-production-operator-tools). Status validasi tetap terbuka sampai CI dan smoke staging lulus.
