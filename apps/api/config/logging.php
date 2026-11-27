@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Logging\OperatorSafeLog;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -71,7 +72,7 @@ return [
             'days' => 14,
             'permission' => 0660,
             'locking' => true,
-            'tap' => [App\Support\Logging\OperatorSafeLog::class],
+            'tap' => [OperatorSafeLog::class],
             'replace_placeholders' => false,
         ],
 

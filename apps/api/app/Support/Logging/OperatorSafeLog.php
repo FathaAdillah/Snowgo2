@@ -3,6 +3,9 @@
 namespace App\Support\Logging;
 
 use Illuminate\Log\Logger;
+use LogicException;
+use Monolog\Handler\ProcessableHandlerInterface;
+use Monolog\Logger as MonologLogger;
 use Monolog\LogRecord;
 
 final class OperatorSafeLog
@@ -10,12 +13,12 @@ final class OperatorSafeLog
     public function __invoke(Logger $logger): void
     {
         $monolog = $logger->getLogger();
-        if (! $monolog instanceof \Monolog\Logger) {
-            throw new \LogicException('Operator log requires Monolog.');
+        if (! $monolog instanceof MonologLogger) {
+            throw new LogicException('Operator log requires Monolog.');
         }
         foreach ($monolog->getHandlers() as $handler) {
-            if (! $handler instanceof \Monolog\Handler\ProcessableHandlerInterface) {
-                throw new \LogicException('Operator log handler must support sanitization.');
+            if (! $handler instanceof ProcessableHandlerInterface) {
+                throw new LogicException('Operator log handler must support sanitization.');
             }
             $handler->pushProcessor(self::sanitize(...));
         }
