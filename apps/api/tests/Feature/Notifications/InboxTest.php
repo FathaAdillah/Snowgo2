@@ -67,6 +67,7 @@ it('retries an explicit temporary SMTP refusal and never resends a sent row', fu
     ($this->consume)(($this->record)($user));
     $id = DB::table('notification_deliveries')->value('id');
     $job = new SendNotificationEmail($id);
+    $mailer = Mail::getFacadeRoot();
     Mail::shouldReceive('to')->once()->with($user->email)->andThrow(new UnexpectedResponseException('Try again later', 451));
     $job->handle();
     $job->handle();
@@ -74,6 +75,7 @@ it('retries an explicit temporary SMTP refusal and never resends a sent row', fu
 
     $this->travel(11)->seconds();
     $this->artisan('notifications:dispatch')->expectsOutput('Notification emails queued: 1')->assertSuccessful();
+    Mail::swap($mailer);
     $mail = Mail::fake();
     $job->handle();
     $job->handle();

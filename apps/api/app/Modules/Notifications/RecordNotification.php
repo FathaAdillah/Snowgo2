@@ -44,7 +44,9 @@ final class RecordNotification implements EventHandler
     private function delivery(RecordedEvent $event, int $userId, ?int $notificationId = null): void
     {
         $key = ['event_id' => $event->id, 'user_id' => $userId, 'channel' => 'EMAIL', 'template' => $event->type];
-        $inserted = DB::table('notification_deliveries')->insertOrIgnore($key + ['notification_id' => $notificationId]);
+        $inserted = DB::table('notification_deliveries')->insertOrIgnore($key + [
+            'notification_id' => $notificationId, 'next_attempt_at' => now(),
+        ]);
         if ($inserted > 0) {
             $id = DB::table('notification_deliveries')->where($key)->value('id');
             DB::afterCommit(static fn () => DispatchNotifications::enqueue($id));
