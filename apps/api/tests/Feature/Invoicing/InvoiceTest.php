@@ -7,8 +7,9 @@ use App\Modules\Foundation\Outbox\ConsumeEvent;
 use App\Modules\Identity\Sessions\DeviceSessions;
 use App\Modules\Invoicing\InvoiceIssuer;
 use App\Modules\Invoicing\InvoiceLifecycle;
-use App\Modules\Invoicing\IssuedNotice;
 use App\Modules\Invoicing\RenderInvoicePdf;
+use App\Modules\Notifications\LifecycleMail;
+use App\Modules\Notifications\SendNotificationEmail;
 use App\Support\Http\ApiProblem;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Database\QueryException;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Feature\Checkout\PreparesCheckout;
@@ -176,11 +177,15 @@ it('reissues an overdue unpaid follow-up without reopening an expired initial or
 
 it('retries a failed PDF and signs only one private, downloadable copy', function () {
     Bus::fake();
-    Notification::fake();
+    Mail::fake();
     $notice = new ConsumeEvent(DB::table('event_consumptions')->where('handler', 'invoicing.mail')->value('id'));
     $notice->handle();
     $notice->handle();
-    Notification::assertSentToTimes($this->buyer, IssuedNotice::class, 1);
+    $mail = Bus::dispatched(SendNotificationEmail::class)->sole();
+    $mail->handle();
+    $mail->handle();
+    Mail::assertSent(LifecycleMail::class, 1);
+    Mail::assertSent(LifecycleMail::class, fn (LifecycleMail $message) => $message->hasTo($this->buyer->email) && str_contains($message->notice['title'], $this->invoice->number));
     $receipt = DB::table('event_consumptions')->where('handler', 'invoicing.pdf')->value('id');
     (new ConsumeEvent($receipt))->handle();
     $this->artisan('invoices:dispatch-pdfs')->expectsOutput('Invoice PDFs queued: 1')->assertSuccessful();

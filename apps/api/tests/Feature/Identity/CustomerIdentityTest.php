@@ -52,6 +52,10 @@ it('registers once, keeps customer routes closed until the email challenge is us
     });
     $stored = DB::table('email_verification_tokens')->sole();
     expect($stored->delivery_ciphertext)->toBeNull()->and($stored->token_hash)->toBe(hash('sha256', $token));
+    $this->assertDatabaseEmpty('notifications');
+    $this->assertDatabaseHas('notification_deliveries', [
+        'user_id' => $user->id, 'template' => 'EmailVerificationRequested', 'status' => 'SENT', 'notification_id' => null,
+    ]);
 
     $session = ($this->login)('rani@example.test', 'a long passphrase');
     ($this->browser)('GET', 'auth/me', session: $session)->assertOk()

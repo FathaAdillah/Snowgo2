@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import vue from '@vitejs/plugin-vue'
 import { createServer } from 'vite'
-import { createSSRApp, h, ref } from 'vue'
+import { computed, createSSRApp, h, ref } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
 const server = await createServer({
@@ -37,6 +37,35 @@ test('a slow or failed read cannot render the successful empty state', async () 
   assert.doesNotMatch(failed, /Belum ada pesanan/)
   assert.match(await render('StoreResult', { ...props, status: 'success' }), /Belum ada pesanan/)
   assert.match(await render('StoreResult', { empty: false, status: 'success' }, 'Pesanan siap'), /Pesanan siap/)
+})
+
+test('the account inbox shows the notification link and only offers a receipt for unread entries', async (t) => {
+  const { default: Inbox } = await server.ssrLoadModule('/app/pages/akun/notifikasi.vue')
+  const { default: CustomerLinks } = await server.ssrLoadModule('/app/components/CustomerLinks.vue')
+  const sample = { body: 'Lihat detail di Snowego.', created_at: '2026-11-27T00:00:00Z' }
+  const data = ref({ data: [
+    { ...sample, id: '1', title: 'Pesanan dibuat', link: '/pesanan/ORD-1', read_at: null },
+    { ...sample, id: '2', title: 'Pembayaran disetujui', link: '/pembayaran/PAY-1', read_at: sample.created_at }
+  ], meta: { next_cursor: null } })
+  const globals = {
+    computed,
+    definePageMeta: () => {},
+    ref,
+    useFetch: () => ({ data, status: ref('success'), error: ref(null), refresh: () => {} }),
+    useCustomerAction: () => ({ busy: ref(false), problem: ref(''), notice: ref('') })
+  }
+  Object.assign(globalThis, globals)
+  t.after(() => {
+    for (const key of Object.keys(globals)) delete globalThis[key]
+  })
+  const app = createSSRApp(Inbox)
+  app.component('CustomerLinks', CustomerLinks)
+  app.component('NuxtLink', { props: ['to'], setup: (props, { slots }) => () => h('a', { href: props.to }, slots.default()) })
+  const html = await renderToString(app)
+  assert.match(html, /href="\/akun\/notifikasi"/)
+  assert.match(html, /href="\/pesanan\/ORD-1"/)
+  assert.match(html, /Sudah dibaca/)
+  assert.equal((html.match(/Tandai sudah dibaca/g) || []).length, 1)
 })
 
 test('Drops shows the illustrated panel only after a successful empty read', async (t) => {

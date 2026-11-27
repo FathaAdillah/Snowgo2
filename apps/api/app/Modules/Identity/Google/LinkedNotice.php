@@ -2,22 +2,14 @@
 
 namespace App\Modules\Identity\Google;
 
-use App\Models\User;
-use App\Modules\Foundation\Outbox\EventHandler;
-use App\Modules\Foundation\Outbox\RecordedEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-final class LinkedNotice extends Notification implements EventHandler, ShouldQueue
+final class LinkedNotice extends Notification implements ShouldQueue
 {
     use Queueable;
-
-    public function handle(RecordedEvent $event): void
-    {
-        User::query()->find($event->aggregateId)?->notify((new self)->onQueue('notifications'));
-    }
 
     /** @return list<string> */
     public function via(object $notifiable): array

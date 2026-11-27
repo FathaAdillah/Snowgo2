@@ -6,6 +6,7 @@ use App\Modules\Identity\Staff\StaffInvitations;
 use App\Modules\Inventory\StockExpiry;
 use App\Modules\Inventory\StockReservations;
 use App\Modules\Invoicing\InvoiceDocuments;
+use App\Modules\Notifications\DispatchNotifications;
 use App\Modules\Orders\ChargeConsents;
 use App\Modules\Orders\CompleteDeliveredOrders;
 use App\Modules\Orders\OrderExpiry;
@@ -47,6 +48,47 @@ Artisan::command('outbox:reconcile', function (Relay $relay) {
 Schedule::command('outbox:relay')->everyMinute();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('outbox:reconcile')->everyMinute();
+Artisan::command('notifications:dispatch', function (DispatchNotifications $notifications) {
+    $this->info('Notification emails queued: '.$notifications->run());
+})->purpose('Queue due notification emails and flag expired send leases');
+Schedule::command('notifications:dispatch')->everyMinute()->withoutOverlapping();
+
+Artisan::command('notifications:status {id?}', function () {
+    $deliveries = DB::table('notification_deliveries');
+    if ($id = $this->argument('id')) {
+        $delivery = $deliveries->where('id', $id)->first(['id', 'template', 'status', 'attempts', 'provider_ref', 'updated_at']);
+        if ($delivery === null) {
+            $this->error('Delivery not found.');
+
+            return 1;
+        }
+        $this->table(array_keys((array) $delivery), [(array) $delivery]);
+    } else {
+        $this->table(['Status', 'Count'], $deliveries->selectRaw('status, count(*) as count')->groupBy('status')->orderBy('status')->get()->map(fn ($row) => (array) $row));
+    }
+
+    return 0;
+})->purpose('Inspect notification delivery status without recipient data');
+
+Artisan::command('notifications:reconcile {id} {outcome : sent or retry}', function () {
+    $next = match ($this->argument('outcome')) {
+        'sent' => 'SENT',
+        'retry' => 'PENDING',
+        default => null,
+    };
+    if ($next === null || DB::table('notification_deliveries')->where('id', $this->argument('id'))
+        ->where('status', 'AMBIGUOUS')->update([
+            'status' => $next, 'next_attempt_at' => $next === 'PENDING' ? now() : null, 'updated_at' => now(),
+        ]) !== 1) {
+        $this->error('An ambiguous delivery and a valid outcome are required.');
+
+        return 1;
+    }
+    $this->info('Delivery reconciled: '.$next);
+
+    return 0;
+})->purpose('Resolve a notification delivery after checking SMTP evidence');
+
 Artisan::command('inventory:expire-holds', function (StockExpiry $expiry, StockReservations $stock) {
     $this->info('Expired RTS orders: '.$expiry->run($stock));
 })->purpose('Release expired ACTIVE RTS stock holds once per order');

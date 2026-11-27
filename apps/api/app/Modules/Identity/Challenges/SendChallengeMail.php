@@ -10,6 +10,7 @@ use App\Modules\Identity\Mail\VerifyEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -36,21 +37,45 @@ final class SendChallengeMail implements ShouldQueue
     public function handle(): void
     {
         $user = User::query()->whereKey($this->userId)->whereNull('disabled_at')->first();
-        $challenge = $user ? $this->active($this->challenge($user))->whereNotNull('delivery_ciphertext')->first() : null;
-        if ($user === null || $challenge === null) {
+        $prepared = $user ? $this->prepare($user) : null;
+        if ($prepared === null) {
             $this->failed(null);
 
             return;
         }
+        [$address, $mail, $ciphertext] = $prepared;
+        Mail::to($address)->send($mail);
+        $this->forget($user, $ciphertext);
+    }
+
+    /** @return array{string, Mailable, string}|null */
+    public function prepare(User $user, ?int $eventId = null): ?array
+    {
+        $query = $this->active($this->challenge($user))->whereNotNull('delivery_ciphertext');
+        if ($eventId !== null) {
+            $query->whereNotExists(fn (Builder $newer) => $newer->selectRaw('1')->from('outbox_events')
+                ->where('event_type', $this->event)->where('aggregate_type', 'user')
+                ->where('aggregate_id', $user->id)->where('id', '>', $eventId));
+        }
+        $challenge = $query->first();
+        if ($challenge === null) {
+            return null;
+        }
+
         $token = Crypt::decryptString($challenge->delivery_ciphertext);
-        Mail::to($this->event === 'StaffEmailChangeRequested' ? $challenge->email : $user->email)->send(match ($this->event) {
+        $mail = match ($this->event) {
             'StaffEmailChangeRequested' => new StaffEmailChange($token),
             'PasswordResetRequested' => new ResetPassword($user->email, $token),
             'StaffInvited' => new StaffInvitation($token),
             default => new VerifyEmail($token),
-        });
-        // A newer challenge keeps its own ciphertext for its own delivery.
-        $this->challenge($user)->where('delivery_ciphertext', $challenge->delivery_ciphertext)->update(['delivery_ciphertext' => null]);
+        };
+
+        return [$this->event === 'StaffEmailChangeRequested' ? $challenge->email : $user->email, $mail, $challenge->delivery_ciphertext];
+    }
+
+    public function forget(User $user, string $ciphertext): void
+    {
+        $this->challenge($user)->where('delivery_ciphertext', $ciphertext)->update(['delivery_ciphertext' => null]);
     }
 
     /** Remove this job's challenge material once delivery is final, successful, failed or expired. */

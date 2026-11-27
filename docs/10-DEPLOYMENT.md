@@ -31,6 +31,14 @@ API publik terjangkau same-origin melalui storefront/admin menurut route surface
 
 Runbook initial: filter logs berdasarkan request ID dan job ID. Cek DB/Redis/storage probes, Horizon failed jobs dan outbox backlog. Untuk retry, cocokkan event key, DB state dan apakah side effect eksternal sudah terjadi. Replay job only dari objek sumber dengan audit/lease; untuk transfer ambigu cek mutasi sebelum retry. Jadwal default, expiry tiap menit, quote/charge expiry tiap menit, completion tiap jam, rekonsiliasi dan backup harian, polling provider Phase 2 sesuai policy. Horizon queue critical, default, notifications, low memiliki supervisor eksplisit, retry backoff/jitter (default 10s, 60s, 300s), timeout worker lebih pendek dari retry_after. Audit key dan destination disanitasi sebelum log.
 
+### Operasi notifikasi
+
+- Inbox pelanggan ada di **Akun → Notifikasi**. Email challenge auth tidak masuk inbox; tautan/kode sekali pakai tetap terpisah dari payload outbox dan delivery.
+- Jalankan `docker compose exec api php artisan notifications:status` untuk jumlah per status, atau tambahkan ID delivery untuk melihat template, jumlah percobaan, waktu pembaruan dan SMTP Message-ID tanpa alamat atau isi pesan. `SENT` berarti SMTP menerima pesan, bukan bahwa pesan masuk kotak masuk tujuan.
+- Scheduler memanggil `notifications:dispatch` setiap menit untuk memasukkan ulang intent tertunda yang hilang dari Redis. Penolakan SMTP 4xx dicoba ulang setelah 10, 60, 300 dan 900 detik sesuai siklus scheduler; penolakan permanen dan challenge kedaluwarsa berakhir `FAILED`.
+- Putus koneksi atau worker mati saat mengirim dapat menghasilkan `AMBIGUOUS`. Cocokkan Message-ID di Mailpit/log provider sebelum menjalankan `notifications:reconcile <id> sent` bila sudah diterima atau `notifications:reconcile <id> retry` bila dipastikan belum diterima. Jangan kirim ulang bila hasilnya tidak dapat ditentukan. Untuk challenge yang sudah kedaluwarsa, minta challenge baru.
+- QA lokal: buat pesanan atau minta verifikasi di akun sintetis, tunggu relay dan worker, lalu cek penerima, subjek dan tautan pada [Mailpit](http://localhost:8025). Cocokkan dengan `notifications:status`; tandai satu notifikasi dibaca di storefront dan pastikan hilang dari filter belum dibaca.
+
 ### Admin lokal cepat (tanpa hot reload)
 
 Di stack development yang sudah berjalan, gunakan bundle admin siap pakai untuk mencoba dashboard seperti pengguna. Host dan port tetap sama; Laravel tetap lokal dengan pemeriksaan sesi, MFA, dan izin biasa. Tidak perlu migrasi atau menghapus volume.

@@ -3,7 +3,7 @@
 use App\Models\User;
 use App\Modules\Foundation\Outbox\Relay;
 use App\Modules\Identity\Google\GoogleOidc;
-use App\Modules\Identity\Google\LinkedNotice;
+use App\Modules\Notifications\LifecycleMail;
 use Database\Factories\UserFactory;
 use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
@@ -12,13 +12,13 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 
 uses(DatabaseTruncation::class);
 
 beforeEach(function () {
     config(['sanctum.stateful' => ['localhost'], 'queue.default' => 'sync']);
-    Notification::fake();
+    Mail::fake();
     $google = new MockHandler;
     $this->google = $google;
     $this->app->bind(GoogleOidc::class, fn () => (new GoogleOidc(request(), 'snowego-test', 'test',
@@ -86,7 +86,7 @@ it('requires both the legacy login and fresh password to confirm a single-use li
     ($this->browser)('POST', 'google/links', $payload)->assertUnprocessable();
     $this->assertDatabaseHas('social_accounts', ['user_id' => $user->id, 'subject' => 'subject-A']);
     app(Relay::class)->publish();
-    Notification::assertSentTo($user, LinkedNotice::class);
+    Mail::assertSent(LifecycleMail::class, fn (LifecycleMail $mail) => $mail->hasTo($user->email) && $mail->notice['title'] === 'Akun Google ditautkan ke Snowego');
 });
 
 it('rejects bad and expired states before exchanging a code', function () {
