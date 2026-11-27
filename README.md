@@ -65,7 +65,7 @@ Untuk memeriksa perubahan, jalankan `make test`, `make lint`, `make contracts-ch
 
 ## Keamanan dan operasi
 
-- **Akses staf:** login dan MFA tetap wajib, termasuk untuk superadmin. Setiap fitur admin baru membutuhkan seeder izin per aksi; menu dan tombol mengikuti izin, dan otorisasi tetap ditegakkan di API. Konsol DB, Log Viewer, dan dashboard Horizon tidak diekspos di produksi.
+- **Akses staf:** login dan MFA tetap wajib, termasuk untuk superadmin. Setiap fitur admin baru membutuhkan seeder izin per aksi; menu dan tombol mengikuti izin, dan otorisasi tetap ditegakkan di API. Konsol DB tidak diekspos di produksi. Horizon (monitoring agregat) dan Log Viewer (metadata tersanitasi) hanya tersedia melalui opt-in, sesi MFA superadmin, dan host admin; default tetap nonaktif.
 - **Data dan kredensial:** simpan secret hanya di environment; key penyedia ongkir tidak dikirim ke browser. Jangan lampirkan `.env`, bukti transfer, data pelanggan, atau log berisi kredensial di issue maupun PR. Gunakan data sintetis saat melaporkan masalah.
 - **Deployment:** gunakan [panduan Dokploy](docs/DEPLOY-DOKPLOY.md), [template env produksi](.env.production.example), dan [Compose produksi](docker-compose.prod.yml). Panduan mencakup registry, domain HTTPS, S3, SMTP, migrasi, seeder izin, pemeriksaan kesehatan, dan rollback.
 

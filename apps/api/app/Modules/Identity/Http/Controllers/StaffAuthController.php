@@ -75,9 +75,7 @@ final class StaffAuthController
     private function identity(User $user): JsonResponse
     {
         $permissions = StaffAccess::permissions($user);
-        if (! app()->environment('local')) {
-            $permissions = array_values(array_diff($permissions, StaffAccess::OPERATOR_TOOLS));
-        }
+        $permissions = array_values(array_filter($permissions, static fn (string $ability): bool => ! in_array($ability, StaffAccess::OPERATOR_TOOLS, true) || StaffAccess::operatorEnabled($ability)));
 
         return ApiResponse::success(['id' => $user->id, 'surface' => User::STAFF, 'display_name' => $user->getAttribute('staff_display_name') ?? $user->email,
             'email' => $user->email, 'login_mfa_required' => ! StaffAccess::passwordOnly($user), 'roles' => $user->getRoleNames()->values(), 'permissions' => $permissions]);

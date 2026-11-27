@@ -10,8 +10,10 @@ x-api-env: &api-env
   APP_KEY: ${APP_KEY:?}
   APP_URL: ${APP_URL:?}
   ADMIN_URL: ${ADMIN_URL:?}
-  LOG_CHANNEL: stderr
+  LOG_CHANNEL: production
   LOG_LEVEL: ${LOG_LEVEL:-info}
+  OPERATOR_HORIZON_ENABLED: ${OPERATOR_HORIZON_ENABLED:-false}
+  OPERATOR_LOG_VIEWER_ENABLED: ${OPERATOR_LOG_VIEWER_ENABLED:-false}
   TRUSTED_PROXIES: ${TRUSTED_PROXIES:?}
   DB_CONNECTION: pgsql
   DB_HOST: ${DB_HOST:-postgres}
@@ -78,6 +80,7 @@ services:
     volumes:
       - ${NGINX_CONFIG_DIR:-./infrastructure/nginx}/edge.conf:/etc/nginx/templates/default.conf.template:ro
       - ${NGINX_CONFIG_DIR:-./infrastructure/nginx}/edge-common.conf:/etc/nginx/snippets/edge-common.conf:ro
+      - ${NGINX_CONFIG_DIR:-./infrastructure/nginx}/admin-operator.conf:/etc/nginx/snippets/admin-operator/tools.conf:ro
     networks: [internal]
     restart: unless-stopped
     depends_on:
@@ -116,6 +119,7 @@ services:
     command: ["sh", "-c", "cp -R public/. /srv/public/ && exec php-fpm"]
     volumes:
       - api_public:/srv/public
+      - operator_logs:/var/www/api/storage/logs
     healthcheck:
       test: ["CMD", "healthcheck-api"]
       interval: 10s
@@ -125,16 +129,22 @@ services:
   horizon:
     <<: *api
     command: ["php", "artisan", "horizon"]
+    volumes:
+      - operator_logs:/var/www/api/storage/logs
     stop_signal: SIGTERM
     stop_grace_period: 60s
 
   scheduler:
     <<: *api
     command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - operator_logs:/var/www/api/storage/logs
 
   migrate:
     <<: *api
     command: ["php", "artisan", "migrate", "--force", "--no-interaction"]
+    volumes:
+      - operator_logs:/var/www/api/storage/logs
     restart: "no"
     profiles: [release]
 
@@ -187,3 +197,4 @@ volumes:
   postgres:
   redis:
   api_public:
+  operator_logs:

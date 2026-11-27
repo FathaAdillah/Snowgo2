@@ -20,11 +20,16 @@ final class LocalOperatorAccess
      */
     public function handle(Request $request, Closure $next, string $ability = StaffAccess::LOGS): Response
     {
-        abort_unless(app()->environment('local') && $request->getHost() === config('log-viewer.route_domain'), 404);
+        abort_unless(StaffAccess::operatorEnabled($ability) && $request->getHost() === config('log-viewer.route_domain'), 404);
         $user = $request->user('web');
         abort_unless($user instanceof User && StaffAccess::active($user, $request), 401);
         abort_unless(StaffAccess::super($user) && $user->can($ability), 403);
         abort_unless($request->isMethodSafe() && ! $request->is('*/download', '*/download/*'), 403);
+        // Production Horizon exposes aggregates only; deny new vendor endpoints by default.
+        if ($ability === StaffAccess::HORIZON && ! app()->environment('local') && $request->is('horizon/api', 'horizon/api/*')) {
+            abort_unless($request->routeIs('horizon.stats.index', 'horizon.workload.index', 'horizon.masters.index',
+                'horizon.jobs-metrics.index', 'horizon.jobs-metrics.show', 'horizon.queues-metrics.index', 'horizon.queues-metrics.show'), 403);
+        }
         if ($ability !== StaffAccess::HORIZON || ! $request->is('horizon/api/*')) {
             $request->session()->put('staff.seen', now()->timestamp);
         }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Logging\OperatorSafeLog;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -56,6 +57,23 @@ return [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
             'ignore_exceptions' => false,
+        ],
+
+        'production' => [
+            'driver' => 'stack',
+            'channels' => env('OPERATOR_LOG_VIEWER_ENABLED', false) === true ? ['stderr', 'operator_daily'] : ['stderr'],
+            'ignore_exceptions' => false,
+        ],
+
+        'operator_daily' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/operator-events.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+            'permission' => 0660,
+            'locking' => true,
+            'tap' => [OperatorSafeLog::class],
+            'replace_placeholders' => false,
         ],
 
         'single' => [

@@ -94,3 +94,7 @@ Status yang diizinkan: NOT_STARTED, IN_PROGRESS, BLOCKED, READY_FOR_TEST, TESTIN
 - Backend selesai bila migration/model/relationship, constraint, validation/authorization, action/API, OpenAPI, unit/feature tests, edge case, race analysis, audit dan docs terkait tuntas.
 - Frontend selesai bila responsif, loading/empty/error dan validation, API/permission/feedback, aksesibilitas, tests dan docs tuntas.
 - DONE / 100% mensyaratkan implementasi, migration yang relevan, test ditulis dan lulus, dokumen diperbarui, review selesai, dan seluruh known critical issues ditutup. Perubahan requirement memperbarui [traceability](REQUIREMENTS-TRACEABILITY.md).
+
+## Change request: production operator tools
+
+**IN REVIEW / belum DONE** — opt-in Horizon agregat dan Log Viewer metadata, host admin, MFA superadmin, audit, default-deny, read-only; OmniDB tetap local-only. Acceptance: CI, integrasi PostgreSQL/Redis, smoke Nginx, pemeriksaan route vendor, pengujian log sanitization dan staging dengan Cloudflare Access. Tidak mengubah status TASK-036–045 sampai acceptance terkait benar-benar lulus.

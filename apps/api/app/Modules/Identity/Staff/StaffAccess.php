@@ -42,6 +42,25 @@ final class StaffAccess
             && $request->session()->get('staff.seen', 0) > now()->subMinutes(30)->timestamp;
     }
 
+    public static function operatorEnabled(string $ability): bool
+    {
+        if (! in_array($ability, self::OPERATOR_TOOLS, true)) {
+            return false;
+        }
+        if (app()->environment('local')) {
+            return true;
+        }
+        if (! app()->environment('production', 'staging')) {
+            return false;
+        }
+
+        return match ($ability) {
+            self::HORIZON => config('operator-tools.horizon') === true,
+            self::LOGS => config('operator-tools.logs') === true,
+            default => false,
+        };
+    }
+
     public static function passwordOnly(User $user): bool
     {
         return $user->staff_password_only && ! self::super($user);
